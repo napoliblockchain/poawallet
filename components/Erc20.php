@@ -3,21 +3,16 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
 
-use yii\web\Response;
 use yii\web\HttpException;
 use yii\helpers\Json;
 
-use app\models\MPWallets;
-use app\models\ContractType;
 
 use Web3\Web3;
 use Web3\Contract;
 use Web3\Providers\HttpProvider;
 use Web3\RequestManagers\HttpRequestManager;
 use Web3p\EthereumTx\Transaction;
-use Nullix\JsAesPhp\JsAesPhp;
 
 use app\components\Settings;
 // use app\components\WebApp;
@@ -473,6 +468,11 @@ class Erc20 extends Component
             //    $sealer_account = Yii::$app->params['sealer_account_3'];
             //    $prv_key = Yii::$app->params['sealer_prvkey_3'];
             } else {
+                return $balance;
+            }
+
+            // faucet disabled when the sealer is not configured in the environment
+            if (empty($sealer_account) || empty($prv_key)) {
                 return $balance;
             }
 

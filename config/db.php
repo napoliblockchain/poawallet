@@ -1,10 +1,10 @@
 <?php
-$secrets = require __DIR__ . '/secrets.php';
+$env = require __DIR__ . '/env.php';
 
 return [
     'class' => 'yii\db\Connection',
-    'dsn' => getenv('DB_DSN') ?: $secrets['db_dsn'],
-    'username' => getenv('DB_USERNAME') ?: $secrets['db_username'],
-    'password' => getenv('DB_PASSWORD') ?: $secrets['db_password'],
+    'dsn' => $env('DB_DSN'),
+    'username' => $env('DB_USERNAME'),
+    'password' => $env('DB_PASSWORD'),
     'charset' => 'utf8',
 ];

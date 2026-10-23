@@ -9,7 +9,6 @@ use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\httpclient\Client;
 
@@ -257,41 +256,38 @@ class WebApp extends Component
      */
 
     public static function encrypt($data) {
-        return strtr(self::enc($data,  hash( 'sha256', self::secretFromFile('secret_key') )), '', '');
+        return strtr(self::enc($data,  hash( 'sha256', self::encryptionSecret('secret_key') )), '', '');
     }
 
     public static function decrypt($data) {
-        return strtr(self::dec($data,  hash( 'sha256', self::secretFromFile('secret_key') )), '', '');
+        return strtr(self::dec($data,  hash( 'sha256', self::encryptionSecret('secret_key') )), '', '');
     }
 
     /**
      * Metodi privati della classe
      */
     private static function enc($data, $key) {
-        return base64_encode( openssl_encrypt( $data, self::secretFromFile('encrypt_method'), $key, 0, substr( hash( 'sha256', self::secretFromFile('secret_iv') ), 0, 16 ) ) );
+        return base64_encode( openssl_encrypt( $data, self::encryptionSecret('encrypt_method'), $key, 0, substr( hash( 'sha256', self::encryptionSecret('secret_iv') ), 0, 16 ) ) );
     }
 
     private static function dec($data, $key) {
-        return openssl_decrypt( base64_decode( $data ), self::secretFromFile('encrypt_method'), $key, 0, substr( hash( 'sha256', self::secretFromFile('secret_iv') ), 0, 16 ) );
+        return openssl_decrypt( base64_decode( $data ), self::encryptionSecret('encrypt_method'), $key, 0, substr( hash( 'sha256', self::encryptionSecret('secret_iv') ), 0, 16 ) );
     }
 
     /**
-     * questa funzione prova a caricare il secret_key e secret_iv dalla directory corrente in un file
+     * legge secret_key, secret_iv o encrypt_method dai params (variabili d'ambiente ENCRYPT_*)
      * @param $key la chiave da leggere
      * @return restituisce la chiave letta
      */
-    private static function secretFromFile($key)
+    private static function encryptionSecret($key)
     {
-        $file = Yii::$app->params['encryptionFile'];
+        $value = Yii::$app->params['encryption'][$key] ?? '';
 
-        if (file_exists($file) === false) {
-            echo "Unable to load config from: " . $file . PHP_EOL;
-            echo "Detected no SECRET KEY or SECRET IV, all signed requests will fail" . PHP_EOL;
-            die;
+        if ($value === '' || $value === null) {
+            throw new \RuntimeException('Missing encryption configuration: ' . $key);
         }
-        $contents = Json::decode(file_get_contents($file));
 
-        return isset($contents[$key]) ? $contents[$key] : "";
+        return $value;
     }
 
     public static function showTransactionRow($data, $fromAddress,$newTransaction=false,$status=null){

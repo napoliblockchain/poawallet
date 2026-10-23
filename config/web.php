@@ -1,29 +1,8 @@
 <?php
-$secrets = require __DIR__ . '/secrets.php';
+$env = require __DIR__ . '/env.php';
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
-
-// in secret file you must put the correct info for the correct domain
-// 'oauth_github' => [
-//     'client_id' => [
-//         'localhost' => 'aaa'
-//         'exmpale.com' => 'xxxxx',
-//     ],
-//     'secret' => [
-//         'localhost' => 'bbbbbbb'
-//         'axample.com' => 'yyyyyyy',
-//     ]
-// ],
-
-if (isset($_SERVER['SERVER_NAME'])){
-    $githubClientId = $secrets['oauth_github']['client_id'][$_SERVER['SERVER_NAME']] ?? null;
-    $githubClientSecret = $secrets['oauth_github']['secret'][$_SERVER['SERVER_NAME']] ?? null;
-} else {
-    $githubClientId = null;
-    $githubClientSecret = null;
-}
-
 
 $config = [
     'id' => 'Poa Wallet',
@@ -52,7 +31,7 @@ $config = [
         ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
-            'cookieValidationKey' => $secrets['cookieValidationKey'],
+            'cookieValidationKey' => $env('COOKIE_VALIDATION_KEY'),
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -70,31 +49,31 @@ $config = [
            'clients' => [
                'google' => [
                    'class' => 'yii\authclient\clients\Google',
-                   'clientId' => $secrets['google_client_id'],
-                   'clientSecret' => $secrets['google_client_secret'],
+                   'clientId' => $env('GOOGLE_CLIENT_ID', null),
+                   'clientSecret' => $env('GOOGLE_CLIENT_SECRET', null),
                ],
                'facebook' => [
                    'class' => 'yii\authclient\clients\Facebook',
                    // 'validateAuthState' => false, //TEMPORARY
                    'attributeNames' => ['id', 'email', 'first_name', 'last_name'],
-                   'clientId' => $secrets['facebook_client_id'],
-                   'clientSecret' => $secrets['facebook_client_secret'],
+                   'clientId' => $env('FACEBOOK_CLIENT_ID', null),
+                   'clientSecret' => $env('FACEBOOK_CLIENT_SECRET', null),
                     // 'attributeParams' => [
                     //     'include_email' => 'true'
                     // ],
                ],
                'github' => [
                    'class' => 'yii\authclient\clients\GitHub',
-                   'clientId' => $githubClientId,
-                   'clientSecret' => $githubClientSecret,
+                   'clientId' => $env('GITHUB_CLIENT_ID', null),
+                   'clientSecret' => $env('GITHUB_CLIENT_SECRET', null),
                ],
                // 'twitter' => [
                //      'class' => 'yii\authclient\clients\Twitter',
                //      'attributeParams' => [
                //          'include_email' => 'true'
                //      ],
-               //      'consumerKey' => $secrets['twitter_consumer_key'],
-               //      'consumerSecret' => $secrets['twitter_consumer_secret'],
+               //      'consumerKey' => $env('TWITTER_CONSUMER_KEY', null),
+               //      'consumerSecret' => $env('TWITTER_CONSUMER_SECRET', null),
                //  ],
                // etc.
            ],
@@ -102,15 +81,15 @@ $config = [
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
             'viewPath' => '@app/mail',
-            'useFileTransport' => $secrets['useFileTransport'],
+            'useFileTransport' => filter_var($env('MAIL_USE_FILE_TRANSPORT', 'false'), FILTER_VALIDATE_BOOLEAN),
             'transport' => [
                 'dsn' => sprintf(
                     '%s://%s:%s@%s:%s',
-                    $secrets['encryption'] === 'ssl' ? 'smtps' : 'smtp',
-                    urlencode($secrets['mail_username']),
-                    urlencode($secrets['mail_password']),
-                    $secrets['mail_host'],
-                    $secrets['mail_port']
+                    $env('MAIL_ENCRYPTION', 'tls') === 'ssl' ? 'smtps' : 'smtp',
+                    urlencode($env('MAIL_USERNAME')),
+                    urlencode($env('MAIL_PASSWORD')),
+                    $env('MAIL_HOST'),
+                    $env('MAIL_PORT')
                 ),
             ],
         ],
