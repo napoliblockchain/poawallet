@@ -25,7 +25,7 @@
         "drsdre/yii2-wizardwidget": "*",
         "brainfoolong/js-aes-php": "^1.0",
         "web3p/ethereum-tx": "^0.4.1",
-        "minishlink/web-push": "^6.0",
+        "minishlink/web-push": "^10.1",
         "yiisoft/yii2-authclient": "^2.2",
         "yiisoft/yii2-redis": "^2.1"
     },
