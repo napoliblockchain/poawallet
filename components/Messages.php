@@ -12,7 +12,6 @@ use app\models\Notifications;
 use app\models\NotificationsReaders;
 
 use app\components\Settings;
-use app\components\WebApp;
 
 use yii\data\ActiveDataProvider;
 use app\models\PushSubscriptions;
@@ -98,7 +97,7 @@ class Messages extends Component
         self::log("total count: <pre>".print_r($dataProvider->getTotalCount(),true)."</pre>\n");
 
 
-        if ($dataProvider->getTotalCount() >0 )
+        if ($settings !== null && $dataProvider->getTotalCount() >0 )
         {
             self::log("Dataprovider > 0\n");
 
@@ -107,7 +106,7 @@ class Messages extends Component
                 'VAPID' => array(
                     'subject' => $notification->description,
                     'publicKey' => $settings->public_key, // don't forget that your public key also lives in app.js
-                    'privateKey' => WebApp::decrypt($settings->secret_key), // in the real world, this would be in a secret file
+                    'privateKey' => $settings->private_key,
                 ),
             );
 

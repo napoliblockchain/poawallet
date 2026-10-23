@@ -15,7 +15,6 @@ use yii\db\ActiveRecord;
 
 use app\models\Owner;
 use app\models\Blockchains;
-use app\models\Vapid;
 use app\models\Host;
 use app\models\Nodes;
 
@@ -47,8 +46,16 @@ class Settings extends Component
         return $node;
     }
 
+    /**
+     * chiavi VAPID per le notifiche push, da variabili d'ambiente
+     * @return object|null public_key / private_key, null se non configurate (push disattivate)
+     */
     public static function vapid(){
-        return Vapid::findOne(1);
+        $vapid = Yii::$app->params['vapid'] ?? [];
+        if (empty($vapid['public_key']) || empty($vapid['private_key'])) {
+            return null;
+        }
+        return (object) $vapid;
     }
 
     public static function host(){

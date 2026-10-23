@@ -21,6 +21,14 @@ return [
     ],
 
     /**
+     * VAPID keys for web push (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY). Empty = push disabled.
+     */
+    'vapid' => [
+        'public_key' => $env('VAPID_PUBLIC_KEY', null),
+        'private_key' => $env('VAPID_PRIVATE_KEY', null),
+    ],
+
+    /**
      * Set the password reset token expiration time.
      */
     'user.passwordResetTokenExpire' => 3600,

@@ -2,7 +2,7 @@
 
 use app\components\Settings;
 
-$vapidPublicKey = Settings::vapid()->public_key;
+$vapidPublicKey = Settings::vapid()?->public_key ?? '';
 $urlSavesubscription = \yii\helpers\Url::to(['push/save']); // save subscription for push messages
 
 $options = [
