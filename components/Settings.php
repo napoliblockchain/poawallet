@@ -28,13 +28,6 @@ class Settings extends Component
 
     // questa funziona ora assume come valore lo user id 
     public static function poa($user_id = 0){
-        // postman FIX
-        if (Yii::$app->user->id == null) {
-            $user_id = 1;
-        } 
-		// echo '<pre>' . print_r($user_id, true) . '</pre>';
-		// exit;
-
         if ($user_id != 0) {
             $node = Nodes::find()->where(['id_user'=> $user_id])->one();
         } else {
