@@ -17,7 +17,7 @@ use Web3\Contract;
 use Web3\Providers\HttpProvider;
 use Web3\RequestManagers\HttpRequestManager;
 use Web3p\EthereumTx\Transaction;
-use Nullix\CryptoJsAes\CryptoJsAes;
+use Nullix\JsAesPhp\JsAesPhp;
 
 use app\components\Settings;
 // use app\components\WebApp;

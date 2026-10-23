@@ -18,14 +18,30 @@ use app\assets\SynchronizeLatestBlocksAsset;
 use app\components\Settings;
 
 function isLocalhost($whitelist = ['127.0.0.1', '::1']) {
-    return in_array($_SERVER['REMOTE_ADDR'], $whitelist);
+    $remoteAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+    return $remoteAddress !== null && in_array($remoteAddress, $whitelist, true);
+}
+
+$webSocketAddress = null;
+if (isLocalhost()) {
+    $webSocketAddress = Yii::$app->params['WebSocketServerAddress-localhost']
+        ?? Yii::$app->params['WebSocketServerAddress']
+        ?? Yii::$app->params['websocket_url']
+        ?? null;
+} else {
+    $webSocketAddress = Yii::$app->params['WebSocketServerAddress']
+        ?? Yii::$app->params['websocket_url']
+        ?? null;
 }
 
 // impostazioni variabili globali per tutti i js
 $options = [
+    'userId' => (int)Yii::$app->user->id,
     'cryptedIdUser' => app\components\WebApp::encrypt(Yii::$app->user->id),
     'spinner' => '<div class="button-spinner spinner-border text-primary" style="width:1.3rem; height:1.3rem;" role="status"><span class="sr-only">Loading...</span></div>',
-    // 'WebSocketServerAddress' => isLocalhost() ? 'ws://localhost:7500' : Yii::$app->params['websocket_url'],
+    'WebSocketServerAddress' => $webSocketAddress,
+    'urlUpdateNotification' => \yii\helpers\Url::to(['/push/notified']),
+    'urlSoundNotification' => '/src/sounds/notify.mp3',
 ];
 $this->registerJs(
     "var yiiGlobalOptions = ".\yii\helpers\Json::htmlEncode($options).";",

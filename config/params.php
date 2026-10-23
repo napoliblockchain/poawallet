@@ -72,8 +72,10 @@ return [
     'sealer_prvkey_3' => $secrets['sealer_prvkey_3'],
 
 
-    // websocker url
-    // 'websocket_url' => $secrets['websocket_url'],
+    // websocket url
+    'WebSocketServerAddress' => getenv('WEBSOCKET_URL') ?: ($secrets['WebSocketServerAddress'] ?? ($secrets['websocket_url'] ?? '/ws-notify')),
+    'WebSocketServerAddress-localhost' => getenv('WEBSOCKET_URL_LOCALHOST') ?: ($secrets['WebSocketServerAddress-localhost'] ?? '/ws-notify'),
+    'websocket_url' => getenv('WEBSOCKET_URL') ?: $secrets['websocket_url'] ?? null,
 
     // infura client
     // 'infura_client' => $secrets['infura_client'],

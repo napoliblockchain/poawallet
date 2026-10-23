@@ -1,123 +1,107 @@
 /**
- * Created by jambtc
+ * Notification helpers + fallback polling worker.
  */
 
 var notify;
 
 $(function () {
-    'use strict';
+    "use strict";
 
-    if (typeof(Worker) !== "undefined") {
-        // console.log(`[type of bcWorker]`,typeof(bcWorker));
-
-        if (typeof notificationsWorker === "undefined") {
-            var notificationsWorker = new Worker("js/web-workers/notificationsWorker.js");
+    function playSound() {
+        if (!yiiGlobalOptions || !yiiGlobalOptions.urlSoundNotification) {
+            return;
         }
-        notificationsWorker.onmessage = function(event) {
-            // console.log('[From notificationsWorker] data:',event.data);
-            var data = event.data;
-            notify.handleResponse(data);
-
-        };
-    } else {
-        console.log('[bcMain] Sorry, your browser does not support Web Workers');
+        var audio = new Audio(yiiGlobalOptions.urlSoundNotification);
+        audio.play().catch(function () {
+            return null;
+        });
     }
 
-    function stopNotificationsWorker(){
-        notificationsWorker.terminate();
-        notificationsWorker = undefined;
+    function playAlarm() {
+        if (navigator.vibrate) {
+            navigator.vibrate(60);
+        }
+        playSound();
     }
-    // console.log(`[window location]`,window.location.href);
-
 
     notify = {
-        handleResponse: function(response)
-        {
-            if (response.playAlarm == true){
-                backend.Alarm();
-            }
-            if (response.playSound == true){
-                backend.playSound();
-                //VERIFICO QUESTE ULTIME 3 TRANSAZIONI PER AGGIORNARE IN REAL-TIME LO STATO (IN CASO CI SI TROVA SULLA PAGINA TRANSACTIONS)
-                // for (var key in response.status) {
-                //     var status = response.status[key];
-                //     //backend.updateTransactionRows(status,key);
-                // }
+        handleResponse: function (response) {
+            if (response.playAlarm === true) {
+                playAlarm();
+            } else if (response.playSound === true) {
+                playSound();
             }
 
-            // $("#notifiche_dropdown").fadeIn(1000).css("display","");
-            $('#quantity_notify').html(response.countedUnread);
-            // $('#notifiche__contenuto').html(response.htmlTitle);
-            // $('#notifiche__contenuto').append(response.htmlContent);
+            $("#quantity_notify").html(response.countedUnread || 0);
+            $(".notification-list").html(response.htmlTitle || "");
+            $(".notification-list").append(response.htmlContent || "");
 
-            $('.notification-list').html(response.htmlTitle);
-            $('.notification-list').append(response.htmlContent);
-            if (response.countedUnread > 0){
-                $("#quantity_circle").fadeIn(1000).show();
-                $('.notify-readAll').show();
+            if ((response.countedUnread || 0) > 0) {
+                $("#quantity_circle").fadeIn(300).show();
+                $(".notify-readAll").show();
             } else {
-                 $("#quantity_circle").fadeIn(1000).hide();
-                 $('.notify-readAll').hide();
+                $("#quantity_circle").fadeIn(300).hide();
+                $(".notify-readAll").hide();
             }
         },
-        openAllEnvelopes: async function(){
+        openAllEnvelopes: async function () {
             try {
-                let response = await $.ajax({
-                    url:'index.php?r=backend/update-all-news',
+                var response = await $.ajax({
+                    url: "index.php?r=backend/update-all-news",
                     type: "POST",
-                    data: {},
-                    dataType: 'json',
-                    beforeSend: function() {
-                        $(".markall").html(yiiOptions.spinner);
-                    },
-                    success: function(response) {
-                        // $(".markall").remove();
-                        console.log('[notify] All notifications updated.',response);
-                    },
-                    error: function(data) {
-                        console.log(data);
+                    dataType: "json",
+                    beforeSend: function () {
+                        $(".markall").html(yiiGlobalOptions.spinner);
                     },
                 });
+                if (response && response.success && notifyHandle) {
+                    notifyHandle.sendAction({ action: 'getNotifications' });
+                }
             } catch (e) {
-                console.log("[Backend: open all envelopes] ERRORE in async function. Si è verificato un errore!");
+                console.log("[notify] update-all-news error", e);
             }
         },
-        openEnvelope: async function(id_notification){
-            event.preventDefault();
-            event.stopPropagation();
-            var submitUrl = $('#news_'+id_notification).attr('href');
+        openEnvelope: async function (idNotification, evt) {
+            var localEvent = evt || window.event;
+            if (localEvent) {
+                localEvent.preventDefault();
+                localEvent.stopPropagation();
+            }
 
-            // metto a read il valore del messaggio
+            var submitUrl = $("#news_" + idNotification).attr("href");
             try {
-                let response = await $.ajax({
-                    url:'index.php?r=backend/update-single-news',
+                var response = await $.ajax({
+                    url: "index.php?r=backend/update-single-news",
                     type: "POST",
-                    data: { 'id_notification' : id_notification },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success)
-                            location.href = submitUrl;
-                        },
-                    error: function(data) {
-                        console.log(data);
-                    },
+                    data: { id_notification: idNotification },
+                    dataType: "json",
                 });
+
+                if (response && response.success && submitUrl) {
+                    location.href = submitUrl;
+                }
             } catch (e) {
-                console.log("[Backend: open single envelope] ERRORE in async function. Si è verificato un errore!");
+                console.log("[notify] update-single-news error", e);
             }
         },
-
     };
 
+    // Websocket mode active: helper only, no polling worker.
+    if (yiiGlobalOptions && yiiGlobalOptions.WebSocketServerAddress) {
+        return;
+    }
 
+    if (typeof Worker === "undefined") {
+        console.log("[notify] Browser no support Web Workers");
+        return;
+    }
 
+    var notificationsWorker = new Worker("js/web-workers/notificationsWorker.js");
+    notificationsWorker.onmessage = function (event) {
+        notify.handleResponse(event.data);
+    };
 
-    // avvio la sincronizzazione dei messaggi
     notificationsWorker.postMessage({
-        action : "start",
+        action: "start",
     });
-
-
-
-
 });

@@ -4,7 +4,7 @@ use Da\QrCode\QrCode;
 // use app\assets\NFCWriteAsset;
 use app\assets\ClipboardCopyAsset;
 
-$this->title = Yii::$app->id;
+$this->title = Yii::t('app', 'Receive');
 
 $qrCode = (new QrCode($fromAddress))
     ->setSize(600)

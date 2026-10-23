@@ -28,7 +28,7 @@ use yii\helpers\Json;
 use yii\helpers\Url;
 
 use app\components\WebApp;
-use Nullix\CryptoJsAes\CryptoJsAes;
+use Nullix\JsAesPhp\JsAesPhp;
 
 use app\components\Settings;
 use app\components\Messages;
@@ -181,7 +181,7 @@ class SendController extends Controller
 		$memo = $_POST['memo'];
 		$encrypted = $_POST['prv_key'];
 		$passphrase = $WebApp->decrypt($_POST['prv_pas']);
-		$decrypted = CryptoJsAes::decrypt($encrypted, $passphrase);
+		$decrypted = JsAesPhp::decrypt($encrypted, $passphrase);
 		// print_r($decrypted);
 		// exit;
 		if (null === $decrypted){

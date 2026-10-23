@@ -3,7 +3,7 @@
 use app\components\Settings;
 
 $vapidPublicKey = Settings::vapid()->public_key;
-$urlSavesubscription = \yii\helpers\Url::to(['users/save-subscription']);//save subscription for push messages
+$urlSavesubscription = \yii\helpers\Url::to(['push/save']); // save subscription for push messages
 
 $options = [
     'cryptURL' => \yii\helpers\Url::to(['/wallet/crypt']),

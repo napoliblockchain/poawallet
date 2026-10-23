@@ -9,7 +9,7 @@ use app\assets\QRCodeReaderAsset;
 
 QRCodeReaderAsset::register($this);
 
-$this->title = Yii::$app->id;
+$this->title = Yii::t('app', 'Send');
 $form = ActiveForm::begin([
     'id' => 'send-form',
     'enableAjaxValidation' => true,

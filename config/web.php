@@ -100,16 +100,18 @@ $config = [
            ],
         ],
         'mailer' => [
-            'class' => 'yii\swiftmailer\Mailer',
+            'class' => \yii\symfonymailer\Mailer::class,
             'viewPath' => '@app/mail',
             'useFileTransport' => $secrets['useFileTransport'],
             'transport' => [
-                'class' => 'Swift_SmtpTransport',
-                'host' => $secrets['mail_host'],
-                'username' => $secrets['mail_username'],
-                'password' => $secrets['mail_password'],
-                'port' => $secrets['mail_port'],
-                'encryption' => $secrets['encryption'],
+                'dsn' => sprintf(
+                    '%s://%s:%s@%s:%s',
+                    $secrets['encryption'] === 'ssl' ? 'smtps' : 'smtp',
+                    urlencode($secrets['mail_username']),
+                    urlencode($secrets['mail_password']),
+                    $secrets['mail_host'],
+                    $secrets['mail_port']
+                ),
             ],
         ],
         'log' => [

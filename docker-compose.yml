@@ -1,15 +1,16 @@
 version: '3'
 services:
   wss:
-    hostname: wss
     build:
-       dockerfile: Dockerfile-wss
-       context: .
-    volumes:
-      - ~/.composer-docker/cache:/root/.composer/cache:delegated
-      - ./:/app:delegated
+      context: ../../tradarb/ws-notify
+      dockerfile: Dockerfile
+    environment:
+      NOTIFY_WS_PORT: 14800
+      NOTIFY_BACKEND_URL: http://php
+      NOTIFY_ALLOWED_ORIGINS: http://localhost:9001
+      NOTIFY_INTERNAL_SECRET: ${NOTIFY_INTERNAL_SECRET:-change-me-secret}
     ports:
-      - '7502:7502'
+      - '18110:14800'
 
   php:
     hostname: wallet
@@ -21,5 +22,8 @@ services:
     volumes:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
+    environment:
+      WEBSOCKET_URL: ws://localhost:18110
+      WEBSOCKET_URL_LOCALHOST: ws://127.0.0.1:18110
     ports:
       - '9001:80'

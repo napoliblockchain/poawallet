@@ -28,41 +28,31 @@ use app\components\WebApp;
 
 class BackendController extends Controller
 {
-	public function beforeAction($action)
-	{
-    	$this->enableCsrfValidation = false;
-    	return parent::beforeAction($action);
-	}
 
 	/**
 	 * {@inheritdoc}
 	 */
 	public function behaviors()
-	{
-		return [
-			'access' => [
-				'class' => AccessControl::className(),
-				'only' => [
-					'notify',
-				],
-				'rules' => [
-					// [
-					// 	'allow' => true,
-					// 	'actions' => ['saveSubscription'],
-					// 	'roles' => ['?'],
-					// ],
-					[
-						'allow' => true,
-						'actions' => [
-							'notify',
-							'updateAllNews',
-						],
-						'roles' => ['@'],
-					],
-				],
-			],
-			];
-	}
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['notify', 'update-single-news', 'update-all-news'],
+                'rules' => [['allow' => true, 'roles' => ['@']]],
+                'denyCallback' => function () {
+                    throw new \yii\web\ForbiddenHttpException('Authentication required');
+                },
+            ],
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'notify' => ['GET'],
+                    'update-single-news' => ['POST'],
+                    'update-all-news' => ['POST'],
+                ],
+            ],
+        ];
+    }
 
 	/**
 	 * {@inheritdoc}
@@ -83,13 +73,23 @@ class BackendController extends Controller
 	// aggiorna solo la notifica in "letta"
 	// update one row
 	public function actionUpdateSingleNews(){
-		// UPDATE `customer` SET `status` = 1 WHERE `email` LIKE `%@example.com%`
+        $id = filter_var(Yii::$app->request->post('id_notification'), FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]);
+        if ($id === false) {
+            throw new \yii\web\BadRequestHttpException('Invalid notification id');
+        }
+        if (!NotificationsReaders::find()->where([
+            'id_notification' => $id, 'id_user' => Yii::$app->user->id,
+        ])->exists()) {
+            throw new \yii\web\NotFoundHttpException('Notification not found');
+        }
 		$update = NotificationsReaders::updateAll(
 			[
 				'alreadyread' => NotificationsReaders::STATUS_READ
 			],
 			[
-				'like', 'id_notification', $_POST['id_notification'],
+				'id_notification' => $id,
+                'id_user' => Yii::$app->user->id,
 			]
 		);
 
@@ -106,7 +106,7 @@ class BackendController extends Controller
 				'alreadyread' => NotificationsReaders::STATUS_READ
 			],
 			[
-				'like', 'id_user', Yii::$app->user->id
+				'id_user' => Yii::$app->user->id
 			]
 		);
 
@@ -115,18 +115,23 @@ class BackendController extends Controller
 	}
 	public function actionNotify()
 	{
-		// echo "<pre>".print_r($_POST,true)."</pre>";
-		// exit;
-		$fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
+		$fromAddress = null;
+		$userId = Yii::$app->user->id;
+
+
+		if ($userId !== null) {
+			$fromAddress = MPWallets::find()->userAddress($userId);
+		}
 
 		$news = NotificationsReaders::find()
- 	     		->andWhere(['id_user'=>Yii::$app->user->id])
-				->latest()
- 	    		->all();
+            ->andWhere(['id_user' => $userId])
+            ->latest()
+            ->all();
 
-				// echo "<pre>".print_r($news,true)."</pre>";
-				// exit;
+		// echo "<pre>".print_r($news,true)."</pre>";
+		// exit;
 
+       $response['userId'] = (int)$userId;
 	   $response['countedRead'] = 0;
 	   $response['countedUnread'] = 0;
 	   $response['htmlTitle'] = '';
@@ -164,6 +169,7 @@ class BackendController extends Controller
 		   }
 		   // Leggo la notifica tramite key
 		   $notify = Notifications::findOne($item->id_notification);
+           if ($notify === null) { continue; }
 
 		   //if ($data->from_address == $fromAddress){
 
@@ -184,7 +190,7 @@ class BackendController extends Controller
 			}
 
 			$response['htmlContent'] .= '<li class='.$classUnread.'>
-			<a onclick="notify.openEnvelope('.$notify->id.');"
+			<a onclick="notify.openEnvelope('.$notify->id.', event); return false;"
 				href="'.htmlentities('index.php?'.$parsedurl['query']).'"
 				id="news_'.$notify->id.'">
 	   			<div class="d-flex justify-content-between">
@@ -194,7 +200,7 @@ class BackendController extends Controller
 	                       </div>
 
 	                       <div class="mr-auto p-2">
-	                         <p class="coin-name">'.Yii::t('app',$notify->description).'</p>
+	                         <p class="coin-name">'.Html::encode(Yii::t('app',$notify->description)).'</p>
 						   </div>
 				</div>
 

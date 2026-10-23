@@ -15,6 +15,7 @@ use app\models\PasswordResetRequestForm;
 use app\models\ResetPasswordForm;
 use app\components\WebApp;
 use app\components\AuthHandler;
+use app\models\Logs;
 
 class SiteController extends Controller
 {
@@ -117,7 +118,7 @@ class SiteController extends Controller
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            // return $this->goBack();
+            Logs::write('Login: ' . Yii::$app->user->identity->username);
             return $this->redirect(['wallet/index']);
         }
 

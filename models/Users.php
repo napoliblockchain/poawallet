@@ -22,7 +22,9 @@ use app\models\MPWallets;
  * @property string|null $email
  * @property string|null $last_name
  * @property string|null $first_name
+ * @property int $privilege_id
  *
+ * @property Profiles $profile
  * @property MpAuth[] $mpAuths
  * @property MpNotificationsReaders[] $mpNotificationsReaders
  * @property MpSubscriptions[] $mpSubscriptions
@@ -52,7 +54,7 @@ class Users extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return [
             [['username', 'password', 'activation_code', 'status_activation_code', 'oauth_provider', 'oauth_uid'], 'required'],
-            [['status_activation_code'], 'integer'],
+            [['status_activation_code', 'privilege_id'], 'integer'],
             [['username', 'password', 'authKey', 'accessToken', 'picture', 'email', 'last_name', 'first_name'], 'string', 'max' => 255],
             [['activation_code'], 'string', 'max' => 60],
             [['oauth_provider'], 'string', 'max' => 20],
@@ -333,6 +335,11 @@ class Users extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function validateStatus()
     {
         return $this->status_activation_code;
+    }
+
+    public function getProfile(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(Profiles::class, ['id' => 'privilege_id']);
     }
 
 }
