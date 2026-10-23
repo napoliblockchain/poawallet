@@ -3,7 +3,6 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
 use yii\helpers\Url;
 
 
@@ -14,7 +13,7 @@ class Logo extends Component
   * In questa funzione che stampa a video il footer, la variabile
   * $color deve essere inserita nel formato: #ffdd1a
   */
-  public function footer($color=NULL){
+  public static function footer($color=NULL){
       $versionfilename = Yii::$app->basePath."/../version.txt";
       if(file_exists($versionfilename)){
           $version = file_get_contents($versionfilename);

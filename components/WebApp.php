@@ -104,7 +104,7 @@ class WebApp extends Component
     //     return $request->getisOk();
     // }
 
-	private function si_classifier($val){
+	private static function si_classifier($val){
 		$suffixes = [
 			24 => [
 					'long_suffix' => 'yotta',
@@ -199,7 +199,7 @@ class WebApp extends Component
 
 
 	// Best shortens a number and attaches K, M, B, etc. accordingly
-	public function si_formatter($number, $style = 'short'){
+	public static function si_formatter($number, $style = 'short'){
 		$classifier = self::si_classifier($number);
 		if ($classifier === null){
 			# Don't know how to classify this value

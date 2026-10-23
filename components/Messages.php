@@ -3,14 +3,11 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
-use yii\helpers\Url;
 use yii\helpers\Json;
 
 use Minishlink\WebPush\WebPush;
 use Minishlink\WebPush\Subscription;
 
-use yii\base\Model;
 use app\models\Notifications;
 use app\models\NotificationsReaders;
 
@@ -42,7 +39,7 @@ class Messages extends Component
         return (object) $model->attributes;
     }
 
-    private function saveReader($id_user,$id_notification){
+    private static function saveReader($id_user,$id_notification){
         $readers = new NotificationsReaders;
         $readers->id_user = $id_user;
         $readers->id_notification = $id_notification;
@@ -55,7 +52,7 @@ class Messages extends Component
     }
 
     //scrive nel file log le informazioni richieste
-    private function log($text){
+    private static function log($text){
         // fermo il log
         return true;
         $logFileName = Yii::$app->basePath."/logs/messages-push.log";
@@ -71,7 +68,7 @@ class Messages extends Component
     * @param $notification (array contenente la notifica)
     * @param $app (applicazione che riceverà la notifica) di default è Napay
     */
-    public function push($attributes, $app='wallet')
+    public static function push($attributes, $app='wallet')
     {
         self::log("Salvo il messaggio in db");
         $notification = self::save($attributes);
@@ -232,7 +229,7 @@ class Messages extends Component
     /**
     * Funzione che restituisce il titolo del messaggio push in base al type_notification
     **/
-    private function appTitle($type_notification,$app){
+    private static function appTitle($type_notification,$app){
         switch ($type_notification) {
             case 'invoice':
             case 'help':
