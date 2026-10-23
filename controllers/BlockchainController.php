@@ -25,7 +25,7 @@ use yii\helpers\ArrayHelper;
 
 use app\components\Settings;
 use app\components\WebApp;
-use app\components\Messages;
+use app\components\NotificationService;
 use app\components\Erc20;
 
 class BlockchainController extends Controller
@@ -279,7 +279,7 @@ class BlockchainController extends Controller
 					'price' => $tokens->token_price,
 				];
 
-				$messages= Messages::push($notification);
+				$messages= NotificationService::notify($notification);
 			}
 			// notifica per chi riceve (to_address)
 			$id_user_to = MPWallets::find()->userIdFromAddress($tokens->to_address);
@@ -296,7 +296,7 @@ class BlockchainController extends Controller
 					'timestamp' => $tokens->invoice_timestamp,
 					'price' => $tokens->token_price,
 				];
-				$messages= Messages::push($notification);
+				$messages= NotificationService::notify($notification);
 			}
 
 			$ERC20 = new Yii::$app->Erc20($array['userid']);

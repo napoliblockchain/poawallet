@@ -48,7 +48,7 @@ class Settings extends Component
 
     /**
      * chiavi VAPID per le notifiche push, da variabili d'ambiente
-     * @return object|null public_key / private_key, null se non configurate (push disattivate)
+     * @return object|null public_key / private_key / subject, null se non configurate (push disattivate)
      */
     public static function vapid(){
         $vapid = Yii::$app->params['vapid'] ?? [];

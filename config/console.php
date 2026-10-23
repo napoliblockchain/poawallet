@@ -63,4 +63,9 @@ if (YII_ENV_DEV) {
     ];
 }
 
+$redis = require __DIR__ . '/redis.php';
+if ($redis !== null) {
+    $config['components']['redis'] = $redis;
+}
+
 return $config;

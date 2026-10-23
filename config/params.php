@@ -22,11 +22,16 @@ return [
 
     /**
      * VAPID keys for web push (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY). Empty = push disabled.
+     * subject: contact for push services (mailto: or https URL).
      */
     'vapid' => [
         'public_key' => $env('VAPID_PUBLIC_KEY', null),
         'private_key' => $env('VAPID_PRIVATE_KEY', null),
+        'subject' => $env('VAPID_SUBJECT', 'mailto:' . $env('MAIL_SUPPORT')),
     ],
+
+    // Redis channel listened by ws-notify (same value as NOTIFY_CHANNEL of the ws-notify service)
+    'notify.channel' => $env('NOTIFY_CHANNEL', 'poawallet:notify'),
 
     /**
      * Set the password reset token expiration time.

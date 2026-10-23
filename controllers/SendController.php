@@ -31,7 +31,7 @@ use app\components\WebApp;
 use Nullix\JsAesPhp\JsAesPhp;
 
 use app\components\Settings;
-use app\components\Messages;
+use app\components\NotificationService;
 
 
 class SendController extends Controller
@@ -294,7 +294,7 @@ class SendController extends Controller
 			'timestamp' => time(),
 			'price' => $tokens->token_price,
 		];
-		Messages::push($notification);
+		NotificationService::notify($notification);
 
 		//adesso posso uscire CON IL JSON DA REGISTRARE NEL SW.
 		$data = [
@@ -370,7 +370,7 @@ class SendController extends Controller
 				'timestamp' => time(),
 				'price' => $tokens->token_price,
 			];
-			$pushOptions = Messages::push($notification);
+			$pushOptions = NotificationService::notify($notification);
 
 			// notifica per chi riceve (to_address)
 			$id_user_to = MPWallets::find()->userIdFromAddress($tokens->to_address);
@@ -382,7 +382,7 @@ class SendController extends Controller
 					'amount' => $tokens->token_price,
 					'symbol' => $settings->smartContract->symbol,
 				]);
-				Messages::push($notification);
+				NotificationService::notify($notification);
 			}
 
 			//adesso posso uscire CON IL JSON DA REGISTRARE NEL SW.

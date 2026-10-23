@@ -26,7 +26,8 @@
         "brainfoolong/js-aes-php": "^1.0",
         "web3p/ethereum-tx": "^0.4.1",
         "minishlink/web-push": "^6.0",
-"yiisoft/yii2-authclient": "^2.2"
+        "yiisoft/yii2-authclient": "^2.2",
+        "yiisoft/yii2-redis": "^2.1"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
