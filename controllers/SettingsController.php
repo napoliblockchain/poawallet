@@ -9,6 +9,7 @@ use app\models\Transactions;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 use yii\web\Response;
 use yii\web\HttpException;
 
@@ -26,6 +27,25 @@ use app\components\Settings;
  */
 class SettingsController extends Controller
 {
+	/**
+	 * {@inheritdoc}
+	 */
+	public function behaviors()
+	{
+		return [
+			'access' => [
+				'class' => AccessControl::className(),
+				// all actions require login (fail secure): no 'only' list to keep in sync
+				'rules' => [
+					[
+						'allow' => true,
+						'roles' => ['@'],
+					],
+				],
+			],
+		];
+	}
+
 
     /**
      * Displays a single BoltSocialusers model.

@@ -51,24 +51,15 @@ class SendController extends Controller
 		return [
 			'access' => [
 				'class' => AccessControl::className(),
-				'only' => [
-					'index',
-					'generateTransaction',
-					'validateTransaction',
-				],
+				// all actions require login (fail secure): no 'only' list to keep in sync
 				'rules' => [
 					[
 						'allow' => true,
-						'actions' => [
-							'index',
-							'generateTransaction',
-							'validateTransaction'
-						],
-						'roles' => ['@'], // to permit postman working
+						'roles' => ['@'],
 					],
 				],
 			],
-			];
+		];
 	}
 
 	/**
@@ -189,12 +180,7 @@ class SendController extends Controller
 		}
 
 
-		// postman FIX
-		if (Yii::$app->user->id == null) {
-			$id_user = 1;
- 		} else{
-			$id_user = Yii::$app->user->id;
-		}
+		$id_user = Yii::$app->user->id;
 		// echo '<pre>' . print_r($id_user, true) . '</pre>';
 		// exit;
 

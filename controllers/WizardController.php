@@ -53,23 +53,15 @@ class WizardController extends Controller
 		return [
 			'access' => [
 				'class' => AccessControl::className(),
-				'only' => [
-					'index',
-					'restore',
-				],
+				// all actions require login (fail secure): no 'only' list to keep in sync
 				'rules' => [
-
 					[
 						'allow' => true,
-						'actions' => [
-							'index',
-							'restore',
-						],
 						'roles' => ['@'],
 					],
 				],
 			],
-			];
+		];
 	}
 
 	/**

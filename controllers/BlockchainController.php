@@ -54,26 +54,15 @@ class BlockchainController extends Controller
 		return [
 			'access' => [
 				'class' => AccessControl::className(),
-				'only' => [
-					'getBlockNumber',
-
-				],
+				// all actions require login (fail secure): no 'only' list to keep in sync
 				'rules' => [
-					// [
-					// 	'allow' => true,
-					// 	'actions' => ['saveSubscription'],
-					// 	'roles' => ['?'],
-					// ],
 					[
 						'allow' => true,
-						'actions' => [
-							'getBlockNumber',
-						],
 						'roles' => ['@'],
 					],
 				],
 			],
-			];
+		];
 	}
 
 	/**
@@ -96,7 +85,8 @@ class BlockchainController extends Controller
 	{
 		$raw_post_data = file_get_contents('php://input');
         $_POST = Json::decode($raw_post_data);
-		$user_id = WebApp::decrypt($_POST['user_id']);
+		// always the logged user: the encrypted user_id sent by the client is not trusted
+		$user_id = Yii::$app->user->id;
 		// echo '<pre>'.print_r($_POST,true).'</pre>';
 
 		$wallets = MPWallets::find()->where(['id_user'=>$user_id])->one();
@@ -322,8 +312,6 @@ class BlockchainController extends Controller
 		$user_id = Yii::$app->user->id;
 		// echo '<pre>'.print_r($user_id,true).'</pre>';exit;
 
-		// POSTMAN fix
-		if (null === $user_id) $user_id = 1;
 
 
 		//carico info del wallet

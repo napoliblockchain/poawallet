@@ -44,21 +44,15 @@ class WalletController extends Controller
 		return [
 			'access' => [
 				'class' => AccessControl::className(),
-				'only' => [
-					'index',
-				],
+				// all actions require login (fail secure): no 'only' list to keep in sync
 				'rules' => [
-
 					[
 						'allow' => true,
-						'actions' => [
-							'index',
-						],
 						'roles' => ['@'],
 					],
 				],
 			],
-			];
+		];
 	}
 
 	/**
