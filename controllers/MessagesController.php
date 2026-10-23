@@ -9,6 +9,7 @@ use app\models\NotificationsReaders;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 
 /**
  * BoltTokensController implements the CRUD actions for BoltTokens model.
@@ -21,6 +22,16 @@ class MessagesController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::class,
+                // all actions require login (fail secure)
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -102,7 +113,7 @@ class MessagesController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = NotificationsReaders::findOne($id)) !== null) {
+        if (($model = NotificationsReaders::findOne(['id' => $id, 'id_user' => Yii::$app->user->id])) !== null) {
             return $model;
         }
 

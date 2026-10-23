@@ -77,6 +77,7 @@ $active = function (string $prefix) use ($route): string {
                         <strong class="special"><?= Yii::t('app', 'Manage networks') ?></strong>
                     </a>
                 </li>
+                <?php if (!Yii::$app->user->isGuest && UserRole::isWebmaster()): ?>
                 <li class="<?= $active('/standard-blockchain-values') ?>">
                     <a href="<?= Url::to(['/standard-blockchain-values/index']) ?>">
                         <i class="fa fa-database fa-lg text-secondary"></i>
@@ -89,8 +90,6 @@ $active = function (string $prefix) use ($route): string {
                         <strong class="special"><?= Yii::t('app', 'Standard tokens') ?></strong>
                     </a>
                 </li>
-
-                <?php if (!Yii::$app->user->isGuest && UserRole::isWebmaster()): ?>
                 <li class="<?= $active('/profiles') ?>">
                     <a href="<?= Url::to(['/profiles/index']) ?>">
                         <i class="fa fa-id-badge fa-lg text-warning"></i>

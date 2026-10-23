@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\components\UserRole;
 
 include('manage-blockchainscan_js.php');
 
@@ -63,6 +64,7 @@ include('manage-blockchainscan_js.php');
             </div>
         </div>
 
+        <?php if (UserRole::isWebmaster()): ?>
         <div class="list-box">
             <div class="list-item">
                 <i class="fa fa-database text-secondary"></i>
@@ -86,6 +88,7 @@ include('manage-blockchainscan_js.php');
                 </a>
             </div>
         </div>
+        <?php endif ?>
 
         <div class="form-divider"></div>
         <div class="form-label-divider"><span><?= Yii::t('app', 'Experimental'); ?></span></div>

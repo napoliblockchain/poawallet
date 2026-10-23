@@ -9,6 +9,7 @@ use app\models\Nodes;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 
 
 /**
@@ -22,6 +23,16 @@ class BlockchainsController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::class,
+                // all actions require login (fail secure)
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -123,7 +134,7 @@ class BlockchainsController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = Blockchains::findOne($id)) !== null) {
+        if (($model = Blockchains::findOne(['id' => $id, 'id_user' => Yii::$app->user->id])) !== null) {
             return $model;
         }
 

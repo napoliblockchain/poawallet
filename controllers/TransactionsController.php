@@ -13,6 +13,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 
 use app\components\WebApp;
+use yii\filters\AccessControl;
 
 /**
  * TransactionsController implements the CRUD actions for Transactions model.
@@ -25,6 +26,16 @@ class TransactionsController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::class,
+                // all actions require login (fail secure)
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -153,10 +164,25 @@ class TransactionsController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = Transactions::findOne($id)) !== null) {
+        $model = Transactions::findOne($id);
+        if ($model !== null && self::belongsToUser($model, (int) Yii::$app->user->id)) {
             return $model;
         }
 
         throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
+    }
+
+    /**
+     * transazione visibile solo a chi l'ha registrata o al mittente/destinatario (indirizzo del suo wallet)
+     */
+    private static function belongsToUser(Transactions $model, int $userId): bool
+    {
+        if ((int) $model->id_user === $userId) {
+            return true;
+        }
+        $address = strtolower((string) MPWallets::find()->userAddress($userId));
+
+        return $address !== ''
+            && in_array($address, [strtolower((string) $model->from_address), strtolower((string) $model->to_address)], true);
     }
 }

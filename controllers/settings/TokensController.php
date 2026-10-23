@@ -8,6 +8,7 @@ use app\models\search\SmartContractsSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 
 
 /**
@@ -21,6 +22,16 @@ class TokensController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::class,
+                // all actions require login (fail secure)
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -122,7 +133,7 @@ class TokensController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = SmartContracts::findOne($id)) !== null) {
+        if (($model = SmartContracts::findOne(['id' => $id, 'id_user' => Yii::$app->user->id])) !== null) {
             return $model;
         }
 

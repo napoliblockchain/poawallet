@@ -19,6 +19,7 @@ use yii\helpers\Url;
 
 use app\components\WebApp;
 use app\components\Settings;
+use yii\filters\AccessControl;
 
 
 /**
@@ -32,6 +33,16 @@ class UsersController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::class,
+                // all actions require login (fail secure)
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -227,6 +238,10 @@ class UsersController extends Controller
      */
     protected function findModel($id)
     {
+        // each user can only see and change their own profile
+        if ((int) $id !== (int) Yii::$app->user->id) {
+            throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
+        }
         $model = Users::find()->andWhere(['id'=>$id])->one();
         if ( $model !== null) {
             return $model;

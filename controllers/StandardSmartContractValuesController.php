@@ -12,6 +12,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use app\components\UserRole;
 
 /**
  * CRUD for standard smart-contract presets.
@@ -29,10 +30,12 @@ class StandardSmartContractValuesController extends Controller
             ],
             'access' => [
                 'class' => AccessControl::class,
+                // global defaults used for every new wallet: webmaster only
                 'rules' => [
                     [
                         'allow' => true,
                         'roles' => ['@'],
+                        'matchCallback' => fn() => UserRole::isWebmaster(),
                     ],
                 ],
             ],
