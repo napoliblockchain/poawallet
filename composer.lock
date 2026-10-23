@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b9cab5f8ff602fe5d5e135cad3f96873",
+    "content-hash": "a52858b3789d374c50ec4fb326340ecd",
     "packages": [
         {
             "name": "2amigos/qrcode-library",
@@ -1883,53 +1883,6 @@
             "time": "2019-03-08T08:55:37+00:00"
         },
         {
-            "name": "sc0vu/web3.php",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/sc0Vu/web3.php.git",
-                "reference": "fb94ea92c565dd6e9b8a522d821d2b22b3e271f2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/sc0Vu/web3.php/zipball/fb94ea92c565dd6e9b8a522d821d2b22b3e271f2",
-                "reference": "fb94ea92c565dd6e9b8a522d821d2b22b3e271f2",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "guzzlehttp/guzzle": "^6.3|^7.0",
-                "kornrunner/keccak": "~1.0",
-                "php": "^7.1",
-                "phpseclib/phpseclib": "~2.0.11"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "~6.0"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Web3\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "sc0Vu",
-                    "email": "alk03073135@gmail.com"
-                }
-            ],
-            "description": "Ethereum web3 interface.",
-            "support": {
-                "source": "https://github.com/sc0Vu/web3.php/tree/master"
-            },
-            "time": "2021-08-15T03:28:10+00:00"
-        },
-        {
             "name": "simplito/bigint-wrapper-php",
             "version": "1.0.0",
             "source": {
@@ -3394,6 +3347,53 @@
                 "source": "https://github.com/web3p/rlp/tree/0.3.4"
             },
             "time": "2021-08-30T10:22:03+00:00"
+        },
+        {
+            "name": "web3p/web3.php",
+            "version": "0.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/web3p/web3.php.git",
+                "reference": "2eafffbbe50b79b819088c6a72baf3780d672e11"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/web3p/web3.php/zipball/2eafffbbe50b79b819088c6a72baf3780d672e11",
+                "reference": "2eafffbbe50b79b819088c6a72baf3780d672e11",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "guzzlehttp/guzzle": "^6.3|^7.0",
+                "kornrunner/keccak": "~1.0",
+                "php": "^7.2|^8.0",
+                "phpseclib/phpseclib": "~2.0.30"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~8.0|~9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Web3\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "sc0Vu",
+                    "email": "alk03073135@gmail.com"
+                }
+            ],
+            "description": "Ethereum web3 interface.",
+            "support": {
+                "issues": "https://github.com/web3p/web3.php/issues",
+                "source": "https://github.com/web3p/web3.php/tree/0.1.6"
+            },
+            "time": "2022-03-07T03:26:51+00:00"
         },
         {
             "name": "yiisoft/yii2",
@@ -7368,9 +7368,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "sc0vu/web3.php": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

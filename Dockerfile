@@ -38,12 +38,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends git unzip \
 COPY --from=composer:2.10.3 /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock ./
-# --ignore-platform-reqs: sc0vu/web3.php e bacon/bacon-qr-code dichiarano php ^7 ma girano su 8.3
+# --ignore-platform-req=php: bacon/bacon-qr-code (via 2amigos/qrcode-library) dichiara php ^7 ma gira su 8.3;
+# le estensioni PHP richieste restano verificate
 RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist \
-    --optimize-autoloader --ignore-platform-reqs
+    --optimize-autoloader --ignore-platform-req=php
 
 FROM vendor AS vendor-dev
-RUN composer install --no-scripts --no-interaction --prefer-dist --ignore-platform-reqs
+RUN composer install --no-scripts --no-interaction --prefer-dist --ignore-platform-req=php
 
 # --- sorgenti applicazione ---
 FROM base AS app
