@@ -6,6 +6,13 @@ config/secrets.php
 config/encrypt.json
 config/db-docker.php
 
+# phpinfo() esporrebbe tutte le variabili d'ambiente (segreti); index-test solo per test locali
+web/info.php
+web/index-test.php
+
+# dipendenze: installate da composer nella build
+vendor
+
 # non necessari nell'immagine
 .git
 .github
