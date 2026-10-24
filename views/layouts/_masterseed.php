@@ -40,6 +40,10 @@
 					<p>
 						<?php echo Yii::t('app','Are you sure to continue?');?>
 					</p>
+					<div class="form-group">
+						<label for="masterSeedPassword"><?php echo Yii::t('app','Wallet password');?></label>
+						<input type="password" id="masterSeedPassword" class="form-control" autocomplete="current-password">
+					</div>
 				</div>
 				<div class="masterSeedMessagePinDisabled" style="display:none;">
 	                <p><?php echo Yii::t('app','WARNING - You can backup your seed only if secure PIN is enabled.');?></p>

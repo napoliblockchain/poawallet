@@ -53,7 +53,6 @@ $(function () {
             // password per criptare il seed
             var password = generateEntropy(64);
 
-            console.log('[Restore]: seed valido', seed);
             initializeVault(password,seed);
         });
     });
@@ -116,16 +115,12 @@ $(function () {
         							prv_php 	: CryptoJS.AES.encrypt(JSON.stringify(prv_key), password, {format: CryptoJSAesJson}).toString(),
         							prv_pas		: pwd_crypted,
         						};
-                                console.log('[Restore]: seed: ', seed);
-                                console.log('[Restore]: prv_key: ', prv_key);
                                 console.log('[Restore]: address: ', address);
-        						console.log('[Restore]: address and key in post: ', walletPost);
 
                                 clearAllData('wallet')
                                 .then(function () {
                                     writeData('wallet', walletPost)
                                     .then(function() {
-                                        console.log('[Restore]: Saved wallet info in indexedDB', walletPost);
                                     })
                                     .then(function() {
                                         var seedPost = {

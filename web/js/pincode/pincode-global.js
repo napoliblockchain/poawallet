@@ -89,37 +89,47 @@ $(function () {
             })
 
     	},
+        // PIN cifrato salvato nel browser: viene verificato dal server (wallet/verify-pin), mai decifrato qui
+        cryptedPin: null,
         ask: function (crypted_pin,mask=0) {
-            //return new Promise(function(resolve, reject){
-        		$.ajax({
-        			url:'index.php?r=wallet/decrypt',
-        			type: "POST",
-        			data: {'pass': crypted_pin},
-        			dataType: "json",
-        			success:function(data){
-        				console.log('[Pin Utility] decrypted pin code',data);
-        				$('#pin_password').val(data.decrypted);
-        				$('.pin-confirm-numpad').append(pin_ask_numpad);
-        				$('.easy-numpad-frame').css("top","1px");
+            pincode.cryptedPin = crypted_pin;
+            $('#pin_password').val('');
+            $('.pin-confirm-numpad').append(pin_ask_numpad);
+            $('.easy-numpad-frame').css("top","1px");
 
-        				if (mask==0){
-                            //writeData('isPinRequest', {'id':1,'value': false, 'locked': true} );
-        					$('#pinRequestModal').modal({
-        						backdrop: 'static',
-        						keyboard: false
-        					});
-        				}else{
-        					$('#pinRemoveModal').modal({
-        				      backdrop: 'static',
-        				      keyboard: false
-        				    });
-        				}
-        			},
-        			error: function(j){
-        				console.log('error');
-        			}
-        		});
-            //});
+            if (mask==0){
+                $('#pinRequestModal').modal({
+                    backdrop: 'static',
+                    keyboard: false
+                });
+            }else{
+                $('#pinRemoveModal').modal({
+                  backdrop: 'static',
+                  keyboard: false
+                });
+            }
+        },
+        // verifica il PIN digitato; se il server restituisce il PIN nel nuovo formato lo salva al posto del vecchio
+        verify: function (typedPin) {
+            return $.ajax({
+                url: 'index.php?r=wallet/verify-pin',
+                type: "POST",
+                data: {'crypted_pin': pincode.cryptedPin, 'pin': typedPin},
+                dataType: "json"
+            }).then(function (data) {
+                if (data.valid && data.upgraded) {
+                    pincode.cryptedPin = data.upgraded;
+                    readFromId('pin', 1).then(function (pin) {
+                        if (typeof pin[0] !== 'undefined') {
+                            pin[0].pin = data.upgraded;
+                            writeData('pin', pin[0]);
+                        }
+                    });
+                }
+                return data.valid === true;
+            }, function () {
+                return false;
+            });
         }
 
     };

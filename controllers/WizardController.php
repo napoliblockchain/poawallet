@@ -5,7 +5,6 @@ namespace app\controllers;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
-use yii\web\Response;
 use yii\web\HttpException;
 use yii\filters\VerbFilter;
 
@@ -18,10 +17,8 @@ use app\models\WizardWalletForm;
 use app\models\MPWallets;
 use app\models\Nodes;
 
-use yii\helpers\Json;
 use yii\helpers\Url;
 
-use app\components\WebApp;
 use app\components\Networks;
 
 
@@ -149,31 +146,4 @@ class WizardController extends Controller
 
 
 
-	private static function json ($data)
-	{
-		Yii::$app->response->format = Response::FORMAT_JSON;
-		return $data;
-	}
-
-	public function actionCrypt()
-	{
-		$data = [
-			'cryptedpass' => isset($_POST['pass']) ? WebApp::encrypt($_POST['pass']) : '',
-			'cryptedseed' => isset($_POST['seed']) ? WebApp::encrypt($_POST['seed']) : '',
-			'cryptediduser' => WebApp::encrypt(Yii::$app->user->id),
-		];
-
-		return $this->json($data);
-	}
-
-	public function actionDecrypt()
-	{
-		$data = [
-			'decrypted' => isset($_POST['pass']) ? WebApp::decrypt($_POST['pass']) : '',
-			'decryptedseed' => isset($_POST['cryptedseed']) ? WebApp::decrypt($_POST['cryptedseed']) : '',
-			'decryptediduser' => isset($_POST['cryptediduser']) ? WebApp::decrypt($_POST['cryptediduser']) : '',
-
-		];
-		return $this->json($data);
-	}
 }

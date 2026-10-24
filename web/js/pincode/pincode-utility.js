@@ -250,6 +250,9 @@ function easy_pin_clear(reset=true) {
 function dropNumpad(reset=false){
 	$('.easy-numpad-frame').remove();
 	$('.easy-numpad-output').text('');
+	if (typeof pincode !== 'undefined') {
+		pincode.cryptedPin = null;
+	}
 	if (reset){
 		$('.pin_password_em_').text('');
 		$('#pin_password').val('');
@@ -272,36 +275,29 @@ function easypinconfirm(num) {
 		$('#pin_password_confirm').val( pin + num );
 	}
 	if (pin.length == pinDigits){
-		console.log('verifica uguaglianza pin',$('#pin_password').val(),$('#pin_password_confirm').val());
-		if ($('#pin_password').val() != $('#pin_password_confirm').val()){
-			console.log('i pin sono diversi');
-			$('#pinVerifyButton').prop('disabled', true);
-			$('#pinVerifyButton').addClass('disabled');
-
-			$('#pinRequestButton').prop('disabled', true);
-			$('#pinRequestButton').addClass('disabled');
-
-			$('#pinRemoveButton').prop('disabled', true);
-			$('#pinRemoveButton').addClass('disabled');
-
-			$('.pin_password_em_').show();
-			$('.pin_password_em_').text('Pin is wrong!');
-			//$('.easy-numpad-output').text('Pin is wrong!');
-			$('.easy-numpad-output').removeClass('alert-dark').addClass('alert-danger');
-			return false;
-		}else{
-			console.log('i pin sono uguali');
-			$('#pinVerifyButton').prop('disabled', false);
-			$('#pinVerifyButton').removeClass('disabled');
-
-			$('#pinRequestButton').prop('disabled', false);
-			$('#pinRequestButton').removeClass('disabled');
-
-			$('#pinRemoveButton').prop('disabled', false);
-			$('#pinRemoveButton').removeClass('disabled');
-
-			$('.easy-numpad-output').removeClass('alert-dark').addClass('alert-primary');
+		// richiesta del PIN salvato: verifica sul server
+		if (typeof pincode !== 'undefined' && pincode.cryptedPin) {
+			pincode.verify($('#pin_password_confirm').val()).then(setPinResult);
+			return;
 		}
-
+		// impostazione nuovo PIN: confronto tra le due digitazioni dell'utente
+		setPinResult($('#pin_password').val() == $('#pin_password_confirm').val());
 	}
+}
+
+// abilita i pulsanti di conferma se il PIN e corretto, altrimenti mostra l'errore
+function setPinResult(valid) {
+	var buttons = ['#pinVerifyButton', '#pinRequestButton', '#pinRemoveButton'];
+	buttons.forEach(function (id) {
+		$(id).prop('disabled', !valid);
+		$(id).toggleClass('disabled', !valid);
+	});
+	if (!valid) {
+		$('.pin_password_em_').show();
+		$('.pin_password_em_').text('Pin is wrong!');
+		$('.easy-numpad-output').removeClass('alert-dark').addClass('alert-danger');
+		return false;
+	}
+	$('.easy-numpad-output').removeClass('alert-dark').addClass('alert-primary');
+	return true;
 }

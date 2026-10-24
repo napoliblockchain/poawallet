@@ -105,4 +105,18 @@ class Transactions extends \yii\db\ActiveRecord
     {
         return new \app\models\query\TransactionsQuery(get_called_class());
     }
+
+    /**
+     * transazione visibile solo a chi l'ha registrata o al mittente/destinatario (indirizzo del suo wallet)
+     */
+    public function belongsToUser(int $userId): bool
+    {
+        if ((int) $this->id_user === $userId) {
+            return true;
+        }
+        $address = strtolower((string) MPWallets::find()->userAddress($userId));
+
+        return $address !== ''
+            && in_array($address, [strtolower((string) $this->from_address), strtolower((string) $this->to_address)], true);
+    }
 }

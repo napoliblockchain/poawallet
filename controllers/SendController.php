@@ -171,7 +171,12 @@ class SendController extends Controller
  		$amount = $_POST['amount'];
 		$memo = $_POST['memo'];
 		$encrypted = $_POST['prv_key'];
-		$passphrase = $WebApp->decrypt($_POST['prv_pas']);
+		// password del wallet: decifrata solo se appartiene all'utente loggato
+		$storedPassword = WebApp::decryptForUser($_POST['prv_pas'] ?? null, (int) Yii::$app->user->id);
+		if (null === $storedPassword){
+			throw new HttpException(403,'Cannot decrypt private key.');
+		}
+		$passphrase = $storedPassword['value'];
 		$decrypted = JsAesPhp::decrypt($encrypted, $passphrase);
 		// print_r($decrypted);
 		// exit;
@@ -289,6 +294,8 @@ class SendController extends Controller
 			'url' => Url::to(['/send/validate-transaction']),
 			'row' => $WebApp->showTransactionRow($tokens,$fromAccount,false,'send'),
 			'gas' => $gasBalance,
+			// password salvata nel formato precedente: il browser la sostituisce con quella legata all'utente
+			'prv_pas_upgraded' => $storedPassword['legacy'] ? WebApp::encryptForUser($passphrase, (int) Yii::$app->user->id) : null,
 		];
 
 		return $this->json($data);
@@ -311,7 +318,10 @@ class SendController extends Controller
 			$maxrequests = 30;
 		}
 
-		$tokens = Transactions::findOne($WebApp->decrypt($_POST['id']));
+		$tokens = Transactions::findOne($WebApp->decrypt($_POST['id'] ?? ''));
+		if (null === $tokens || !$tokens->belongsToUser((int) Yii::$app->user->id)){
+			throw new HttpException(404,'Transaction not found.');
+		}
 		$ERC20 = new Yii::$app->Erc20($tokens->id_user);
 
 		while ($requests < $maxrequests)

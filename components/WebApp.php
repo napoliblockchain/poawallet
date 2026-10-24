@@ -9,6 +9,7 @@ use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\httpclient\Client;
 
@@ -261,6 +262,44 @@ class WebApp extends Component
 
     public static function decrypt($data) {
         return strtr(self::dec($data,  hash( 'sha256', self::encryptionSecret('secret_key') )), '', '');
+    }
+
+    /**
+     * cifra un valore legandolo all'utente: solo lo stesso utente potra decifrarlo
+     * @return string formato "v2." + testo cifrato
+     */
+    public static function encryptForUser($value, int $userId): string
+    {
+        return 'v2.' . self::encrypt(Json::encode(['u' => $userId, 'v' => (string) $value]));
+    }
+
+    /**
+     * decifra un valore solo se appartiene all'utente indicato
+     * Formato precedente (non legato all'utente) accettato solo se params['crypto.acceptLegacy'] e true,
+     * per migrare i dati gia salvati nei browser.
+     * @return array|null ['value' => string, 'legacy' => bool], null se non valido o di un altro utente
+     */
+    public static function decryptForUser($data, int $userId): ?array
+    {
+        if (!is_string($data) || $data === '') {
+            return null;
+        }
+        if (strncmp($data, 'v2.', 3) === 0) {
+            $plain = self::decrypt(substr($data, 3));
+            $payload = is_string($plain) ? json_decode($plain, true) : null;
+            if (!is_array($payload) || !isset($payload['u'], $payload['v']) || (int) $payload['u'] !== $userId) {
+                return null;
+            }
+            return ['value' => (string) $payload['v'], 'legacy' => false];
+        }
+        if (empty(Yii::$app->params['crypto.acceptLegacy'])) {
+            return null;
+        }
+        $plain = self::decrypt($data);
+        if (!is_string($plain) || $plain === '') {
+            return null;
+        }
+        return ['value' => $plain, 'legacy' => true];
     }
 
     /**

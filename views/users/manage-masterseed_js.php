@@ -56,30 +56,44 @@ $(function () {
         resetSlider('masterseedSlider');
     });
 
-    // read seed from dbx and decrypt
+    // il server mostra il seed solo dopo aver verificato la password del wallet
     var masterSeedButton = document.querySelector('#showMasterSeed');
 	masterSeedButton.addEventListener('click', function() {
+		var password = $('#masterSeedPassword').val();
+		$('#masterSeedPassword').val('');
 		$('#masterSeed').html(spinner);
-		readAllData('mseed').then(function(data) {
-			console.log('[Master Seed IndexedDB]',data);
-			if (typeof data[0] !== 'undefined') {
-				$.ajax({
-					url: yiiOptions.decryptURL,
-					type: "POST",
-					data: {'cryptedseed': data[0].cryptedseed},
-					dataType: "json",
-					success:function(data){
-						$('#masterSeed').html(data.decryptedseed);
-					},
-					error: function(j){
-						console.log('error',j);
-					}
-				});
-
-			}else{
-				$('#masterSeed').text('Backup not found!');
+		Promise.all([readAllData('mseed'), readAllData('wallet')]).then(function(stores) {
+			var mseed = stores[0][0], wallet = stores[1][0];
+			if (typeof mseed === 'undefined' || typeof wallet === 'undefined') {
+				$('#masterSeed').text(yiiOptions.messages.seedNotFound);
+				return;
 			}
-		})
+			$.ajax({
+				url: yiiOptions.revealSeedURL,
+				type: "POST",
+				data: {'cryptedseed': mseed.cryptedseed, 'prv_pas': wallet.prv_pas, 'password': password},
+				dataType: "json",
+				success:function(data){
+					if (!data.success) {
+						$('#masterSeed').text(yiiOptions.messages.wrongPassword);
+						return;
+					}
+					$('#masterSeed').text(data.seed);
+					// dati salvati nel formato precedente: sostituiti con quelli legati all'utente
+					if (data.upgraded.cryptedseed) {
+						mseed.cryptedseed = data.upgraded.cryptedseed;
+						writeData('mseed', mseed);
+					}
+					if (data.upgraded.prv_pas) {
+						wallet.prv_pas = data.upgraded.prv_pas;
+						writeData('wallet', wallet);
+					}
+				},
+				error: function(j){
+					$('#masterSeed').text(j.status === 429 ? yiiOptions.messages.tooManyAttempts : yiiOptions.messages.wrongPassword);
+				}
+			});
+		});
 	});
 });
 

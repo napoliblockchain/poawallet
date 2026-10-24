@@ -156,7 +156,6 @@ $wallet_send = <<<JS
                     if (typeof data[0] !== 'undefined') {
 						sendPost.prv_key = data[0].prv_php;
 						sendPost.prv_pas = data[0].prv_pas;
-						console.log('[Send]: sendPost con chiave',sendPost);
 
                         $.ajax({
             				url	: yiiOptions.sendURL, // ERC20 send url,
@@ -170,6 +169,15 @@ $wallet_send = <<<JS
         					},
             				success:function(data){
             					console.log('[send]: data from generate-transaction controller',data);
+                                // password salvata nel formato precedente: sostituita con quella legata all'utente
+                                if (data.prv_pas_upgraded) {
+                                    readAllData('wallet').then(function(stored) {
+                                        if (typeof stored[0] !== 'undefined') {
+                                            stored[0].prv_pas = data.prv_pas_upgraded;
+                                            writeData('wallet', stored[0]);
+                                        }
+                                    });
+                                }
                                 $('.generating').parent().removeClass('alert alert-warning');
                                 $('.button-spinner').remove();
                                 $('.generating').html(data.row);

@@ -20,6 +20,9 @@ return [
         'encrypt_method' => $env('ENCRYPT_METHOD', 'AES-256-CBC'),
     ],
 
+    // accept values encrypted with the old format (not bound to the user) while browsers migrate them
+    'crypto.acceptLegacy' => filter_var($env('CRYPTO_ACCEPT_LEGACY', 'true'), FILTER_VALIDATE_BOOLEAN),
+
     /**
      * VAPID keys for web push (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY). Empty = push disabled.
      * subject: contact for push services (mailto: or https URL).

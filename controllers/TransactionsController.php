@@ -165,24 +165,11 @@ class TransactionsController extends Controller
     protected function findModel($id)
     {
         $model = Transactions::findOne($id);
-        if ($model !== null && self::belongsToUser($model, (int) Yii::$app->user->id)) {
+        if ($model !== null && $model->belongsToUser((int) Yii::$app->user->id)) {
             return $model;
         }
 
         throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
     }
 
-    /**
-     * transazione visibile solo a chi l'ha registrata o al mittente/destinatario (indirizzo del suo wallet)
-     */
-    private static function belongsToUser(Transactions $model, int $userId): bool
-    {
-        if ((int) $model->id_user === $userId) {
-            return true;
-        }
-        $address = strtolower((string) MPWallets::find()->userAddress($userId));
-
-        return $address !== ''
-            && in_array($address, [strtolower((string) $model->from_address), strtolower((string) $model->to_address)], true);
-    }
 }

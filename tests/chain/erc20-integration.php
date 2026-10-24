@@ -111,6 +111,36 @@ check(tokenBalanceRpc($tts['address'], $recipient) === '1234', 'recipient receiv
 check(gmp_strval(gmp_sub($before, tokenBalanceRpc($tts['address'], $holder))) === '1234', 'holder balance decreased by 1234 units');
 check((string) $erc20->tokenBalance($recipient) === '1234', 'tokenBalance of recipient via Erc20');
 
+// --- invio tramite SendController: password legata all'utente, formato precedente, password di altri ---
+$password = 'chain-it-password';
+$prvKey = Nullix\JsAesPhp\JsAesPhp::encrypt($holderKey, $password);
+$beforeSend = tokenBalanceRpc($tts['address'], $recipient);
+$send = function ($prvPas) use ($app, $holder, $recipient, $prvKey) {
+    $_POST = ['from' => $holder, 'to' => $recipient, 'amount' => '1.00', 'memo' => 'chain-it', 'prv_key' => $prvKey, 'prv_pas' => $prvPas];
+    $app->request->setBodyParams($_POST);
+    $controller = new app\controllers\SendController('send', $app);
+    $app->controller = $controller;
+    return $controller->runAction('generate-transaction');
+};
+foreach (['bound' => app\components\WebApp::encryptForUser($password, $userId), 'legacy' => app\components\WebApp::encrypt($password)] as $kind => $prvPas) {
+    $res = $send($prvPas);
+    check(isset($res['id']) && $res['status'] === 'new', "send/generate-transaction accepted ($kind password)");
+    $upgraded = $res['prv_pas_upgraded'];
+    check($kind === 'bound' ? $upgraded === null
+        : app\components\WebApp::decryptForUser($upgraded, $userId)['value'] === $password, "prv_pas upgrade returned only for legacy ($kind)");
+    $saved = app\models\Transactions::findOne(app\components\WebApp::decrypt($res['id']));
+    check(waitReceipt($saved->txhash, $erc20)->status === '0x1', "send/generate-transaction mined ($kind)");
+}
+check(gmp_strval(gmp_sub(tokenBalanceRpc($tts['address'], $recipient), $beforeSend)) === '200', 'recipient received 2 x 1.00 TTS through the controller');
+try {
+    $send(app\components\WebApp::encryptForUser($password, $userId + 1));
+    check(false, 'password bound to another user must be rejected');
+} catch (yii\web\HttpException $e) {
+    check($e->statusCode === 403, 'password bound to another user rejected (403)');
+}
+$db->createCommand()->delete('mp_notifications_readers', ['id_user' => $userId])->execute();
+$db->createCommand()->delete('transactions', ['id_user' => $userId])->execute();
+
 // --- faucet gas (rete zerogas) ---
 Yii::$app->params['sealer_account_3'] = $holder;
 Yii::$app->params['sealer_prvkey_3'] = $holderKey;
