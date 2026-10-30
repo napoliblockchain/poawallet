@@ -32,6 +32,12 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => $env('COOKIE_VALIDATION_KEY'),
+            // reverse proxy (gateway) whose X-Forwarded-For / X-Forwarded-Proto are trusted:
+            // HTTPS detection and absolute links (activation, password reset, notifications). Empty = none.
+            'trustedHosts' => array_fill_keys(
+                array_values(array_filter(array_map('trim', explode(',', (string) $env('TRUSTED_PROXIES', ''))))),
+                ['X-Forwarded-For', 'X-Forwarded-Proto']
+            ),
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
