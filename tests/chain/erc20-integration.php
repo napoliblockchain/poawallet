@@ -3,8 +3,18 @@
 // Needs: migrated MySQL (DB_* env), chain data volume mounted read-only at CHAIN_DATA_DIR (tts.json, key).
 // Every result is cross-checked with independent JSON-RPC calls.
 // Run inside the wallet container: php tests/chain/erc20-integration.php
-error_reporting(E_ALL & ~E_DEPRECATED);
-define('YII_DEBUG', true);
+// CHAIN_IT_STRICT=1: come in sviluppo (php.ini-development), anche le deprecazioni diventano errori.
+// Default come in produzione (deprecazioni ignorate) finche web3p/ethereum-tx genera deprecazioni PHP 8.1.
+if (getenv('CHAIN_IT_STRICT') === '1') {
+    error_reporting(E_ALL);
+    set_error_handler(function ($severity, $message, $file, $line) {
+        throw new ErrorException($message, 0, $severity, $file, $line);
+    });
+} else {
+    error_reporting(E_ALL & ~E_DEPRECATED);
+}
+// debug off: error output must never dump environment variables (secrets)
+define('YII_DEBUG', false);
 define('YII_ENV', 'test');
 $root = getenv('NAPAY_TEST_APP_ROOT') ?: dirname(__DIR__, 2);
 require $root . '/vendor/autoload.php';

@@ -48,6 +48,7 @@ $config = [
             'authTimeout' => 7776000,
         ],
         'errorHandler' => [
+            'class' => app\components\errors\WebErrorHandler::class,
             'errorAction' => 'site/error',
         ],
         'authClientCollection' => [

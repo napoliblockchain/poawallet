@@ -34,6 +34,9 @@ $config = [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
+        'errorHandler' => [
+            'class' => app\components\errors\ConsoleErrorHandler::class,
+        ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
