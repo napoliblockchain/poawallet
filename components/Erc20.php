@@ -11,7 +11,7 @@ use yii\helpers\Json;
 use Web3\Web3;
 use Web3\Contract;
 use Web3\Providers\HttpProvider;
-use Web3p\EthereumTx\Transaction;
+use kornrunner\Ethereum\Transaction;
 
 use app\components\Settings;
 // use app\components\WebApp;
@@ -128,18 +128,15 @@ class Erc20 extends Component
             'amount' => self::Encode("uint", $contractAmount), //$amount l'ammontare della transazione (da moltiplicare per 10^2)
         ];
 
-        $transaction = new Transaction([
-            'nonce' => '0x'.dechex($tx->nonce), //è un object BigInteger
-            'from' => $tx->from, //indirizzo commerciante
+        // gas: se supera 0x200b20 va in errore gas exceed limit
+        $signed_transaction = self::signTransaction([
+            'nonce' => $tx->nonce,
             'to' => $tx->contractAddress, //indirizzo contratto
-            'gas' => $tx->gas, // $gas se supera l'importo 0x200b20 va in eerrore gas exceed limit !!!!!!
-            'gasPrice' => $tx->gasPrice, // gasPrice giusto?
+            'gas' => $tx->gas,
+            'gasPrice' => $tx->gasPrice,
             'value' => $tx->value,
-            'chainId' => $tx->chainId,
-            'data' =>  $data_tx['selector'] . $data_tx['address'] . $data_tx['amount'],
-        ]);
-        $transaction->offsetSet('chainId', $tx->chainId);
-        $signed_transaction = $transaction->sign($tx->decryptedSign); // la chiave derivata da json js AES to PHP
+            'data' => $data_tx['selector'] . $data_tx['address'] . $data_tx['amount'],
+        ], $tx->decryptedSign, (int) $tx->chainId); // la chiave derivata da json js AES to PHP
 
     	$response = null;
         $web3->eth->sendRawTransaction(sprintf('0x%s', $signed_transaction), function ($err, $tx) use (&$response){
@@ -489,19 +486,14 @@ class Erc20 extends Component
             // echo '<pre>' . print_r($fromAccount, true) . '</pre>';
             // echo '<pre>'.print_r('0x' . dechex($nonce),true).'</pre>';exit;
 
-            $transaction = new Transaction([
-                'nonce' => '0x'.dechex($nonce), //è un object BigInteger
-                'from' => $fromAccount, //indirizzo sealer Blockchain
+            $signed_transaction = self::signTransaction([
+                'nonce' => $nonce,
                 'to' => $toAccount, //indirizzo commerciante
                 'gas' => '0x200b20', // gas necessario per la transazione
-                'gasPrice' => '1000', // gasPrice giusto?
-                'value' => '0xDE0B6B3A7640000', //. $amount * pow(10, 18), equivale a 1 pow(10,18): 1000000000000000000
-                'chainId' => $settings->blockchain->chain_id,
-                'data' =>  '0x0', // non ci sono dati per contratto
-            ]);
-            $transaction->offsetSet('chainId', $settings->blockchain->chain_id);
-            // $transaction->offsetSet('nonce', '0x' . dechex($nonce));
-            $signed_transaction = $transaction->sign($prv_key); //
+                'gasPrice' => '1000', // wei
+                'value' => '0xDE0B6B3A7640000', // 1 ETH = 10^18 wei
+                'data' => '', // nessun dato per contratto
+            ], $prv_key, (int) $settings->blockchain->chain_id);
 
             // echo '<pre>' . print_r($transaction, true) . '</pre>';exit;
 
@@ -522,5 +514,37 @@ class Erc20 extends Component
 
         return self::gasBalance($address);
 
+    }
+
+    /**
+     * firma una transazione legacy EIP-155 (kornrunner/ethereum-offline-raw-tx)
+     * Valori interi: int, stringa decimale o esadecimale con 0x; gasPrice in wei.
+     * @return string transazione firmata in esadecimale senza 0x
+     */
+    private static function signTransaction(array $tx, string $privateKey, int $chainId): string
+    {
+        $transaction = new Transaction(
+            self::minimalHex($tx['nonce']),
+            self::minimalHex($tx['gasPrice']),
+            self::minimalHex($tx['gas']),
+            preg_replace('/^0x/i', '', (string) $tx['to']),
+            self::minimalHex($tx['value']),
+            preg_replace('/^0x/i', '', (string) $tx['data'])
+        );
+
+        return $transaction->getRaw(preg_replace('/^0x/i', '', trim($privateKey)), $chainId);
+    }
+
+    /**
+     * intero (int, decimale o 0x-esadecimale) in esadecimale minimo senza 0x; zero = stringa vuota
+     */
+    private static function minimalHex($value): string
+    {
+        $value = trim((string) $value);
+        $number = preg_match('/^0x/i', $value) ? gmp_init(substr($value, 2) === '' ? '0' : substr($value, 2), 16) : gmp_init($value === '' ? '0' : $value, 10);
+        if (gmp_sign($number) < 0) {
+            throw new \InvalidArgumentException('Negative transaction value');
+        }
+        return gmp_cmp($number, 0) === 0 ? '' : gmp_strval($number, 16);
     }
 }

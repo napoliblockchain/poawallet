@@ -3,9 +3,9 @@
 // Needs: migrated MySQL (DB_* env), chain data volume mounted read-only at CHAIN_DATA_DIR (tts.json, key).
 // Every result is cross-checked with independent JSON-RPC calls.
 // Run inside the wallet container: php tests/chain/erc20-integration.php
-// CHAIN_IT_STRICT=1: come in sviluppo (php.ini-development), anche le deprecazioni diventano errori.
-// Default come in produzione (deprecazioni ignorate) finche web3p/ethereum-tx genera deprecazioni PHP 8.1.
-if (getenv('CHAIN_IT_STRICT') === '1') {
+// come in sviluppo (php.ini-development): anche le deprecazioni diventano errori.
+// CHAIN_IT_STRICT=0 per eseguirlo come in produzione (deprecazioni ignorate).
+if (getenv('CHAIN_IT_STRICT') !== '0') {
     error_reporting(E_ALL);
     set_error_handler(function ($severity, $message, $file, $line) {
         throw new ErrorException($message, 0, $severity, $file, $line);
@@ -117,6 +117,7 @@ $sent = $erc20->sendToken([
 check(($sent['success'] ?? 0) === 1 && preg_match('/^0x[0-9a-f]{64}$/', (string) $sent['tx']), 'sendToken: raw transaction accepted');
 $receipt = waitReceipt($sent['tx'], $erc20);
 check($receipt->status === '0x1', 'sendToken: receipt status success');
+check(hexdec(rpc('eth_getTransactionByHash', [$sent['tx']])['gasPrice']) === 1000, 'sendToken: gasPrice 1000 wei on chain');
 check(tokenBalanceRpc($tts['address'], $recipient) === '1234', 'recipient received 12.34 TTS (1234 units)');
 check(gmp_strval(gmp_sub($before, tokenBalanceRpc($tts['address'], $holder))) === '1234', 'holder balance decreased by 1234 units');
 check((string) $erc20->tokenBalance($recipient) === '1234', 'tokenBalance of recipient via Erc20');

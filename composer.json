@@ -23,11 +23,11 @@
         "yiisoft/yii2-httpclient": "^2.0",
         "drsdre/yii2-wizardwidget": "*",
         "brainfoolong/js-aes-php": "^1.0",
-        "web3p/ethereum-tx": "^0.4.1",
         "minishlink/web-push": "^10.1",
         "yiisoft/yii2-authclient": "^2.2",
         "yiisoft/yii2-redis": "^2.1",
-        "web3p/web3.php": "^0.3.2"
+        "web3p/web3.php": "^0.3.2",
+        "kornrunner/ethereum-offline-raw-tx": "^0.9"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
