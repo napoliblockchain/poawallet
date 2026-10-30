@@ -11,7 +11,6 @@ use yii\helpers\Json;
 use Web3\Web3;
 use Web3\Contract;
 use Web3\Providers\HttpProvider;
-use Web3\RequestManagers\HttpRequestManager;
 use Web3p\EthereumTx\Transaction;
 
 use app\components\Settings;
@@ -111,7 +110,7 @@ class Erc20 extends Component
         $settings = Settings::poa($this->user_id);
 
         //$web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
         // trasforma amount in valore wei
         $contractAmount = $this->toAmountForContract($tx->amount, $settings->smartContract->decimals);
@@ -167,7 +166,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
     	$response = null;
 		$web3->eth->getTransactionCount($address, function ($err, $nonce) use (&$response) {
@@ -193,7 +192,7 @@ class Erc20 extends Component
         // exit;
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
         // echo '<pre>'.print_r($settings,true).'</pre>';
         // exit;
@@ -249,7 +248,7 @@ class Erc20 extends Component
     public function gasBalance($address)
     {
         $settings = Settings::poa();
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
         //recupero il balance
         $balance = 0;
@@ -284,7 +283,7 @@ class Erc20 extends Component
         // exit;
 
         // $web3 = new Web3($url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($url)));
+        $web3 = new Web3(new HttpProvider($url));
 
 
         // echo 'set web3!';
@@ -311,7 +310,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
 		$contract = new Contract($web3->provider, $settings->smartContract->contractType->smart_contract_abi);
 
@@ -329,7 +328,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
 		$response = null;
         $web3->eth->getBlockByHash($hash, true, function ($err, $block) use (&$response){
@@ -347,7 +346,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
         $erc20abi = $settings->smartContract->contractType;
 
         // // trasforma un numero decimale in valore wei
@@ -441,7 +440,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa();
         
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
         $response = null;
         
         // echo '<pre>'.print_r(self::gasBalance($address),true).'</pre>';
