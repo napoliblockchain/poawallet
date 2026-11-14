@@ -102,6 +102,23 @@ class Erc20 extends Component
     }
 
 
+    /**
+     * Riferimento di una richiesta di pagamento Napay (QR con messaggio `napay:` + 32 esadecimali), accodato ai dati
+     * di `transfer`: il contratto lo ignora, Napay lo legge dalla transazione per abbinare il pagamento.
+     * @return string|null i 32 esadecimali, null se il messaggio non e un riferimento Napay
+     */
+    public static function napayReference($memo): ?string
+    {
+        return is_string($memo) && preg_match('/^napay:([0-9a-f]{32})$/D', $memo, $match) === 1 ? $match[1] : null;
+    }
+
+    private static function paymentReference($reference): string
+    {
+        if ($reference === null) return '';
+        if (!is_string($reference) || preg_match('/^[0-9a-f]{32}$/D', $reference) !== 1) throw new \InvalidArgumentException('invalid_payment_reference');
+        return $reference;
+    }
+
     // sign and send a raw token transaction
     public function sendToken($item)
     {
@@ -135,7 +152,7 @@ class Erc20 extends Component
             'gas' => $tx->gas,
             'gasPrice' => $tx->gasPrice,
             'value' => $tx->value,
-            'data' => $data_tx['selector'] . $data_tx['address'] . $data_tx['amount'],
+            'data' => $data_tx['selector'] . $data_tx['address'] . $data_tx['amount'] . self::paymentReference($tx->reference ?? null),
         ], $tx->decryptedSign, (int) $tx->chainId); // la chiave derivata da json js AES to PHP
 
     	$response = null;

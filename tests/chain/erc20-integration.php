@@ -121,13 +121,33 @@ check(hexdec(rpc('eth_getTransactionByHash', [$sent['tx']])['gasPrice']) === 100
 check(tokenBalanceRpc($tts['address'], $recipient) === '1234', 'recipient received 12.34 TTS (1234 units)');
 check(gmp_strval(gmp_sub($before, tokenBalanceRpc($tts['address'], $holder))) === '1234', 'holder balance decreased by 1234 units');
 check((string) $erc20->tokenBalance($recipient) === '1234', 'tokenBalance of recipient via Erc20');
+check(strlen(rpc('eth_getTransactionByHash', [$sent['tx']])['input']) === 2 + 68 * 2, 'sendToken without reference: plain transfer calldata');
+
+// --- riferimento di pagamento Napay (SIP-021 fase 3) accodato ai dati di transfer ---
+$reference = bin2hex(random_bytes(16));
+check(app\components\Erc20::napayReference('napay:' . $reference) === $reference, 'napayReference: Napay memo recognized');
+foreach (['chain-it', 'napay:' . strtoupper($reference), 'napay:' . $reference . "\n", 'napay:' . substr($reference, 1), null] as $memo) {
+    check(app\components\Erc20::napayReference($memo) === null, 'napayReference: ignores ' . json_encode($memo));
+}
+$withReference = $erc20->sendToken(['nonce' => $erc20->getNonce($holder), 'from' => $holder, 'contractAddress' => $tts['address'], 'toAccount' => $recipient,
+    'amount' => '0.50', 'gas' => '0x200b20', 'gasPrice' => '1000', 'value' => '0', 'chainId' => $tts['chainId'], 'decryptedSign' => $holderKey, 'reference' => $reference]);
+check(($withReference['success'] ?? 0) === 1 && waitReceipt($withReference['tx'], $erc20)->status === '0x1', 'sendToken with reference: mined with success');
+$input = rpc('eth_getTransactionByHash', [$withReference['tx']])['input'];
+check(strlen($input) === 2 + 84 * 2 && str_ends_with($input, $reference) && tokenBalanceRpc($tts['address'], $recipient) === '1284', 'sendToken with reference: calldata = transfer + 16-byte reference, amount unchanged');
+try {
+    $erc20->sendToken(['nonce' => 0, 'from' => $holder, 'contractAddress' => $tts['address'], 'toAccount' => $recipient, 'amount' => '0.01',
+        'gas' => '0x200b20', 'gasPrice' => '1000', 'value' => '0', 'chainId' => $tts['chainId'], 'decryptedSign' => $holderKey, 'reference' => 'zz']);
+    check(false, 'sendToken rejects a malformed reference before signing');
+} catch (InvalidArgumentException $e) {
+    check(true, 'sendToken rejects a malformed reference before signing');
+}
 
 // --- invio tramite SendController: password legata all'utente, formato precedente, password di altri ---
 $password = 'chain-it-password';
 $prvKey = Nullix\JsAesPhp\JsAesPhp::encrypt($holderKey, $password);
 $beforeSend = tokenBalanceRpc($tts['address'], $recipient);
-$send = function ($prvPas) use ($app, $holder, $recipient, $prvKey) {
-    $_POST = ['from' => $holder, 'to' => $recipient, 'amount' => '1.00', 'memo' => 'chain-it', 'prv_key' => $prvKey, 'prv_pas' => $prvPas];
+$send = function ($prvPas, $memo = 'chain-it') use ($app, $holder, $recipient, $prvKey) {
+    $_POST = ['from' => $holder, 'to' => $recipient, 'amount' => '1.00', 'memo' => $memo, 'prv_key' => $prvKey, 'prv_pas' => $prvPas];
     $app->request->setBodyParams($_POST);
     $controller = new app\controllers\SendController('send', $app);
     $app->controller = $controller;
@@ -149,6 +169,11 @@ try {
 } catch (yii\web\HttpException $e) {
     check($e->statusCode === 403, 'password bound to another user rejected (403)');
 }
+$controllerReference = bin2hex(random_bytes(16));
+$res = $send(app\components\WebApp::encryptForUser($password, $userId), 'napay:' . $controllerReference);
+$saved = app\models\Transactions::findOne(app\components\WebApp::decrypt($res['id']));
+check(waitReceipt($saved->txhash, $erc20)->status === '0x1' && str_ends_with(rpc('eth_getTransactionByHash', [$saved->txhash])['input'], $controllerReference)
+    && $saved->message === 'napay:' . $controllerReference, 'send/generate-transaction: Napay QR memo appended as payment reference');
 $db->createCommand()->delete('mp_notifications_readers', ['id_user' => $userId])->execute();
 $db->createCommand()->delete('transactions', ['id_user' => $userId])->execute();
 

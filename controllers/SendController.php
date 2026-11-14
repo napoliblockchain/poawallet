@@ -31,6 +31,7 @@ use app\components\WebApp;
 use Nullix\JsAesPhp\JsAesPhp;
 
 use app\components\Settings;
+use app\components\Erc20;
 use app\components\NotificationService;
 
 
@@ -230,6 +231,7 @@ class SendController extends Controller
 				'value' => '0',
 				'chainId' => $settings->blockchain->chain_id,
 				'decryptedSign' => $decrypted,
+				'reference' => Erc20::napayReference($memo),
 			]);
 
 			if ($tx['success'] == true){
