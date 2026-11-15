@@ -1,162 +1,29 @@
-var pin_numpad = `
-	<div class="easy-numpad-frame" id="easy-numpad-frame">
-		<div class="easy-numpad-container">
-			<div class="easy-numpad-output-container">
-				<p class="easy-numpad-output alert alert-dark">
-					<div class="row h3" style="margin-left:0px;margin-top:-43px;">
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-0"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-1"></i>
-						</div>
-							<div class="col-auto">
-							<i class="fa fa-circle easy-dot-2"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-3"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-4"></i>
-						</div>
-					</div>
-				</p>
-			</div>
-			<div class="easy-numpad-number-container">
-				<table border=0>
-					<tr>
-						<td width="33%"><span onclick="easypin(7)">7</span></td>
-						<td width="33%"><span onclick="easypin(8)">8</span></td>
-						<td width="33%"><span onclick="easypin(9)">9</span></td>
-					</tr>
-					<tr>
-						<td><span onclick="easypin(4)">4</span></td>
-						<td><span onclick="easypin(5)">5</span></td>
-						<td><span onclick="easypin(6)">6</span></td>
+/**
+ * Tastierino PIN a tutto schermo: cinque pallini, tasti grandi, barra di esito (.easy-numpad-output).
+ * handler: funzione per le cifre (easypin | easypinconfirm); del/clear: argomenti delle funzioni di cancellazione.
+ */
+function pinPad(handler, delConfirm, clearReset) {
+	var dots = '';
+	for (var i = 0; i < 5; i++) dots += '<i class="fa fa-circle easy-dot-' + i + '" aria-hidden="true"></i>';
+	var keys = '';
+	[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(function (n) {
+		keys += '<button type="button" class="wallet-pin-key" onclick="' + handler + '(' + n + ')">' + n + '</button>';
+	});
+	keys += '<button type="button" class="wallet-pin-key wallet-pin-key-text clear" onclick="easy_pin_clear(' + clearReset + ')" aria-label="Clear">C</button>'
+		+ '<button type="button" class="wallet-pin-key" onclick="' + handler + '(0)">0</button>'
+		+ '<button type="button" class="wallet-pin-key wallet-pin-key-text del" onclick="easy_pin_del(' + delConfirm + ')" aria-label="Delete"><i class="fas fa-backspace" aria-hidden="true"></i></button>';
+	return '<div class="easy-numpad-frame wallet-pin" id="easy-numpad-frame">'
+		+ '<div class="wallet-pin-dots" aria-live="polite">' + dots + '</div>'
+		+ '<div class="easy-numpad-output alert-dark" aria-hidden="true"></div>'
+		+ '<p class="pin_password_em_ invalid-feedback text-center" role="alert"></p>'
+		+ '<div class="wallet-pin-keys">' + keys + '</div>'
+		+ '</div>';
+}
 
-					</tr>
-					<tr>
-						<td><span onclick="easypin(1)">1</a></td>
-						<td><span onclick="easypin(2)">2</a></td>
-						<td><span onclick="easypin(3)">3</a></td>
-					</tr>
-					<tr>
-						<td><span onclick="easypin(0)">0</span></td>
-						<td><span class="del" id="del" onclick="easy_pin_del(false)"><</span></td>
-						<td><span class="clear" id="clear" onclick="easy_pin_clear()">C</span></td>
-					</tr>
-				</table>
-				<p class="alert alert-danger invalid-feedback pin_password_em_" style="font-size:12px; text-align:right;" ></p>
-			</div>
-		</div>
-	</div>
-`;
+var pin_numpad = pinPad('easypin', 'false', '');
+var pin_confirm_numpad = pinPad('easypinconfirm', 'true', 'false');
+var pin_ask_numpad = pinPad('easypinconfirm', 'true', 'false');
 
-var pin_confirm_numpad = `
-	<div class="easy-numpad-frame" id="easy-numpad-frame">
-		<div class="easy-numpad-container">
-			<div class="easy-numpad-output-container">
-				<p class="easy-numpad-output alert alert-dark">
-					<div class="row h3" style="margin-left:0px;margin-top:-43px;">
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-0"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-1"></i>
-						</div>
-							<div class="col-auto">
-							<i class="fa fa-circle easy-dot-2"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-3"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-4"></i>
-						</div>
-					</div>
-				</p>
-			</div>
-			<div class="easy-numpad-number-container">
-				<table border=0>
-					<tr>
-						<td width="33%"><span onclick="easypinconfirm(7)">7</span></td>
-						<td width="33%"><span onclick="easypinconfirm(8)">8</span></td>
-						<td width="33%"><span onclick="easypinconfirm(9)">9</span></td>
-					</tr>
-					<tr>
-						<td><span onclick="easypinconfirm(4)">4</span></td>
-						<td><span onclick="easypinconfirm(5)">5</span></td>
-						<td><span onclick="easypinconfirm(6)">6</span></td>
-
-					</tr>
-					<tr>
-						<td><span onclick="easypinconfirm(1)">1</a></td>
-						<td><span onclick="easypinconfirm(2)">2</a></td>
-						<td><span onclick="easypinconfirm(3)">3</a></td>
-					</tr>
-					<tr>
-						<td><span onclick="easypinconfirm(0)">0</span></td>
-						<td><span class="del" id="del" onclick="easy_pin_del(true)"><</span></td>
-						<td><span class="clear" id="clear" onclick="easy_pin_clear(false)">C</span></td>
-					</tr>
-				</table>
-				<p class="alert alert-danger invalid-feedback pin_password_em_" style="font-size:12px; text-align:right;" ></p>
-			</div>
-		</div>
-	</div>
-`;
-var pin_ask_numpad = `
-	<div class="easy-numpad-frame" id="easy-numpad-frame">
-		<div class="easy-numpad-container">
-			<div class="easy-numpad-output-container">
-				<p class="easy-numpad-output alert alert-dark">
-					<div class="row h3" style="margin-left:0px;margin-top:-43px;">
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-0"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-1"></i>
-						</div>
-							<div class="col-auto">
-							<i class="fa fa-circle easy-dot-2"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-3"></i>
-						</div>
-						<div class="col-auto">
-							<i class="fa fa-circle easy-dot-4"></i>
-						</div>
-					</div>
-				</p>
-			</div>
-			<div class="easy-numpad-number-container">
-				<table border=0>
-					<tr>
-						<td width="33%"><span onclick="easypinconfirm(7)">7</span></td>
-						<td width="33%"><span onclick="easypinconfirm(8)">8</span></td>
-						<td width="33%"><span onclick="easypinconfirm(9)">9</span></td>
-					</tr>
-					<tr>
-						<td><span onclick="easypinconfirm(4)">4</span></td>
-						<td><span onclick="easypinconfirm(5)">5</span></td>
-						<td><span onclick="easypinconfirm(6)">6</span></td>
-					</tr>
-					<tr>
-						<td><span onclick="easypinconfirm(1)">1</a></td>
-						<td><span onclick="easypinconfirm(2)">2</a></td>
-						<td><span onclick="easypinconfirm(3)">3</a></td>
-					</tr>
-					<tr>
-						<td><span onclick="easypinconfirm(0)">0</span></td>
-						<td><span class="del" id="del" onclick="easy_pin_del(true)"><</span></td>
-						<td><span class="clear" id="clear" onclick="easy_pin_clear(false)">C</span></td>
-					</tr>
-				</table>
-				<p class="alert alert-danger invalid-feedback pin_password_em_" style="font-size:12px; text-align:right;" ></p>
-			</div>
-		</div>
-	</div>
-`;
 navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
 
 function easypin(num) {
@@ -171,7 +38,7 @@ function easypin(num) {
 
 	if (pin.length <= pinDigits){
 		//$('.easy-numpad-output').append('*');
-		$('.easy-dot-'+pin.length).removeClass('fa-circle').addClass('fa-check-circle text-info');
+		$('.easy-dot-'+pin.length).addClass('filled');
 		$('#pin_password').val( pin + num );
 	}
 	if (pin.length == pinDigits){
@@ -191,12 +58,6 @@ function easy_pin_del(confirm=false) {
 	$('#pinNewButton').prop('disabled', true);
 	$('#pinNewButton').addClass('disabled');
 
-  	var easy_numpad_output_val = $('.easy-numpad-output').html();
-	var easy_numpad_output_val_deleted = easy_numpad_output_val.slice(0, -1);
-	console.log('[pin] easy_numpad_output_val:',easy_numpad_output_val);
-	console.log('[pin] easy_numpad_output_val_deleted:',easy_numpad_output_val_deleted);
-
-	$('.easy-numpad-output').text(easy_numpad_output_val_deleted);
 	$('.invalid-feedback').hide().text('');
 
 	if (confirm){
@@ -210,8 +71,7 @@ function easy_pin_del(confirm=false) {
 	console.log('[pin] pin_password:',pin_password);
 	console.log('[pin] pin_password_deleted:',pin_password_deleted.length);
 
-	$('.easy-dot-'+pin_password_deleted.length).removeClass('text-info');
-	$('.easy-dot-'+pin_password_deleted.length).removeClass('fa-check-circle').addClass('fa-circle');
+	$('.easy-dot-'+pin_password_deleted.length).removeClass('filled');
 
 	$('.easy-numpad-output').removeClass('alert-primary');
 	$('.easy-numpad-output').removeClass('alert-danger');
@@ -229,8 +89,7 @@ function easy_pin_clear(reset=true) {
   }
 	//$('.easy-numpad-output').text('');
 	for (i = 0; i < 5; i++){
-		$('.easy-dot-'+i).removeClass('text-info');
-		$('.easy-dot-'+i).removeClass('fa-check-circle').addClass('fa-circle');
+		$('.easy-dot-'+i).removeClass('filled');
 	}
 
 	$('.easy-numpad-output').removeClass('alert-primary');
@@ -249,7 +108,6 @@ function easy_pin_clear(reset=true) {
 // elimina il numpad dalla pagina
 function dropNumpad(reset=false){
 	$('.easy-numpad-frame').remove();
-	$('.easy-numpad-output').text('');
 	if (typeof pincode !== 'undefined') {
 		pincode.cryptedPin = null;
 	}
@@ -271,7 +129,7 @@ function easypinconfirm(num) {
 	console.log('lunghezza conferma pin',pin.length);
 
 	if (pin.length <= pinDigits){
-		$('.easy-dot-'+pin.length).removeClass('fa-circle').addClass('fa-check-circle text-info');
+		$('.easy-dot-'+pin.length).addClass('filled');
 		$('#pin_password_confirm').val( pin + num );
 	}
 	if (pin.length == pinDigits){
@@ -294,7 +152,7 @@ function setPinResult(valid) {
 	});
 	if (!valid) {
 		$('.pin_password_em_').show();
-		$('.pin_password_em_').text('Pin is wrong!');
+		$('.pin_password_em_').text(typeof yiiGlobalOptions !== 'undefined' && yiiGlobalOptions.pinWrong ? yiiGlobalOptions.pinWrong : 'PIN is wrong!');
 		$('.easy-numpad-output').removeClass('alert-dark').addClass('alert-danger');
 		return false;
 	}

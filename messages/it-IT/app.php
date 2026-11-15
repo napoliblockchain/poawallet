@@ -517,4 +517,9 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     'You already have the 12 words (seed) of a wallet and want to restore it.' => 'Hai già le 12 parole (seed) di un wallet e vuoi ripristinarlo.',
     'Generate a new wallet with new 12 words.' => 'Genera un nuovo wallet con 12 parole nuove.',
     'No notifications.' => 'Nessuna notifica.',
+    'Enter your PIN to unlock the wallet.' => 'Inserisci il PIN per sbloccare il wallet.',
+    'Choose a 5-digit PIN.' => 'Scegli un PIN di 5 cifre.',
+    'Enter the same PIN again.' => 'Inserisci di nuovo lo stesso PIN.',
+    'Enter your PIN to remove it.' => 'Inserisci il PIN per rimuoverlo.',
+    'PIN is wrong!' => 'PIN errato!',
 ];

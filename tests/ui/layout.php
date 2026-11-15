@@ -103,6 +103,9 @@ foreach (['spawn/index', 'mailbox/inbox', 'settings/nodes/update', 'settings/blo
     try { $app->createController($deadRoute) === false ? check(true, 'Removed route: ' . $deadRoute) : check(false, 'Removed route: ' . $deadRoute); }
     catch (yii\base\InvalidRouteException $e) { check(true, 'Removed route: ' . $deadRoute); }
 }
+foreach (['pinNewModal', 'pinVerifyModal', 'pinRemoveModal'] as $pinModal) {
+    check(preg_match('~id="' . $pinModal . '"[^>]*>\s*<div class="modal-dialog modal-fullscreen">~', $profile) === 1, 'Full-screen PIN dialog: ' . $pinModal);
+}
 check(str_contains($profile, "getOrCreateInstance(document.getElementById('pinNewModal'), {backdrop: 'static', keyboard: false}).show()"), 'PIN dialog opened with Bootstrap 5 show()');
 
 // --- procedura guidata (layout dedicato, quattro passi senza il vecchio widget Bootstrap 3)
@@ -119,6 +122,8 @@ $db->createCommand()->insert('transactions', ['id_user' => $userId, 'id_smart_co
 $txId = (int) $db->getLastInsertID();
 $wallet = $render('wallet/index');
 check(str_contains($wallet, 'wallet-hero') && str_contains($wallet, 'wallet-actions') && str_contains($wallet, 'class="wallet-tx wallet-tx-in"'), 'Wallet: balance card, quick actions, incoming transaction row');
+check(preg_match('~id="pinRequestModal"[^>]*>\s*<div class="modal-dialog modal-fullscreen">~', $wallet) === 1
+    && !preg_match('~id="pinRequestModal"[\s\S]*?btn-close[\s\S]*?id="pinRequestButton"~', $wallet), 'PIN lock screen is full screen with no way to close it');
 check(!str_contains($wallet, $evil) && str_contains($wallet, htmlspecialchars($evil, ENT_QUOTES)), 'Transaction memo encoded in the row');
 check(str_contains($wallet, 'href="/transactions/view?id='), 'Transaction row links to the clean detail URL');
 $send = $render('send/index');

@@ -20,6 +20,7 @@ $options = [
     'spinner' => '<div class="button-spinner spinner-border text-primary" style="width:1.3rem; height:1.3rem;" role="status"><span class="visually-hidden">Loading...</span></div>',
     'urlUpdateNotification' => \yii\helpers\Url::to(['/push/notified']),
     'urlSoundNotification' => '/src/sounds/notify.mp3',
+    'pinWrong' => Yii::t('app', 'PIN is wrong!'),
 ];
 $this->registerJs(
     "var yiiGlobalOptions = ".\yii\helpers\Json::htmlEncode($options).";",
