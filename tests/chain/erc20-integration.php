@@ -145,9 +145,15 @@ try {
 // --- invio tramite SendController: password legata all'utente, formato precedente, password di altri ---
 $password = 'chain-it-password';
 $prvKey = Nullix\JsAesPhp\JsAesPhp::encrypt($holderKey, $password);
+// chiave come la salva il browser (CryptoJS, procedura guidata e ripristino) e come la cifra js-aes-php
+check(app\components\WalletKeyCipher::decrypt(app\components\WalletKeyCipher::encryptCryptoJs($holderKey, $password), $password) === $holderKey
+    && app\components\WalletKeyCipher::decrypt($prvKey, $password) === $holderKey, 'Wallet key decrypted in browser (CryptoJS) and js-aes-php formats');
+check(app\components\WalletKeyCipher::decrypt(app\components\WalletKeyCipher::encryptCryptoJs($holderKey, $password), 'wrong') === null
+    && app\components\WalletKeyCipher::decrypt('{"ct":"x","iv":"zz","s":"00"}', $password) === null && app\components\WalletKeyCipher::decrypt('nonsense', $password) === null,
+    'Wrong password or malformed key: null, no exception');
 $beforeSend = tokenBalanceRpc($tts['address'], $recipient);
-$send = function ($prvPas, $memo = 'chain-it') use ($app, $holder, $recipient, $prvKey) {
-    $_POST = ['from' => $holder, 'to' => $recipient, 'amount' => '1.00', 'memo' => $memo, 'prv_key' => $prvKey, 'prv_pas' => $prvPas];
+$send = function ($prvPas, $memo = 'chain-it', $key = null) use ($app, $holder, $recipient, $prvKey) {
+    $_POST = ['from' => $holder, 'to' => $recipient, 'amount' => '1.00', 'memo' => $memo, 'prv_key' => $key ?? $prvKey, 'prv_pas' => $prvPas];
     $app->request->setBodyParams($_POST);
     $controller = new app\controllers\SendController('send', $app);
     $app->controller = $controller;
@@ -162,7 +168,11 @@ foreach (['bound' => app\components\WebApp::encryptForUser($password, $userId), 
     $saved = app\models\Transactions::findOne(app\components\WebApp::decrypt($res['id']));
     check(waitReceipt($saved->txhash, $erc20)->status === '0x1', "send/generate-transaction mined ($kind)");
 }
-check(gmp_strval(gmp_sub(tokenBalanceRpc($tts['address'], $recipient), $beforeSend)) === '200', 'recipient received 2 x 1.00 TTS through the controller');
+// invio con la chiave nel formato del browser: era il caso rotto ("Invalid encryptedValue")
+$res = $send(app\components\WebApp::encryptForUser($password, $userId), 'chain-it', app\components\WalletKeyCipher::encryptCryptoJs($holderKey, $password));
+$saved = app\models\Transactions::findOne(app\components\WebApp::decrypt($res['id']));
+check(waitReceipt($saved->txhash, $erc20)->status === '0x1', 'send/generate-transaction mined with the key saved by the browser (CryptoJS)');
+check(gmp_strval(gmp_sub(tokenBalanceRpc($tts['address'], $recipient), $beforeSend)) === '300', 'recipient received 3 x 1.00 TTS through the controller');
 try {
     $send(app\components\WebApp::encryptForUser($password, $userId + 1));
     check(false, 'password bound to another user must be rejected');

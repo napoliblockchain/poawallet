@@ -3,8 +3,8 @@ importScripts('src/js/idb.js');
 importScripts('src/js/idb-utility.js');
 
 // cambiare la versione a ogni modifica di file statici senza ?v= (es. web worker): svuota le cache vecchie
-var CACHE_STATIC_NAME = 'poawallet-static-017';
-var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-017';
+var CACHE_STATIC_NAME = 'poawallet-static-018';
+var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-018';
 
 var OFFLINE_URL = 'offline.html';
 
@@ -95,7 +95,8 @@ self.addEventListener('install', function (event) {
 		caches.open(CACHE_STATIC_NAME)
 			.then(function(cache){
 				console.log('[Service Worker] Precaching app shell...');
-				cache.addAll(STATIC_FILES);
+				// dalla rete, mai dalla cache HTTP del browser (che può avere ancora i worker vecchi)
+				return cache.addAll(STATIC_FILES.map(function (url) { return new Request(url, {cache: 'reload'}); }));
 			})
 	)
 });

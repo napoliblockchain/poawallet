@@ -14,6 +14,7 @@ use yii\data\ActiveDataProvider;
 use yii\db\ActiveRecord;
 
 use app\models\Transactions;
+use app\components\WalletKeyCipher;
 use app\models\search\TransactionsSearch;
 use app\models\MPWallets;
 use app\models\Users;
@@ -28,7 +29,6 @@ use yii\helpers\Json;
 use yii\helpers\Url;
 
 use app\components\WebApp;
-use Nullix\JsAesPhp\JsAesPhp;
 
 use app\components\Settings;
 use app\components\Erc20;
@@ -178,7 +178,7 @@ class SendController extends Controller
 			throw new HttpException(403,'Cannot decrypt private key.');
 		}
 		$passphrase = $storedPassword['value'];
-		$decrypted = JsAesPhp::decrypt($encrypted, $passphrase);
+		$decrypted = is_string($encrypted) ? WalletKeyCipher::decrypt($encrypted, $passphrase) : null;
 		// print_r($decrypted);
 		// exit;
 		if (null === $decrypted){
