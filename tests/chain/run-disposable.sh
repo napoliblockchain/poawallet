@@ -1,5 +1,5 @@
 #!/bin/sh
-# Esegue tests/chain/erc20-integration.php e tests/ui/layout.php su MySQL e chain Besu usa-e-getta (rete interna, nessuna porta host).
+# Esegue tests/chain/erc20-integration.php, tests/ui/layout.php e l'indicizzatore wallet-realtime (SIP-029) su MySQL e chain Besu usa-e-getta (rete interna, nessuna porta host).
 # Immagine wallet costruita da questo checkout (target dev); mai la sandbox o la chain condivise.
 # Richiede le immagini locali napay/chain-tools:dev e hyperledger/besu:26.9.0.
 set -eu
@@ -9,19 +9,23 @@ umask 077
 work=$(mktemp -d)
 project="poawallet-chain-test-$(basename "$work" | tr '[:upper:].' '[:lower:]-')"
 image="$project-wallet:test"
+realtime_image="$project-realtime:test"
 compose() { docker compose -p "$project" -f "$work/compose.yml" "$@"; }
 cleanup() {
     code=$?
     trap - EXIT
     compose down -v --timeout 10 >/dev/null 2>&1 || true
-    docker image rm "$image" >/dev/null 2>&1 || true
+    docker image rm "$image" "$realtime_image" >/dev/null 2>&1 || true
     rm -rf "$work"
     exit "$code"
 }
 trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
 docker build -q --target dev -t "$image" "$root" >/dev/null
+docker build -q -t "$realtime_image" "$root/realtime" >/dev/null
 db_password=$(openssl rand -hex 24)
+root_password=$(openssl rand -hex 24)
+indexer_password=$(openssl rand -hex 24)
 cat > "$work/wallet.env" <<ENV
 DB_DSN=mysql:host=mysql;dbname=wallet_test
 DB_USERNAME=wallet_test
@@ -55,7 +59,7 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: "$root_password"
       MYSQL_DATABASE: wallet_test
       MYSQL_USER: wallet_test
       MYSQL_PASSWORD: "$db_password"
@@ -94,6 +98,20 @@ services:
     volumes: ["chain:/chain:ro", "$root/tests:/var/www/tests:ro"]
     tmpfs: [/var/www/runtime]
     networks: [internal]
+  realtime:
+    image: $realtime_image
+    environment:
+      CHAIN_RPC_URL: http://besu:8545
+      CHAIN_ID: "2118"
+      DB_HOST: mysql
+      DB_NAME: wallet_test
+      DB_USER: wallet_indexer
+      DB_PASSWORD: "$indexer_password"
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [internal]
 volumes:
   chain:
 networks:
@@ -106,3 +124,20 @@ compose run --rm chain-deploy >/dev/null
 compose run --rm --no-deps wallet php yii migrate --interactive=0 >/dev/null
 compose run --rm --no-deps wallet php tests/chain/erc20-integration.php
 compose run --rm --no-deps wallet php tests/ui/layout.php
+# SIP-029: indicizzatore Go con utente DB a permessi minimi, due giri sugli stessi blocchi (nessun doppione)
+compose run --rm --no-deps -T chain-deploy node --input-type=module - < "$root/tests/chain/realtime-transfers.mjs" > "$work/transfers.json"
+compose run --rm --no-deps -T wallet php tests/chain/realtime-indexer.php setup < "$work/transfers.json"
+compose exec -T -e MYSQL_PWD="$root_password" mysql mysql -uroot wallet_test <<SQL
+CREATE USER 'wallet_indexer'@'%' IDENTIFIED BY '$indexer_password';
+GRANT SELECT ON wallet_test.mp_wallets TO 'wallet_indexer'@'%';
+GRANT SELECT ON wallet_test.nodes TO 'wallet_indexer'@'%';
+GRANT SELECT ON wallet_test.smart_contract TO 'wallet_indexer'@'%';
+GRANT SELECT ON wallet_test.blockchains TO 'wallet_indexer'@'%';
+GRANT SELECT, INSERT, UPDATE ON wallet_test.transactions TO 'wallet_indexer'@'%';
+GRANT SELECT, INSERT ON wallet_test.mp_notifications TO 'wallet_indexer'@'%';
+GRANT SELECT, INSERT ON wallet_test.mp_notifications_readers TO 'wallet_indexer'@'%';
+GRANT SELECT, INSERT, UPDATE ON wallet_test.chain_index_cursors TO 'wallet_indexer'@'%';
+SQL
+compose run --rm --no-deps realtime --once
+compose run --rm --no-deps realtime --once
+compose run --rm --no-deps -T wallet php tests/chain/realtime-indexer.php verify < "$work/transfers.json"
