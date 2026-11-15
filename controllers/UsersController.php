@@ -83,11 +83,12 @@ class UsersController extends Controller
             ->andWhere(['to_address'=>$wallet->wallet_address])
             ->andWhere(['status'=>'complete']);
 
-        $sent['sum'] = round($tokens_from->sum('token_price'), $node->smartContract->decimals);
-        $sent['count'] = round($tokens_from->count(), $node->smartContract->decimals);
+        // nessuna transazione: SUM restituisce null
+        $sent['sum'] = round((float) $tokens_from->sum('token_price'), (int) $node->smartContract->decimals);
+        $sent['count'] = (int) $tokens_from->count();
 
-        $received['sum'] = round($tokens_to->sum('token_price'), $node->smartContract->decimals);
-        $received['count'] = round($tokens_to->count(), $node->smartContract->decimals);
+        $received['sum'] = round((float) $tokens_to->sum('token_price'), (int) $node->smartContract->decimals);
+        $received['count'] = (int) $tokens_to->count();
 
         $total_transactions = $sent['count'] + $received['count'];
 
@@ -127,7 +128,10 @@ class UsersController extends Controller
             $last1 = $userAccountValues[count($userAccountValues)-1];
             $last2 = $userAccountValues[count($userAccountValues)-2];
 
-            if ($last1 > $last2){
+            if ($last1 == 0 || $last2 == 0) {
+                // saldo a zero: variazione percentuale non definita
+                $increase = 0;
+            } elseif ($last1 > $last2){
                 $increase = round($last1 / $last2 *100, 2);
                 $color = 'green';
                 $arrow = 'up';

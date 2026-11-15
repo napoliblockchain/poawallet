@@ -31,22 +31,12 @@ $(function () {
     var wizardForm = document.querySelector('#wizard-form');
     var submitButton = document.querySelector('.seed-submit');
 
-    var logoutButton = document.querySelector('.site-logout');
-
-    logoutButton.addEventListener('click', function(event){
-        event.preventDefault();
-        event.stopPropagation();
-
-        console.log('logout');
-        $("#form-logout").submit();
-
-
-    });
-
     submitButton.addEventListener('click', function(event){
         event.preventDefault();
         event.stopPropagation();
 
+        if (submitButton.disabled) return;
+        submitButton.disabled = true;
         $('#js-newseed-btn-text').html(yiiOptions.spinner);
 
         newWallet().then( function(seed) {

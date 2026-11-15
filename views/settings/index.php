@@ -6,110 +6,37 @@ use app\components\UserRole;
 
 include('manage-blockchainscan_js.php');
 
+
+$this->title = Yii::t('app', 'Settings');
+$links = [
+    [['/network/index'], 'fas fa-info-circle', Yii::t('app', 'Network info')],
+    [['/nodes/update'], 'fas fa-network-wired', Yii::t('app', 'Select nodes')],
+    [['/smartcontracts/index'], 'fas fa-star', Yii::t('app', 'Manage tokens')],
+    [['/blockchains/index'], 'fas fa-link', Yii::t('app', 'Manage networks')],
+];
+if (UserRole::isWebmaster()) {
+    $links[] = [['/standard-blockchain-values/index'], 'fas fa-database', Yii::t('app', 'Standard networks')];
+    $links[] = [['/standard-smart-contract-values/index'], 'fas fa-cubes', Yii::t('app', 'Standard tokens')];
+}
 ?>
-<div class="h-100 ref-card c5">
-    <div class="mt-5 ref-card c5">
-        <div class="dash-content relative">
-            <h3 class="w-text"><?= Yii::t('app', 'Settings') ?></h3>
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title"><?= Html::encode($this->title) ?></h2></div>
+    <div class="list-group list-group-flush">
+        <?php foreach ($links as [$url, $icon, $label]): ?>
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-3" href="<?= Url::to($url) ?>">
+                <i class="<?= $icon ?> fa-fw text-primary" aria-hidden="true"></i><span class="flex-fill"><?= Html::encode($label) ?></span><i class="fas fa-chevron-right text-secondary" aria-hidden="true"></i>
+            </a>
+        <?php endforeach ?>
+    </div>
+</div>
+
+<div class="card border-danger">
+    <div class="card-header"><h3 class="card-title text-danger"><?= Html::encode(Yii::t('app', 'Experimental')) ?></h3></div>
+    <div class="list-group list-group-flush">
+        <div class="list-group-item d-flex align-items-center gap-3">
+            <i class="fas fa-eraser fa-fw text-danger" aria-hidden="true"></i>
+            <span class="flex-fill text-danger"><?= Html::encode(Yii::t('app', 'Reset blockchain')) ?></span>
+            <div class="blockchainRescan sweet-check" role="switch" aria-checked="false" aria-label="<?= Html::encode(Yii::t('app', 'Reset blockchain')) ?>"><div class="outline"><span></span></div></div>
         </div>
     </div>
-
-    <form id="settingsForm bg-primary">
-
-        <div class="list-box">
-            <div class="list-item">
-                <i class="fa fa-link text-primary"></i>
-                <em class="seperate"></em>
-                <a href="<?= Url::to(['network/index']) ?>">
-                    <span class="list-item-title"><?php echo Yii::t('app', 'Network info'); ?>
-                        <small class="text-muted"></small>
-                    </span>
-                </a>
-            </div>
-        </div>
-
-        <div class="list-box">
-            <div class="list-item">
-                <i class="fa fa-network-wired text-primary"></i>
-                <em class="seperate"></em>
-                <a href="<?= Url::to(['/nodes/update']) ?>">
-                    <span class="list-item-title"><?php echo Yii::t('app', 'Select nodes'); ?>
-                        <small class="text-muted"></small>
-                    </span>
-                </a>
-            </div>
-        </div>
-
-        <div class="list-box">
-            <div class="list-item">
-                <i class="fa fa-star text-info"></i>
-                <em class="seperate"></em>
-                <a href="<?= Url::to(['/smartcontracts/index']) ?>">
-                    <span class="list-item-title"><?php echo Yii::t('app', 'Manage tokens'); ?>
-                        <small class="text-muted"></small>
-                    </span>
-                </a>
-            </div>
-        </div>
-
-        <div class="list-box">
-            <div class="list-item">
-                <i class="fa fa-link text-info"></i>
-                <em class="seperate"></em>
-                <a href="<?= Url::to(['/blockchains/index']) ?>">
-                    <span class="list-item-title"><?php echo Yii::t('app', 'Manage networks'); ?>
-                        <small class="text-muted"></small>
-                    </span>
-                </a>
-            </div>
-        </div>
-
-        <?php if (UserRole::isWebmaster()): ?>
-        <div class="list-box">
-            <div class="list-item">
-                <i class="fa fa-database text-secondary"></i>
-                <em class="seperate"></em>
-                <a href="<?= Url::to(['/standard-blockchain-values/index']) ?>">
-                    <span class="list-item-title"><?php echo Yii::t('app', 'Standard networks'); ?>
-                        <small class="text-muted"></small>
-                    </span>
-                </a>
-            </div>
-        </div>
-
-        <div class="list-box">
-            <div class="list-item">
-                <i class="fa fa-cubes text-secondary"></i>
-                <em class="seperate"></em>
-                <a href="<?= Url::to(['/standard-smart-contract-values/index']) ?>">
-                    <span class="list-item-title"><?php echo Yii::t('app', 'Standard tokens'); ?>
-                        <small class="text-muted"></small>
-                    </span>
-                </a>
-            </div>
-        </div>
-        <?php endif ?>
-
-        <div class="form-divider"></div>
-        <div class="form-label-divider"><span><?= Yii::t('app', 'Experimental'); ?></span></div>
-        <div class="form-divider"></div>
-
-        <div class="list-box">
-            <div class="list-item">
-                <i class="fa fa-eraser text-danger"></i>
-                <em class="seperate"></em>
-                <span class="list-item-title text-danger"><?php echo Yii::t('app', 'Reset blockchain'); ?>
-                    <small class="text-muted"></small>
-                </span>
-                <div class="blockchainRescan sweet-check">
-                    <div class="outline">
-                        <span></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-divider"></div>
-
-    </form>
 </div>

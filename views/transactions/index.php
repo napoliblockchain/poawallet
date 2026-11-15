@@ -22,7 +22,6 @@ $this->title = Yii::t('app', 'Transactions');
         'emptyText' => Yii::t('app', 'No transactions yet.'),
         'emptyTextOptions' => ['class' => 'text-secondary text-center py-4'],
         'tableOptions' => ['class' => 'table-96 table wallet-tx-table mb-0'],
-        'pager' => ['class' => yii\bootstrap5\LinkPager::class],
         'columns' => [[
             'format' => 'raw',
             'value' => static fn($data) => app\components\WebApp::showTransactionRow($data, $fromAddress),

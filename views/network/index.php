@@ -1,82 +1,43 @@
 <?php
+
 use yii\helpers\Html;
 
 /* @var $this yii\web\View */
+/* @var $node app\models\Nodes|null */
 
 $this->title = Yii::t('app', 'Network info');
+// valori dei blocchi aggiornati da wallet-sync.js (classi network-*)
 ?>
-<div class="h-100 network-details ref-card c7">
-    <div class="mt-5 ref-card c10">
-		<h3 class="w-text"><?= $this->title ?></h3>
-	</div>
-
-    <section class="mt-15 mb-15 container">
-    	<div class="coin-box">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-2x fa-network-wired"></i>
-                    <div class="ml-10">
-                      <h3 class="coin-name"><?= Yii::t('app','Node info') ?></h3>
-                      <div class="d-flex flex-column">
-                          <div class="p-0"><?= Yii::t('app','Url: ') ?><small class="text-muted"><?= $node->blockchain->url ?? null ?></small></div>
-                          <div class="p-0"><?= Yii::t('app','Network: ') ?><small class="text-muted"><?= $node->blockchain->denomination ?? null?></small></div>
-                          <div class="p-0"><?= Yii::t('app','Token: ') ?><small class="text-muted"><?= $node->smartContract->denomination ?? null?></small></div>
-                      </div>
-                    </div>
-                </div>
-            </div>
+<div class="network-details">
+    <div class="card mb-3">
+        <div class="card-header"><h2 class="card-title"><i class="fas fa-network-wired me-2 text-primary" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Node info')) ?></h2></div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-4 text-secondary fw-normal"><?= Html::encode(Yii::t('app', 'Network: ')) ?></dt><dd class="col-8"><?= Html::encode($node->blockchain->denomination ?? '') ?></dd>
+                <dt class="col-4 text-secondary fw-normal"><?= Html::encode(Yii::t('app', 'Token: ')) ?></dt><dd class="col-8"><?= Html::encode($node->smartContract->denomination ?? '') ?></dd>
+                <dt class="col-4 text-secondary fw-normal"><?= Html::encode(Yii::t('app', 'Url: ')) ?></dt><dd class="col-8 text-break mb-0"><?= Html::encode($node->blockchain->url ?? '') ?></dd>
+            </dl>
         </div>
-        <div class="coin-box mt-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-2x fa-project-diagram"></i>
-                    <div class="ml-10">
-                      <h3 class="coin-name"><?= Yii::t('app','Latest block') ?></h3>
-                      <small class="d-block mt-1 mr-3 text-break network-block-hash">
-                          &nbsp;
-                      </small>
-                    </div>
-                </div>
-                <div>
-                    <small class="d-block mb-0 p-1 shadow">
-                        <span class="network-block-number text-muted">&nbsp;</span>
-                    </small>
-                </div>
-            </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between"><span class="text-secondary"><i class="fas fa-cubes me-1" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Latest block')) ?></span><span class="network-block-number fw-bold"></span></div>
+                <div class="small text-break font-monospace mt-2 network-block-hash"></div>
+            </div></div>
         </div>
-
-        <div class="coin-box mt-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-2x fa-wallet"></i>
-                    <div class="ml-10">
-                      <h3 class="coin-name"><?= Yii::t('app','Wallet block') ?></h3>
-                      <small class="d-block mt-1 mr-3 text-break network-block-wallet-hash">
-                          &nbsp;
-                      </small>
-                    </div>
-                </div>
-                <div>
-                    <small class="d-block mb-0 p-1 shadow">
-                        <span class="network-block-percentage txt-green">&nbsp;</span>
-                        <span class="network-block-wallet text-muted">&nbsp;</span>
-                    </small>
-                </div>
-            </div>
-
+        <div class="col-md-6">
+            <div class="card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between"><span class="text-secondary"><i class="fas fa-wallet me-1" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Wallet block')) ?></span>
+                    <span><span class="network-block-percentage text-success"></span> <span class="network-block-wallet fw-bold"></span></span></div>
+                <div class="small text-break font-monospace mt-2 network-block-wallet-hash"></div>
+            </div></div>
         </div>
-        <div class="coin-box mt-3">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-2x fa-history "></i>
-                <div class="ml-10">
-                  <h3 class="coin-name"><?= Yii::t('app','Remaining time') ?></h3>
-                  <small class="network-block-relativeTime text-muted">&nbsp;</small>
-                </div>
-            </div>
+        <div class="col-12">
+            <div class="card"><div class="card-body d-flex justify-content-between">
+                <span class="text-secondary"><i class="fas fa-history me-1" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Remaining time')) ?></span>
+                <span class="network-block-relativeTime"></span>
+            </div></div>
         </div>
-    </section>
-
-
-    <div class="form-divider"></div>
-
+    </div>
 </div>

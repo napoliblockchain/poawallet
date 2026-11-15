@@ -511,4 +511,10 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     'Confirm the transfer' => 'Conferma il trasferimento',
     'Gas' => 'Gas',
     'Please contact us if you think this is a server error. Thank you.' => 'Contattaci se pensi che sia un errore del server. Grazie.',
+    'New wallet' => 'Nuovo wallet',
+    'Steps' => 'Passi',
+    'Create or restore' => 'Crea o ripristina',
+    'You already have the 12 words (seed) of a wallet and want to restore it.' => 'Hai già le 12 parole (seed) di un wallet e vuoi ripristinarlo.',
+    'Generate a new wallet with new 12 words.' => 'Genera un nuovo wallet con 12 parole nuove.',
+    'No notifications.' => 'Nessuna notifica.',
 ];

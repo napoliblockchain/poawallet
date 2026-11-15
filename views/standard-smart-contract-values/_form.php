@@ -12,9 +12,7 @@ use yii\helpers\Html;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <div class="txt-left">
-        <?= $form->errorSummary($model, ['id' => 'error-summary', 'class' => 'col-lg-12 callout callout-danger']) ?>
-    </div>
+    <?= $form->errorSummary($model, ['class' => 'alert alert-danger']) ?>
 
     <?= $form->field($model, 'id_blockchain')->dropDownList(
         $blockchain_list,
@@ -32,8 +30,8 @@ use yii\helpers\Html;
     <?= $form->field($model, 'decimals')->textInput() ?>
     <?= $form->field($model, 'symbol')->textInput(['maxlength' => true]) ?>
 
-    <div class="form-group">
-        <?= Html::submitButton('<i class="fas fa-save"></i> ' . Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>
+    <div class="mt-4">
+        <?= Html::submitButton('<i class="fas fa-save"></i> ' . Yii::t('app', 'Save'), ['class' => 'btn btn-primary']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

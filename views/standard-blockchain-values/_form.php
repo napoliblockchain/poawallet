@@ -19,8 +19,8 @@ use yii\helpers\Html;
     <?= $form->field($model, 'url_block_explorer')->textInput(['maxlength' => true]) ?>
     <?= $form->field($model, 'zerogas')->textInput() ?>
 
-    <div class="form-group">
-        <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>
+    <div class="mt-4">
+        <?= Html::submitButton('<i class="fas fa-save me-1" aria-hidden="true"></i>' . Html::encode(Yii::t('app', 'Save')), ['class' => 'btn btn-primary']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

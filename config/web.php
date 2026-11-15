@@ -144,6 +144,12 @@ $config = [
 
     ],
     'params' => $params,
+    // paginazione Bootstrap 5 (Tabler) in tutti gli elenchi GridView/ListView
+    'container' => [
+        'definitions' => [
+            \yii\widgets\LinkPager::class => \yii\bootstrap5\LinkPager::class,
+        ],
+    ],
 ];
 
 if (YII_ENV_DEV) {

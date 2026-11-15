@@ -479,56 +479,22 @@ class WebApp extends Component
 		return ($sent == 'sent' ? '<h5 class="text-warning">-' : '<h5 class="text-success">+') . $price . '</h5>';
 	}
 
-    public static function showMessagesRow($item){
+    /** Riga di una notifica (elenco messaggi): testo e link codificati; vecchi link index.php?r= resi assoluti. */
+    public static function showMessagesRow($item)
+    {
         $data = Notifications::findOne($item->id_notification);
-        // return print_r($data,true);
-
-        $dateLN = date("d M `y",$data->timestamp);
-        $timeLN = date("H:i:s",$data->timestamp);
-
-        $notifi__icon = self::Icon(
-            (strpos($data->description,'token') !== false ? 'token' : $data->type )
+        if ($data === null) return '';
+        $icon = self::Icon(strpos((string) $data->description, 'token') !== false ? 'token' : $data->type);
+        $url = (string) $data->url;
+        if (str_starts_with($url, 'index.php')) $url = '/' . $url;
+        $badge = ['complete' => 'bg-success-lt', 'expired' => 'bg-warning-lt'][$data->status] ?? 'bg-secondary-lt';
+        return Html::a(
+            '<span class="wallet-tx-icon bg-primary-lt text-primary"><i class="' . Html::encode($icon) . '" aria-hidden="true"></i></span>'
+            . '<span class="wallet-tx-body"><span class="d-block text-break">' . Html::encode(Yii::t('app', (string) $data->description)) . '</span>'
+            . '<span class="d-block small text-secondary">' . Html::encode(Yii::$app->formatter->asDatetime((int) $data->timestamp, 'php:d/m/Y H:i'))
+            . ($data->status ? ' <span class="badge ' . $badge . ' text-capitalize ms-1">' . Html::encode($data->status) . '</span>' : '') . '</span></span>',
+            preg_match('~^(/|https?://)~i', $url) ? $url : '#',
+            ['class' => 'wallet-tx']
         );
-
-        switch ($data->status){
-            case 'complete':
-                $classStatus = 'bg-success';
-                break;
-            case 'expired':
-                $classStatus = 'bg-warning';
-                break;
-
-            default:
-                $classStatus = 'bg-secondary';
-        }
-
-        // $classStatus = ($data->status == 'complete') ? 'bg-success' : ($data->status == 'expired') ? 'bg-warning' : 'bg-secondary';
-
-        $line = '
-        <a href="'.$data->url.'" />
-        <div class="container-fluid m-0 p-0">
-              <div class="row ml-0">
-                  <div class="col-11 m-0 p-0">
-                      <div class="card shadow">
-                          <div class=" d-flex d-flex-grow">
-
-                              <div class="transaction-card-body ml-1">
-                                  <h6 class="card-title pt-2 text-break">'.$data->description.'</h6>
-
-                              </div>
-
-
-                          </div>
-						  <p class="text-right card-text">
-						  	<small class="mr-2 text-muted">'.$dateLN.' <span class="ml-10">'.$timeLN.'</span></small>
-						  </p>
-
-                      </div>
-                  </div>
-              </div>
-          </div>
-          </a>
-          ';
-         return $line;
     }
 }

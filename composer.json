@@ -19,7 +19,6 @@
         "yiisoft/yii2-symfonymailer": "^2.0",
         "jambtc/yii2-oauth-telegram": "^1.0",
         "yiisoft/yii2-httpclient": "^2.0",
-        "drsdre/yii2-wizardwidget": "*",
         "brainfoolong/js-aes-php": "^1.0",
         "minishlink/web-push": "^10.1",
         "yiisoft/yii2-authclient": "^2.2",

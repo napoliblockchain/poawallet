@@ -81,18 +81,34 @@ check(str_contains($html, '/js/wallet-sync.js') && !str_contains($html, 'ws-webs
     'Polling synchronization, no WebSocket client or blocking alert');
 check(!str_contains($html, 'data-toggle=') && !str_contains($html, 'data-dismiss="modal"') && !str_contains($html, 'class="close"'), 'No Bootstrap 4 data attributes in the layout');
 
-// --- pagine del wallet: transazione con dati malevoli (memo dalla chain), sempre codificati
-$evil = '<img src=x onerror=alert(1)>';
-$db->createCommand()->insert('transactions', ['id_user' => $userId, 'id_smart_contract' => $contractId, 'type' => 'token', 'status' => 'complete',
-    'token_price' => 12.34, 'token_received' => 12.34, 'invoice_timestamp' => time(), 'expiration_timestamp' => time() + 900,
-    'from_address' => '0x' . str_repeat('ab', 20), 'to_address' => $tts['holder'], 'blocknumber' => '0x10', 'txhash' => '0x' . str_repeat('cd', 32), 'message' => $evil])->execute();
-$txId = (int) $db->getLastInsertID();
 $render = static function (string $route, array $params = []) use ($app): string {
     $app->requestedRoute = $route;
     $app->response->clear();
     $result = $app->runAction($route, $params);
     return is_string($result) ? $result : (string) $app->response->content;
 };
+// --- profilo senza transazioni completate (somme nulle) e pagine di impostazione
+$profile = $render('users/view', ['id' => app\components\WebApp::encrypt($userId)]);
+check(str_contains($profile, 'pincodeslider') && str_contains($profile, 'masterseedSlider') && str_contains($profile, 'js-push-btn-modal') && str_contains($profile, 'id="pinNewModal"'),
+    'Profile without transactions renders, switches and PIN dialogs present');
+foreach (['settings/index' => 'blockchainRescan', 'network/index' => 'network-block-number', 'smartcontracts/index' => 'TTS dev', 'blockchains/index' => 'Dev QBFT',
+    'nodes/update' => 'nodes-id_blockchain', 'messages/index' => 'notifications-form'] as $route => $marker) {
+    $page = $render($route);
+    check(str_contains($page, $marker) && !str_contains($page, 'ref-card'), 'Settings page restyled: ' . $route);
+}
+
+// --- procedura guidata (layout dedicato, quattro passi senza il vecchio widget Bootstrap 3)
+$wizard = $render('wizard/index');
+check(substr_count($wizard, 'data-wizard-step=') === 4 && str_contains($wizard, 'id="seed-submit"') && str_contains($wizard, 'id="form-logout"')
+    && !str_contains($wizard, 'glyphicon') && !str_contains($wizard, 'wizardwidget'), 'Wizard: four steps, new keys and logout, no legacy widget');
+check(!str_contains($wizard, '<b>Ui</b>'), 'Wizard greeting encodes the user name');
+
+// --- pagine del wallet: transazione con dati malevoli (memo dalla chain), sempre codificati
+$evil = '<img src=x onerror=alert(1)>';
+$db->createCommand()->insert('transactions', ['id_user' => $userId, 'id_smart_contract' => $contractId, 'type' => 'token', 'status' => 'complete',
+    'token_price' => 12.34, 'token_received' => 12.34, 'invoice_timestamp' => time(), 'expiration_timestamp' => time() + 900,
+    'from_address' => '0x' . str_repeat('ab', 20), 'to_address' => $tts['holder'], 'blocknumber' => '0x10', 'txhash' => '0x' . str_repeat('cd', 32), 'message' => $evil])->execute();
+$txId = (int) $db->getLastInsertID();
 $wallet = $render('wallet/index');
 check(str_contains($wallet, 'wallet-hero') && str_contains($wallet, 'wallet-actions') && str_contains($wallet, 'class="wallet-tx wallet-tx-in"'), 'Wallet: balance card, quick actions, incoming transaction row');
 check(!str_contains($wallet, $evil) && str_contains($wallet, htmlspecialchars($evil, ENT_QUOTES)), 'Transaction memo encoded in the row');

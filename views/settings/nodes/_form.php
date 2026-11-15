@@ -26,22 +26,18 @@ include ('_formjs.php');
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <div class="txt-left">
-        <?php if (Yii::$app->session->hasFlash('nodeSelectedsuccess')): ?>
-            <div class="alert alert-success">
-                <?php echo  Yii::$app->session->getFlash('nodeSelectedsuccess'); ?><br>
-            </div>
+    <?php if (Yii::$app->session->hasFlash('nodeSelectedsuccess')): ?>
+            <div class="alert alert-success" role="status"><?= Html::encode(Yii::$app->session->getFlash('nodeSelectedsuccess')) ?></div>
         <?php endif; ?>
-        <?= $form->errorSummary($model, ['id' => 'error-summary','class'=>'col-lg-12 callout callout-danger']) ?>
-    </div>
+        <?= $form->errorSummary($model, ['class' => 'alert alert-danger']) ?>
 
     <?= $form->field($model, 'id_blockchain')->dropDownList($blockchains) ?>
     <?= $form->field($model, 'id_smart_contract')->dropDownList($smartcontract) ?>
     <?= $form->field($model, 'id_user')->hiddenInput(['value' => Yii::$app->user->id])->label(false) ?>
 
 
-    <div class="form-group mt-3">
-        <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>
+    <div class="mt-4">
+        <?= Html::submitButton('<i class="fas fa-save me-1" aria-hidden="true"></i>' . Html::encode(Yii::t('app', 'Save')), ['class' => 'btn btn-primary']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

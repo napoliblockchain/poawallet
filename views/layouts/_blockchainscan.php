@@ -1,9 +1,9 @@
 <!-- show Blockchain Scan modal dialog-->
-<div class="modal fade" id="blockchainScanModal" tabindex="-1" role="dialog" aria-labelledby="blockchainScanModalLabel" aria-hidden="true" style="display: none;">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content alert alert-danger">
+<div class="modal fade" id="blockchainScanModal" tabindex="-1" role="dialog" aria-labelledby="blockchainScanModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+		<div class="modal-content border-danger">
 			<div class="modal-header">
-				<h5 class="modal-title" id="blockchainScanModalLabel"><?php echo Yii::t('app','Blockchain Reset');?></h5>
+				<h3 class="modal-title" id="blockchainScanModalLabel"><?php echo Yii::t('app','Blockchain Reset');?></h3>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="resetSliderAriablockchain"></button>
 			</div>
 			<div class="modal-body">
@@ -12,15 +12,13 @@
 					<?php echo Yii::t('app','Are you sure to continue?');?>
 				</p>
 			</div>
-			<div class="modal-footer">
-				<div class="form-group">
-					<button type="button" class="blockchainScanSliderBack2 btn btn-secondary" data-bs-dismiss="modal" >
-						<i class="fa fa-backward"></i> <?php echo Yii::t('app','Back');?>
+			<div class="modal-footer d-flex justify-content-between">
+				<button type="button" class="blockchainScanSliderBack2 btn btn-secondary" data-bs-dismiss="modal" >
+						<i class="fa fa-arrow-left me-1" aria-hidden="true"></i> <?php echo Yii::t('app','Back');?>
 					</button>
 					<button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="showblockchainScan" data-bs-toggle="modal" data-bs-target="#showblockchainScanModal">
-						<i class="fa fa-thumbs-up"></i> <?php echo Yii::t('app','Confirm');?>
+						<i class="fa fa-check me-1" aria-hidden="true"></i> <?php echo Yii::t('app','Confirm');?>
 					</button>
-				</div>
 			</div>
 		</div>
 	</div>

@@ -1,65 +1,22 @@
 <?php
 
-use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\grid\GridView;
+use yii\helpers\Html;
 
 /* @var $this yii\web\View */
-/* @var $searchModel app\models\search\BlockchainsSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
 $this->title = Yii::t('app', 'Networks');
-?>
-<div class="dash-balance">
-
-    <div class="card hot txt-white">
-        <div class="card-header">
-            <h3 class="card-title "><?= $this->title ?></h3>
-            <?php if ($dataProvider->totalCount == 0): ?>
-                <p>
-                    <?= Yii::t('app','You must insert a Networks node'); ?>
-                </p>
-            <?php endif ?>
-
-        </div>
-        <div class="card-body" >
-            <div class="table-responsive">
-                <?= GridView::widget([
-                    'dataProvider' => $dataProvider,
-                    'layout' => "{summary}\n{items}\n{pager}",
-                    'tableOptions' => ['class' => 'table m-0 table-striped table-sm txt-white'],
-                        'columns' => [
-                            ['class' => 'yii\grid\SerialColumn'],
-                            // 'id',
-                            [
-                                'attribute' => 'denomination',
-                                'format' => 'raw',
-                                'value' => function ($data) {
-                                    return Html::a($data->denomination, Url::toRoute(['view', 'id' => $data->id]),[
-                                        'class' => 'txt-white'
-                                    ]);
-                                },
-                            ],
-
-                            // 'chain_id',
-                            // 'url:url',
-                            'symbol',
-                            // 'url_block_explorer:url',
-
-
-                            // ['class' => 'yii\grid\ActionColumn'],
-                        ],
-                    ]); ?>
-
-
-            </div>
-
-        </div>
-        <div class="card-footer text-muted ">
-            <?= Html::a('<button type="button" class="btn btn-success float-right">
-                <i class="fas fa-plus"></i> '. Yii::t('app', 'Add Network').'
-            </button>', ['create']) ?>
-        </div>
-    </div>
-
-</div>
+$body = ($dataProvider->totalCount == 0 ? '<div class="alert alert-info m-3">' . Html::encode(Yii::t('app', 'You must insert a Networks node')) . '</div>' : '')
+    . GridView::widget([
+        'dataProvider' => $dataProvider,
+        'layout' => "{items}\n<div class=\"card-footer d-flex justify-content-between align-items-center\">{summary}{pager}</div>",
+        'tableOptions' => ['class' => 'table table-vcenter card-table'],
+        'columns' => [
+            ['attribute' => 'denomination', 'format' => 'raw', 'value' => static fn($data) => Html::a(Html::encode($data->denomination), ['view', 'id' => $data->id])],
+            'chain_id',
+            'symbol',
+        ],
+    ]);
+echo $this->render('/layouts/_card', ['title' => $this->title, 'flush' => true, 'body' => $body,
+    'actions' => Html::a('<i class="fas fa-plus me-1" aria-hidden="true"></i>' . Html::encode(Yii::t('app', 'Add Network')), ['create'], ['class' => 'btn btn-sm btn-primary'])]);
