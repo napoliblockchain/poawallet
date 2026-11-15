@@ -42,6 +42,8 @@ function easypin(num) {
 		$('#pin_password').val( pin + num );
 	}
 	if (pin.length == pinDigits){
+		// PIN completo: chi lo usa fuori dal profilo (es. master seed) ascolta questo evento
+		$(document).trigger('wallet:pin-complete');
 		$('#pinNewButton').prop('disabled', false);
 		$('#pinNewButton').removeClass('disabled');
 		$('.easy-numpad-output').removeClass('alert-dark').addClass('alert-primary');
@@ -57,6 +59,7 @@ function easy_pin_del(confirm=false) {
 
 	$('#pinNewButton').prop('disabled', true);
 	$('#pinNewButton').addClass('disabled');
+	$(document).trigger('wallet:pin-incomplete');
 
 	$('.invalid-feedback').hide().text('');
 
@@ -99,6 +102,7 @@ function easy_pin_clear(reset=true) {
 
 	$('.pin_password_em_').text('');
 	$('#pin_password_confirm').val('');
+	$(document).trigger('wallet:pin-incomplete');
 
 	if (reset){
 		$('#pin_password').val('');

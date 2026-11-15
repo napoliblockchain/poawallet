@@ -80,13 +80,8 @@ $messages = app\controllers\MessagesController::class;
 check(load($messages, 20, 1) !== null, 'message: own notification');
 check(load($messages, 21, 1) === null, 'message: other user notification denied');
 
-$chains = app\controllers\settings\BlockchainsController::class;
-check(load($chains, 30, 1) !== null, 'settings blockchain: own network');
-check(load($chains, 31, 1) === null, 'settings blockchain: other user network denied');
-
-$tokens = app\controllers\settings\TokensController::class;
-check(load($tokens, 40, 1) !== null, 'settings token: own token');
-check(load($tokens, 41, 1) === null, 'settings token: other user token denied');
+// controller doppioni /settings/* rimossi: reti e token solo da BlockchainsController e SmartcontractsController
+check(!class_exists('app\\controllers\\settings\\BlockchainsController') && !class_exists('app\\controllers\\settings\\TokensController'), 'duplicate settings controllers removed');
 
 foreach ([app\controllers\BlockchainsController::class => [30, 31], app\controllers\SmartcontractsController::class => [40, 41]] as $class => [$own, $other]) {
     check(load($class, $own, 1) !== null, "$class: own record");

@@ -103,6 +103,8 @@ foreach (['spawn/index', 'mailbox/inbox', 'settings/nodes/update', 'settings/blo
     try { $app->createController($deadRoute) === false ? check(true, 'Removed route: ' . $deadRoute) : check(false, 'Removed route: ' . $deadRoute); }
     catch (yii\base\InvalidRouteException $e) { check(true, 'Removed route: ' . $deadRoute); }
 }
+check(str_contains($profile, 'pin-seed-numpad') && !str_contains($profile, 'masterSeedPassword') && str_contains($profile, "'crypted_pin': storedPin.pin")
+    && preg_match('~id="masterSeedModal"[^>]*>\s*<div class="modal-dialog modal-fullscreen">~', $profile) === 1, 'Master seed asks the PIN on the full-screen keypad, no hidden wallet password');
 foreach (['pinNewModal', 'pinVerifyModal', 'pinRemoveModal'] as $pinModal) {
     check(preg_match('~id="' . $pinModal . '"[^>]*>\s*<div class="modal-dialog modal-fullscreen">~', $profile) === 1, 'Full-screen PIN dialog: ' . $pinModal);
 }

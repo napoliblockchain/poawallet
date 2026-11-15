@@ -522,4 +522,8 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     'Enter the same PIN again.' => 'Inserisci di nuovo lo stesso PIN.',
     'Enter your PIN to remove it.' => 'Inserisci il PIN per rimuoverlo.',
     'PIN is wrong!' => 'PIN errato!',
+    'Wrong PIN.' => 'PIN errato.',
+    'Too many wrong attempts: the seed is locked for 24 hours.' => 'Troppi tentativi errati: il seed è bloccato per 24 ore.',
+    'Enter your PIN: after 3 wrong attempts the seed is locked for 24 hours.' => 'Inserisci il PIN: dopo 3 tentativi errati il seed resta bloccato per 24 ore.',
+    'Write these 12 words on paper, in this order, and keep them in a safe place.' => 'Scrivi queste 12 parole su carta, in questo ordine, e conservale in un posto sicuro.',
 ];

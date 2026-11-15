@@ -210,7 +210,8 @@ class WalletController extends Controller
 	}
 
 	/**
-	 * mostra il seed solo dopo aver verificato la password del wallet
+	 * Mostra il seed solo con il PIN del wallet, verificato qui come per lo sblocco (mai decifrato nel browser).
+	 * Senza PIN impostato il seed non si legge. Contatore proprio e severo: 3 errori bloccano per 24 ore.
 	 */
 	public function actionRevealSeed()
 	{
@@ -219,15 +220,17 @@ class WalletController extends Controller
 			return $this->json(['success' => false, 'locked' => true]);
 		}
 		$userId = (int) Yii::$app->user->id;
-		$password = (string) Yii::$app->request->post('password', '');
-		$storedPassword = WebApp::decryptForUser(Yii::$app->request->post('prv_pas'), $userId);
-		if ($storedPassword === null || $password === '' || !hash_equals($storedPassword['value'], $password)) {
+		$pin = (string) Yii::$app->request->post('pin', '');
+		$storedPin = WebApp::decryptForUser(Yii::$app->request->post('crypted_pin'), $userId);
+		if ($storedPin === null || preg_match('/^[0-9]{5}$/D', $pin) !== 1 || !hash_equals($storedPin['value'], $pin)) {
 			self::registerFailure('seed');
-			return $this->json(['success' => false]);
+			$locked = self::tooManyAttempts('seed');
+			if ($locked) Logs::write('Master seed locked after wrong PINs: ' . Yii::$app->user->identity->username);
+			return $this->json(['success' => false, 'locked' => $locked]);
 		}
 		$seed = WebApp::decryptForUser(Yii::$app->request->post('cryptedseed'), $userId);
 		if ($seed === null) {
-			return $this->json(['success' => false]);
+			return $this->json(['success' => false, 'locked' => false]);
 		}
 		Yii::$app->cache->delete(self::attemptsKey('seed'));
 		Logs::write('Master seed revealed: ' . Yii::$app->user->identity->username);
@@ -237,13 +240,13 @@ class WalletController extends Controller
 			'seed' => $seed['value'],
 			'upgraded' => [
 				'cryptedseed' => $seed['legacy'] ? WebApp::encryptForUser($seed['value'], $userId) : null,
-				'prv_pas' => $storedPassword['legacy'] ? WebApp::encryptForUser($storedPassword['value'], $userId) : null,
+				'crypted_pin' => $storedPin['legacy'] ? WebApp::encryptForUser($pin, $userId) : null,
 			],
 		]);
 	}
 
-	private const MAX_SECRET_ATTEMPTS = 5;
-	private const SECRET_ATTEMPTS_WINDOW = 900; // 15 minuti
+	/** tentativi e durata del blocco (secondi) per tipo di segreto: il seed dà il controllo totale dei fondi */
+	private const SECRET_ATTEMPTS = ['pin' => [5, 900], 'seed' => [3, 86400]];
 
 	private static function attemptsKey(string $kind): string
 	{
@@ -252,13 +255,13 @@ class WalletController extends Controller
 
 	private static function tooManyAttempts(string $kind): bool
 	{
-		return (int) Yii::$app->cache->get(self::attemptsKey($kind)) >= self::MAX_SECRET_ATTEMPTS;
+		return (int) Yii::$app->cache->get(self::attemptsKey($kind)) >= self::SECRET_ATTEMPTS[$kind][0];
 	}
 
 	private static function registerFailure(string $kind): void
 	{
 		$key = self::attemptsKey($kind);
-		Yii::$app->cache->set($key, (int) Yii::$app->cache->get($key) + 1, self::SECRET_ATTEMPTS_WINDOW);
+		Yii::$app->cache->set($key, (int) Yii::$app->cache->get($key) + 1, self::SECRET_ATTEMPTS[$kind][1]);
 	}
 
 

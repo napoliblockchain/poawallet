@@ -10,8 +10,8 @@ $options = [
     'revealSeedURL' => \yii\helpers\Url::to(['/wallet/reveal-seed']),
     'messages' => [
         'seedNotFound' => Yii::t('app', 'Backup not found!'),
-        'wrongPassword' => Yii::t('app', 'Wrong password.'),
-        'tooManyAttempts' => Yii::t('app', 'Too many attempts, try again later.'),
+        'wrongPin' => Yii::t('app', 'Wrong PIN.'),
+        'tooManyAttempts' => Yii::t('app', 'Too many wrong attempts: the seed is locked for 24 hours.'),
     ],
     'expiringTime' => 5, // in test altrimenti inserisci 5 minuti
     //'vapidPublicKey' => \settings::load()->VapidPublic,

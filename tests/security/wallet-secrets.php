@@ -1,5 +1,5 @@
 <?php
-// Wallet secrets: values bound to the user, PIN verified server-side, seed revealed only with the wallet password.
+// Wallet secrets: values bound to the user, PIN verified server-side, seed revealed only with the PIN (3 failures lock it for 24 hours).
 // Calls the real WalletController actions. SQLite in memory, array cache, test encryption keys only.
 define('YII_DEBUG', false);
 define('YII_ENABLE_ERROR_HANDLER', false);
@@ -122,23 +122,34 @@ for ($i = 0; $i < 5; $i++) {
 $locked = call('verify-pin', ['crypted_pin' => $pin9, 'pin' => '11111']);
 check(Yii::$app->response->statusCode === 429 && $locked['valid'] === false, 'PIN locked after 5 failures, even with the right PIN');
 
-// --- reveal-seed ---
+// --- reveal-seed: solo con il PIN, 3 errori = blocco ---
 asUser(7);
-$wallet = ['cryptedseed' => WebApp::encryptForUser('seed words', 7), 'prv_pas' => WebApp::encryptForUser('wallet-password', 7)];
-$seed = call('reveal-seed', $wallet + ['password' => 'wallet-password']);
-check($seed['success'] === true && $seed['seed'] === 'seed words', 'seed revealed with correct wallet password');
-check($seed['upgraded'] === ['cryptedseed' => null, 'prv_pas' => null], 'no upgrade for bound values');
+$wallet = ['cryptedseed' => WebApp::encryptForUser('seed words', 7), 'crypted_pin' => WebApp::encryptForUser('54321', 7)];
+$seed = call('reveal-seed', $wallet + ['pin' => '54321']);
+check($seed['success'] === true && $seed['seed'] === 'seed words', 'seed revealed with the correct PIN');
+check($seed['upgraded'] === ['cryptedseed' => null, 'crypted_pin' => null], 'no upgrade for bound values');
 check((int) Yii::$app->db->createCommand("SELECT COUNT(*) FROM logs WHERE description LIKE 'Master seed revealed%'")->queryScalar() === 1, 'seed reveal written to audit log');
-$wrong = call('reveal-seed', $wallet + ['password' => 'guess']);
-check($wrong['success'] === false && !isset($wrong['seed']), 'wrong password: no seed');
-check(call('reveal-seed', ['cryptedseed' => $wallet['cryptedseed'], 'password' => 'wallet-password'])['success'] === false, 'missing stored password: no seed');
+check(call('reveal-seed', ['cryptedseed' => $wallet['cryptedseed'], 'pin' => '54321'])['success'] === false, 'no PIN set: seed cannot be revealed');
+check(call('reveal-seed', $wallet + ['pin' => '5432'])['success'] === false, 'PIN must have 5 digits');
+// anche questi tentativi contano: contatore azzerato per provare la sequenza di blocco da capo
+Yii::$app->cache->delete('wallet-secret-attempts:seed:7');
+$wrong = call('reveal-seed', $wallet + ['pin' => '00000']);
+check($wrong['success'] === false && !isset($wrong['seed']) && $wrong['locked'] === false, 'wrong PIN: no seed, not yet locked');
+check(call('reveal-seed', $wallet + ['pin' => '22222'])['locked'] === false, 'second wrong PIN: still not locked');
+$third = call('reveal-seed', $wallet + ['pin' => '11111']);
+check($third['success'] === false && $third['locked'] === true, 'third failure locks the seed');
+$locked = call('reveal-seed', $wallet + ['pin' => '54321']);
+check(Yii::$app->response->statusCode === 429 && $locked['success'] === false && !isset($locked['seed']), 'locked: no seed even with the right PIN');
+check(Yii::$app->cache->get('wallet-secret-attempts:seed:7') !== false, 'seed lock kept in cache (24 hours)');
+check(call('verify-pin', ['crypted_pin' => $wallet['crypted_pin'], 'pin' => '54321'])['valid'] === true, 'seed lock does not lock the PIN unlock screen');
+Yii::$app->cache->delete('wallet-secret-attempts:seed:7');
 asUser(8);
-check(call('reveal-seed', $wallet + ['password' => 'wallet-password'])['success'] === false, 'other user cannot reveal seed with stolen ciphertexts');
+check(call('reveal-seed', $wallet + ['pin' => '54321'])['success'] === false, 'other user cannot reveal seed with stolen ciphertexts');
 asUser(7);
-$legacySeed = call('reveal-seed', ['cryptedseed' => WebApp::encrypt('seed words'), 'prv_pas' => WebApp::encrypt('wallet-password'), 'password' => 'wallet-password']);
+$legacySeed = call('reveal-seed', ['cryptedseed' => WebApp::encrypt('seed words'), 'crypted_pin' => WebApp::encrypt('54321'), 'pin' => '54321']);
 check($legacySeed['success'] === true
     && WebApp::decryptForUser($legacySeed['upgraded']['cryptedseed'], 7)['value'] === 'seed words'
-    && WebApp::decryptForUser($legacySeed['upgraded']['prv_pas'], 7)['value'] === 'wallet-password', 'legacy seed and password upgraded to bound format');
-expectHttp(400, fn() => call('reveal-seed', $wallet + ['password' => 'wallet-password'], 'POST', false), 'reveal-seed requires CSRF token');
+    && WebApp::decryptForUser($legacySeed['upgraded']['crypted_pin'], 7)['value'] === '54321', 'legacy seed and PIN upgraded to bound format');
+expectHttp(400, fn() => call('reveal-seed', $wallet + ['pin' => '54321'], 'POST', false), 'reveal-seed requires CSRF token');
 
 echo 'PASS ' . $checks . " wallet secrets checks\n";

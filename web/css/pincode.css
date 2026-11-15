@@ -23,3 +23,7 @@
 .wallet-pin-key-text { background: transparent; font-size: 1.25rem; color: var(--tblr-secondary, #667382); }
 .wallet-pin-actions { display: flex; gap: .75rem; width: 100%; max-width: 22rem; }
 .wallet-pin-actions .btn { flex: 1 1 0; }
+/* Master seed: 12 parole numerate */
+.wallet-seed-words { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem 1rem; width: 100%; max-width: 24rem; margin: 0; padding-left: 2rem; font-family: var(--tblr-font-monospace, monospace); font-size: 1.1rem; user-select: none; }
+.wallet-seed-words li { padding: .35rem .5rem; border-radius: .5rem; background: #eef1f5; }
+@media (min-width: 576px) { .wallet-seed-words { grid-template-columns: repeat(3, 1fr); max-width: 32rem; } }

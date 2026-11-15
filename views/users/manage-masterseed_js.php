@@ -1,105 +1,86 @@
 <?php
 
+/* Master seed: PIN sul tastierino a schermo intero, verifica sul server (wallet/reveal-seed), poi le 12 parole. */
 
 $manageSeed = <<<JS
 
 $(function () {
     'use strict';
 
-    // leggo lo status attuale della tabella pin
-    var masterseedSlider = document.querySelector('.masterseedSlider');
-    masterseedSlider.addEventListener('click', function(){
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('masterSeedModal'), {backdrop: 'static', keyboard: false}).show();
+    var askModal = document.getElementById('masterSeedModal');
+    var showModal = document.getElementById('showMasterSeedModal');
+    var confirmButton = document.getElementById('showMasterSeed');
 
-    });
-
-    function resetSlider(className)
-    {
-        $('.'+className).removeClass('checked');
+    function resetSlider() {
+        $('.masterseedSlider').removeClass('checked').attr('aria-checked', 'false');
     }
 
-    // evita di copiare e incollare il seed
-    $('.no-copypaste').bind('copy paste cut drag drop', function (e) {
-      e.preventDefault();
+    // apertura: tastierino nuovo a ogni richiesta, pulsante attivo solo con 5 cifre
+    document.querySelector('.masterseedSlider').addEventListener('click', function () {
+        dropNumpad(true);
+        $('#masterSeedError').text('');
+        $('.pin-seed-numpad').append(pin_numpad);
+        confirmButton.disabled = true;
+        bootstrap.Modal.getOrCreateInstance(askModal, {backdrop: 'static', keyboard: false}).show();
+    });
+    $(document).on('wallet:pin-complete', function () { if (askModal.classList.contains('show')) confirmButton.disabled = false; });
+    $(document).on('wallet:pin-incomplete', function () { confirmButton.disabled = true; });
+
+    askModal.addEventListener('hidden.bs.modal', function () { dropNumpad(true); });
+    ['.masterseedSliderBack1', '.masterseedSliderBack2', '.masterseedSliderBack3'].forEach(function (selector) {
+        document.querySelector(selector).addEventListener('click', resetSlider);
     });
 
-    // INTERCETTA IL PULSANTE indietro SULLA PRIMA SCHERMATA e reset pulsanti
-    var masterseedSliderBack1 = document.querySelector('.masterseedSliderBack1');
-    masterseedSliderBack1.addEventListener('click', function(){
-        resetSlider('masterseedSlider');
-    });
+    // il seed non si copia e non si trascina
+    $('.no-copypaste').on('copy paste cut drag drop', function (e) { e.preventDefault(); });
 
-    // INTERCETTA IL PULSANTE indietro SULLA SECONDA SCHERMATA e reset pulsanti
-    var masterseedSliderBack2 = document.querySelector('.masterseedSliderBack2');
-    masterseedSliderBack2.addEventListener('click', function(){
-        resetSlider('masterseedSlider');
+    confirmButton.addEventListener('click', function () {
+        var pin = $('#pin_password').val();
+        confirmButton.disabled = true;
+        $('#masterSeedError').text('');
+        Promise.all([readAllData('mseed'), readAllData('pin')]).then(function (stores) {
+            var mseed = stores[0][0], storedPin = stores[1][0];
+            if (typeof mseed === 'undefined' || typeof storedPin === 'undefined') {
+                $('#masterSeedError').text(yiiOptions.messages.seedNotFound);
+                return;
+            }
+            $.ajax({
+                url: yiiOptions.revealSeedURL,
+                type: 'POST',
+                data: {'cryptedseed': mseed.cryptedseed, 'crypted_pin': storedPin.pin, 'pin': pin},
+                dataType: 'json'
+            }).done(function (data) {
+                if (!data.success) {
+                    $('#masterSeedError').text(data.locked ? yiiOptions.messages.tooManyAttempts : yiiOptions.messages.wrongPin);
+                    easy_pin_clear();
+                    return;
+                }
+                var list = $('#masterSeed').empty();
+                String(data.seed).trim().split(/\\s+/).forEach(function (word) { $('<li>').text(word).appendTo(list); });
+                // dati salvati nel formato precedente: sostituiti con quelli legati all'utente
+                if (data.upgraded.cryptedseed) {
+                    mseed.cryptedseed = data.upgraded.cryptedseed;
+                    writeData('mseed', mseed);
+                }
+                if (data.upgraded.crypted_pin) {
+                    storedPin.pin = data.upgraded.crypted_pin;
+                    writeData('pin', storedPin);
+                }
+                bootstrap.Modal.getOrCreateInstance(askModal).hide();
+                bootstrap.Modal.getOrCreateInstance(showModal, {backdrop: 'static', keyboard: false}).show();
+            }).fail(function (j) {
+                $('#masterSeedError').text(j.status === 429 ? yiiOptions.messages.tooManyAttempts : yiiOptions.messages.wrongPin);
+                easy_pin_clear();
+            });
+        });
     });
-
-    // INTERCETTA IL PULSANTE indietro SULLA SECONDA SCHERMATA e reset pulsanti
-    var masterseedSliderBack3 = document.querySelector('.masterseedSliderBack3');
-    masterseedSliderBack3.addEventListener('click', function(){
-        resetSlider('masterseedSlider');
-    });
-
-    // INTERCETTA IL PULSANTE indietro e reset pulsanti
-    var resetSliderAriaMaster2 = document.querySelector('#resetSliderAriaMaster2');
-    resetSliderAriaMaster2.addEventListener('click', function(){
-        resetSlider('masterseedSlider');
-    });
-
-    // INTERCETTA IL PULSANTE indietro e reset pulsanti
-    var resetSliderAriaMaster1 = document.querySelector('#resetSliderAriaMaster1');
-    resetSliderAriaMaster1.addEventListener('click', function(){
-        resetSlider('masterseedSlider');
-    });
-
-    // il server mostra il seed solo dopo aver verificato la password del wallet
-    var masterSeedButton = document.querySelector('#showMasterSeed');
-	masterSeedButton.addEventListener('click', function() {
-		var password = $('#masterSeedPassword').val();
-		$('#masterSeedPassword').val('');
-		$('#masterSeed').html(spinner);
-		Promise.all([readAllData('mseed'), readAllData('wallet')]).then(function(stores) {
-			var mseed = stores[0][0], wallet = stores[1][0];
-			if (typeof mseed === 'undefined' || typeof wallet === 'undefined') {
-				$('#masterSeed').text(yiiOptions.messages.seedNotFound);
-				return;
-			}
-			$.ajax({
-				url: yiiOptions.revealSeedURL,
-				type: "POST",
-				data: {'cryptedseed': mseed.cryptedseed, 'prv_pas': wallet.prv_pas, 'password': password},
-				dataType: "json",
-				success:function(data){
-					if (!data.success) {
-						$('#masterSeed').text(yiiOptions.messages.wrongPassword);
-						return;
-					}
-					$('#masterSeed').text(data.seed);
-					// dati salvati nel formato precedente: sostituiti con quelli legati all'utente
-					if (data.upgraded.cryptedseed) {
-						mseed.cryptedseed = data.upgraded.cryptedseed;
-						writeData('mseed', mseed);
-					}
-					if (data.upgraded.prv_pas) {
-						wallet.prv_pas = data.upgraded.prv_pas;
-						writeData('wallet', wallet);
-					}
-				},
-				error: function(j){
-					$('#masterSeed').text(j.status === 429 ? yiiOptions.messages.tooManyAttempts : yiiOptions.messages.wrongPassword);
-				}
-			});
-		});
-	});
+    // le parole non restano nella pagina dopo la chiusura
+    showModal.addEventListener('hidden.bs.modal', function () { $('#masterSeed').empty(); });
 });
-
 
 JS;
 $this->registerJs(
     $manageSeed,
-    yii\web\View::POS_READY, //POS_END
+    yii\web\View::POS_READY,
     'manageSeed'
 );
-
-?>
