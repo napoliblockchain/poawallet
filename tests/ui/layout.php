@@ -132,6 +132,7 @@ $send = $render('send/index');
 check(str_contains($send, 'id="send-form"') && str_contains($send, 'id="activate-camera-btn"') && str_contains($send, 'id="sellOrder"') && str_contains($send, 'class="modal fade" id="cameraPopup"'),
     'Send: form, camera button, confirmation and camera dialogs');
 check(str_contains($send, 'import QrScanner from "/js/qrcodescanner/') && !str_contains($send, '"./js/'), 'QR scanner loaded from absolute paths');
+check(str_contains($send, 'window.applyPaymentRequest = function') && str_contains($send, 'window.applyPaymentRequest(result)'), 'Scanned or pasted payment request filled by the same parser');
 foreach (['sendform-to', 'sendform-amount', 'sendform-memo', 'sendform-from', 'sendform-balance', 'error-summary', 'amount-to-send-gas'] as $id) {
     check(str_contains($send, 'id="' . $id . '"'), 'Send script hook kept: ' . $id);
 }

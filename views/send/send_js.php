@@ -48,6 +48,25 @@ $wallet_send = <<<JS
         return 0;
     }
 
+    /*
+     * Richiesta di pagamento "indirizzo&amount=X&message=Y" (QR del POS, o testo incollato nel destinatario):
+     * compila destinatario, importo e messaggio; importo e messaggio della richiesta non si modificano.
+     */
+    window.applyPaymentRequest = function (text) {
+        var match = /^\s*(0x[0-9a-fA-F]{40})(?:&(.*))?\s*$/.exec(String(text));
+        if (!match) return false;
+        var params = new URLSearchParams(match[2] || '');
+        $('#sendform-to').val(match[1]);
+        var amount = params.get('amount') || '';
+        var memo = params.get('message') || '';
+        $('#sendform-amount').val(amount).prop('readonly', amount !== '');
+        $('#sendform-memo').val(memo).prop('readonly', memo !== '');
+        return true;
+    };
+    $('#sendform-to').on('input', function () {
+        if (this.value.indexOf('&') !== -1) applyPaymentRequest(this.value);
+    });
+
     var sendForm = document.querySelector('#send-form');
     var stepButton = document.querySelector('#getCheckedButton1');
     var submitButton = document.querySelector('.pay-submit');
