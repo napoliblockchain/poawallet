@@ -79,6 +79,7 @@ foreach (['id="quantity_circle"', 'id="quantity_notify"', 'id="notification-list
 }
 check(str_contains($html, '/js/wallet-sync.js') && !str_contains($html, 'ws-websocket.js') && !str_contains($html, 'wss_server') && !str_contains($html, 'WebSocketServerAddress'),
     'Polling synchronization, no WebSocket client or blocking alert');
+check(!str_contains($html, 'ws-latest.js') && !str_contains($html, 'latestWorker'), 'No browser-driven chain scan (indexer only, no duplicate notifications)');
 check(!str_contains($html, 'data-toggle=') && !str_contains($html, 'data-dismiss="modal"') && !str_contains($html, 'class="close"'), 'No Bootstrap 4 data attributes in the layout');
 
 $render = static function (string $route, array $params = []) use ($app): string {

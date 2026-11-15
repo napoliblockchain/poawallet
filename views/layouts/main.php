@@ -9,7 +9,6 @@ use app\assets\PincodeAsset;
 use app\assets\NotificationsAsset;
 use app\assets\ServiceWorkerAsset;
 use app\assets\WalletSyncAsset;
-use app\assets\SynchronizeLatestBlocksAsset;
 
 use app\components\Settings;
 
@@ -34,7 +33,6 @@ AppAsset::register($this);
 PincodeAsset::register($this);
 ServiceWorkerAsset::register($this);
 WalletSyncAsset::register($this);
-SynchronizeLatestBlocksAsset::register($this);
 
 // try to fix page call to backend/notify
 NotificationsAsset::register($this);

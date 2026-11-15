@@ -3,8 +3,8 @@ importScripts('src/js/idb.js');
 importScripts('src/js/idb-utility.js');
 
 // cambiare la versione a ogni modifica di file statici senza ?v= (es. web worker): svuota le cache vecchie
-var CACHE_STATIC_NAME = 'poawallet-static-018';
-var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-018';
+var CACHE_STATIC_NAME = 'poawallet-static-019';
+var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-019';
 
 var OFFLINE_URL = 'offline.html';
 
@@ -20,9 +20,6 @@ var STATIC_FILES = [
 	'js/wallet-sync.js',
 	'js/web-workers/eth-tx.js',
 
-	// search latest transactions
-	'js/ws-latest.js',
-	'js/web-workers/latestWorker.js',
 
 	// manage notifications
 	'js/notifications-MainWorker.js',

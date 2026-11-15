@@ -100,4 +100,6 @@ $(function () {
 
     status.set("pending");
     poll();
+    // invii rimasti in coda nel browser (offline): ricontrollati sul server (idb-utility.js)
+    if (typeof checkPendingTransactions === "function") checkPendingTransactions();
 });
