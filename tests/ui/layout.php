@@ -91,6 +91,7 @@ $render = static function (string $route, array $params = []) use ($app): string
 $profile = $render('users/view', ['id' => app\components\WebApp::encrypt($userId)]);
 check(str_contains($profile, 'pincodeslider') && str_contains($profile, 'masterseedSlider') && str_contains($profile, 'js-push-btn-modal') && str_contains($profile, 'id="pinNewModal"'),
     'Profile without transactions renders, switches and PIN dialogs present');
+check(!str_contains($profile, 'anonymous.png') && str_contains($profile, 'fa-user'), 'Profile shows the user icon, no picture');
 foreach (['settings/index' => 'blockchainRescan', 'network/index' => 'network-block-number', 'smartcontracts/index' => 'TTS dev', 'blockchains/index' => 'Dev QBFT',
     'nodes/update' => 'nodes-id_blockchain', 'messages/index' => 'notifications-form'] as $route => $marker) {
     $page = $render($route);

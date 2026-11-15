@@ -27,8 +27,6 @@ include ('manage-push_js.php');
 $this->title = Yii::t('app', 'User Profile');
 $symbol = Html::encode($node->smartContract->symbol);
 $fullName = trim($model->first_name . ' ' . $model->last_name);
-$picture = (string) $model->picture;
-if ($picture !== '' && !preg_match('~^(/|https?://)~i', $picture)) $picture = '/' . $picture;
 // installazione dell'app sulla schermata Home (deferredPrompt da service.js)
 $this->registerJs(<<<JS
 window.saveOnDesktop = function () {
@@ -44,9 +42,8 @@ JS, yii\web\View::POS_END, 'wallet_save_on_desktop');
 ?>
 <div class="card mb-3">
     <div class="card-body d-flex align-items-center gap-3">
-        <span class="avatar avatar-lg rounded-circle bg-primary-lt"<?= $picture !== '' ? ' style="background-image: url(' . Html::encode($picture) . ')"' : '' ?>>
-            <?= $picture !== '' ? '' : '<i class="fas fa-user" aria-hidden="true"></i>' ?>
-        </span>
+        <!-- per ora solo icona: immagine del social o caricata dall'utente in un passo successivo -->
+        <span class="avatar avatar-lg rounded-circle bg-primary-lt"><i class="fas fa-user" aria-hidden="true"></i></span>
         <div class="min-w-0">
             <h2 class="mb-0 text-truncate"><?= Html::encode($fullName !== '' ? $fullName : $model->email) ?></h2>
             <div class="text-secondary text-truncate"><?= Html::encode($model->email) ?></div>
