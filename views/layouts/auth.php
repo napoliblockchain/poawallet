@@ -21,7 +21,7 @@ ServiceWorkerAsset::register($this);
     <meta name="theme-color" content="#2a4fa0">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
     <?php $this->head() ?>
 </head>
 <body class="wallet-auth">
@@ -30,7 +30,7 @@ ServiceWorkerAsset::register($this);
     <div class="container container-tight py-4">
         <div class="text-center mb-4">
             <a href="<?= Url::to(['site/index']) ?>" class="wallet-brand">
-                <img src="css/images/logo.png" alt="">
+                <img src="/css/images/logo.png" alt="">
                 <span><?= Html::encode(Yii::$app->name) ?></span>
             </a>
         </div>

@@ -24,9 +24,9 @@ $options = [
     'recipientError' => Yii::t('app','Recipient address not entered.'),
     'htmlTransactionBody' => '<div class="alert alert-warning">
                                 <p class="generating">'.Yii::t('app','Generating transaction...').'</p>
-                                <div class="button-spinner spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>
+                                <div class="button-spinner spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
                                 </div>',
-    'spinner' => '<div class="button-spinner spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
+    'spinner' => '<div class="button-spinner spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
     'zerogas' => $blockchain->blockchain->zerogas,
     //'textClose' => Yii::t('app','Close'),
     // ...

@@ -1,7 +1,7 @@
 <?php
 use yii\helpers\Url;
 // use yii\helpers\Html;
-use yii\bootstrap4\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 use drsdre\wizardwidget;
 

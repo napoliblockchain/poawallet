@@ -10,9 +10,8 @@ $(function () {
     // check click su slider
     var blockchainRescanSlider = document.querySelector('.blockchainRescan');
     blockchainRescanSlider.addEventListener('click', function(){
-        wssstop = 1;
-        webSocket.close();
-        console.log('[ws] websocket close', wssstop);
+        // nessuna sincronizzazione durante la nuova scansione
+        if (window.walletSync) walletSync.pause();
         $('#blockchainScanModal').modal({
 			  backdrop: 'static',
 			  keyboard: false
@@ -22,7 +21,7 @@ $(function () {
 
     function resetSlider(className)
     {
-        wssstop = 0;
+        if (window.walletSync) walletSync.resume();
         $('.'+className).removeClass('checked');
     }
 

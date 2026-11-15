@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Url;
-use yii\bootstrap4\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 use drsdre\wizardwidget;
 use app\components\WebApp;
@@ -225,7 +225,7 @@ $sendForm->from = $fromAddress;
             <div class="popup-container add bg-transparent">
                 <div class="popup-content wallet-address h-100">
 
-                    <img src="css/img/content/crypto-buy.png" class="img-buy mt-20" alt="">
+                    <img src="/css/img/content/crypto-buy.png" class="img-buy mt-20" alt="">
 
                     <div class="no-hide-content">
                         <div class="send-v2__form-row " style="background-color: aliceblue;">

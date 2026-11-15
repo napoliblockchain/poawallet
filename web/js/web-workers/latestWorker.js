@@ -19,7 +19,7 @@ onmessage = e => {
 }
 
 function parseUrl(action){
-    return `../../index.php?r=` + action;
+    return `/` + action; // URL puliti (urlManager enablePrettyUrl)
 }
 
 

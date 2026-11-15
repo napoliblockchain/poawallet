@@ -47,16 +47,15 @@ $(function () {
         openAllEnvelopes: async function () {
             try {
                 var response = await $.ajax({
-                    url: "index.php?r=backend/update-all-news",
+                    url: "/backend/update-all-news",
                     type: "POST",
                     dataType: "json",
                     beforeSend: function () {
                         $(".markall").html(yiiGlobalOptions.spinner);
                     },
                 });
-                if (response && response.success && notifyHandle) {
-                    notifyHandle.sendAction({ action: 'getNotifications' });
-                }
+                // il ciclo di notificationsWorker aggiorna l'elenco entro pochi secondi
+                if (response && response.success) $("#quantity_circle").hide();
             } catch (e) {
                 console.log("[notify] update-all-news error", e);
             }
@@ -71,7 +70,7 @@ $(function () {
             var submitUrl = $("#news_" + idNotification).attr("href");
             try {
                 var response = await $.ajax({
-                    url: "index.php?r=backend/update-single-news",
+                    url: "/backend/update-single-news",
                     type: "POST",
                     data: { id_notification: idNotification },
                     dataType: "json",
@@ -86,17 +85,12 @@ $(function () {
         },
     };
 
-    // Websocket mode active: helper only, no polling worker.
-    if (yiiGlobalOptions && yiiGlobalOptions.WebSocketServerAddress) {
-        return;
-    }
-
     if (typeof Worker === "undefined") {
         console.log("[notify] Browser no support Web Workers");
         return;
     }
 
-    var notificationsWorker = new Worker("js/web-workers/notificationsWorker.js");
+    var notificationsWorker = new Worker("/js/web-workers/notificationsWorker.js");
     notificationsWorker.onmessage = function (event) {
         notify.handleResponse(event.data);
     };

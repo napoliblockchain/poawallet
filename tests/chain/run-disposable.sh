@@ -1,5 +1,5 @@
 #!/bin/sh
-# Esegue tests/chain/erc20-integration.php su MySQL e chain Besu usa-e-getta (rete interna, nessuna porta host).
+# Esegue tests/chain/erc20-integration.php e tests/ui/layout.php su MySQL e chain Besu usa-e-getta (rete interna, nessuna porta host).
 # Immagine wallet costruita da questo checkout (target dev); mai la sandbox o la chain condivise.
 # Richiede le immagini locali napay/chain-tools:dev e hyperledger/besu:26.9.0.
 set -eu
@@ -105,3 +105,4 @@ compose up -d --wait --wait-timeout 180 mysql besu
 compose run --rm chain-deploy >/dev/null
 compose run --rm --no-deps wallet php yii migrate --interactive=0 >/dev/null
 compose run --rm --no-deps wallet php tests/chain/erc20-integration.php
+compose run --rm --no-deps wallet php tests/ui/layout.php

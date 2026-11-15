@@ -11,7 +11,7 @@
 			</div>
 			<div class="modal-footer">
         		<div class="form-group">
-					<button type="button" class="btn btn-secondary text-capitalize" data-dismiss="modal" id="pinNewButtonBack">
+					<button type="button" class="btn btn-secondary text-capitalize" data-bs-dismiss="modal" id="pinNewButtonBack">
 						<i class="fa fa-backward"></i> <?php echo Yii::t('app','back');?>
 					</button>
 				</div>
@@ -37,7 +37,7 @@
 			</div>
 			<div class="modal-footer">
                 <div class="form-group">
-					<button type="button" class="btn btn-secondary text-capitalize" data-dismiss="modal" id="pinVerifyButtonBack">
+					<button type="button" class="btn btn-secondary text-capitalize" data-bs-dismiss="modal" id="pinVerifyButtonBack">
 						<i class="fa fa-backward"></i> <?php echo Yii::t('app','back');?>
 					</button>
 				</div>
@@ -63,7 +63,7 @@
 			</div>
 			<div class="modal-footer">
                 <div class="form-group">
-					<button type="button" class="btn btn-secondary " data-dismiss="modal" id="pinRemoveButtonBack" >
+					<button type="button" class="btn btn-secondary " data-bs-dismiss="modal" id="pinRemoveButtonBack" >
 						<i class="fa fa-backward"></i> <?php echo Yii::t('app','back');?>
 					</button>
 				</div>

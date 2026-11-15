@@ -5,7 +5,7 @@ use yii\web\View;
 $options = [
     'language' => Yii::$app->language,
     'getTokens' => Url::to(['/settings/nodes/tokens-list']),
-    'spinner' => '<div class="button-spinner spinner-border text-primary" style="width:1.3rem; height:1.3rem;" role="status"><span class="sr-only">Loading...</span></div>',
+    'spinner' => '<div class="button-spinner spinner-border text-primary" style="width:1.3rem; height:1.3rem;" role="status"><span class="visually-hidden">Loading...</span></div>',
     // ...
 ];
 $this->registerJs(

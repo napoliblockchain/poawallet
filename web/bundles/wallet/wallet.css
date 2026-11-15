@@ -30,3 +30,71 @@
 .wallet-auth .wallet-switch a { color: #fff; font-weight: 600; }
 .wallet-footer { color: rgba(255, 255, 255, .7); font-size: .8rem; text-align: center; }
 .wallet-footer a { color: #fff; }
+
+/* ---------- App: barra in alto, menu in basso (mobile) / in linea (desktop) ---------- */
+.wallet-app { background: var(--tblr-body-bg, #f6f8fb); }
+.wallet-topbar { background: linear-gradient(120deg, var(--wallet-brand) 0%, var(--wallet-brand-dark) 100%); color: #fff; }
+.wallet-topbar .navbar-brand { color: #fff; gap: .5rem; }
+.wallet-topbar .navbar-brand img { width: 32px; height: auto; }
+.wallet-topbar .btn-icon { color: #fff; background: transparent; border: 0; position: relative; font-size: 1.15rem; }
+.wallet-topbar .btn-icon:hover, .wallet-topbar .btn-icon:focus { color: #fff; background: rgba(255, 255, 255, .12); }
+.wallet-topbar .header-message { color: rgba(255, 255, 255, .85); }
+.wallet-main { padding-bottom: 5.5rem; }
+
+.wallet-tabbar { background: #fff; border-top: 1px solid var(--tblr-border-color, #e6e7e9); }
+.wallet-tabbar .nav-link {
+    display: flex; flex-direction: column; align-items: center; gap: .15rem;
+    color: var(--tblr-secondary, #667382); font-size: .72rem; padding: .45rem .25rem;
+}
+.wallet-tabbar .nav-link i { font-size: 1.2rem; }
+.wallet-tabbar .nav-link.active { color: var(--wallet-brand); font-weight: 600; }
+@media (max-width: 767.98px) {
+    .wallet-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; padding-bottom: env(safe-area-inset-bottom); }
+    .wallet-tabbar .nav { justify-content: space-around; flex-wrap: nowrap; }
+    .wallet-tabbar .nav-item { flex: 1 1 0; text-align: center; }
+}
+@media (min-width: 768px) {
+    .wallet-main { padding-bottom: 2rem; }
+    .wallet-tabbar { border-top: 0; border-bottom: 1px solid var(--tblr-border-color, #e6e7e9); }
+    .wallet-tabbar .nav-link { flex-direction: row; gap: .5rem; font-size: .9rem; padding: .75rem 1rem; }
+    .wallet-tabbar .nav-link.active { box-shadow: inset 0 -2px 0 var(--wallet-brand); }
+}
+
+/* Stato sincronizzazione (wallet-sync.js) e contatore notifiche */
+.pulse-button {
+    display: inline-block; width: 12px; height: 12px; border: 0; padding: 0; border-radius: 50%;
+    background-color: #2fb344; box-shadow: 0 0 0 0 rgba(47, 179, 68, .7);
+    animation: wallet-pulse 1.25s infinite cubic-bezier(.66, 0, 0, 1); cursor: default;
+}
+.pulse-button-offline { background-color: #d63939; box-shadow: 0 0 0 0 rgba(214, 57, 57, .7); }
+.pulse-button-pending { background-color: #9ba9be; animation: none; }
+@keyframes wallet-pulse { to { box-shadow: 0 0 0 10px rgba(47, 179, 68, 0); } }
+@media (prefers-reduced-motion: reduce) { .pulse-button { animation: none; } }
+.notify-quantity {
+    position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px; line-height: 16px;
+    padding: 0 3px; border-radius: 8px; background: #d63939; color: #fff; font-size: 10px; text-align: center;
+}
+
+/* Pannello notifiche (aperto/chiuso da global.script.js: data-search) */
+.search-form { display: none; position: fixed; inset: 0; z-index: 1050; background: rgba(24, 36, 51, .45); }
+.search-form .wallet-notifications { max-width: 32rem; margin: 4.5rem auto 0; max-height: calc(100vh - 6rem); overflow-y: auto; }
+.search-form .notification-list > li { padding: .75rem 1rem; border-bottom: 1px solid var(--tblr-border-color, #e6e7e9); }
+
+/* Avviso fisso: nuova versione dell'app */
+#snackbar {
+    visibility: hidden; position: fixed; left: 50%; transform: translateX(-50%); bottom: 6rem; z-index: 1060;
+    width: min(92vw, 26rem); padding: 1rem; border-radius: .75rem; background: #182433; color: #fff; text-align: center;
+    box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .3);
+}
+#snackbar.show { visibility: visible; animation: wallet-fadein .4s; }
+@keyframes wallet-fadein { from { opacity: 0; transform: translate(-50%, 1rem); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* Animazioni all'arrivo di una transazione (ws-websocket.js) */
+.animationTransaction { animation: wallet-tx-in 1.5s both; }
+@keyframes wallet-tx-in { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.animationBalanceIn { animation: wallet-balance-in 2s both; }
+@keyframes wallet-balance-in { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.animationStar { animation: wallet-spin 1s linear; }
+@keyframes wallet-spin { to { transform: rotate(3600deg); } }
+.bg-newtransaction { background-color: rgba(42, 79, 160, .12) !important; }
+.button-spinner { width: 1.3rem; height: 1.3rem; }

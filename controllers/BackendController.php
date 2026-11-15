@@ -191,7 +191,7 @@ class BackendController extends Controller
 
 			$response['htmlContent'] .= '<li class='.$classUnread.'>
 			<a onclick="notify.openEnvelope('.$notify->id.', event); return false;"
-				href="'.htmlentities('index.php?'.$parsedurl['query']).'"
+				href="'.htmlentities('/index.php?'.($parsedurl['query'] ?? '')).'"
 				id="news_'.$notify->id.'">
 	   			<div class="d-flex justify-content-between">
 

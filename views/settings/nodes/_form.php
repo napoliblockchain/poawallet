@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use app\models\Blockchains;
 use app\models\SmartContracts;
-use yii\bootstrap4\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Nodes */

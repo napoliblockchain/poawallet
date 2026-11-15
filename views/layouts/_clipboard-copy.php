@@ -4,15 +4,13 @@
 		<div class="modal-content bg-info text-light">
 			<div class="modal-header">
 				<h5 class="modal-title" id="copyAddressModalLabel"><?php echo Yii::t('app','Message');?></h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">×</span>
-				</button>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<div class="modal-body">
 				<?php echo Yii::t('app','Address copied in clipboard.');?>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-dismiss="modal" style="min-width:100px; padding:2.5px 10px 2.5px 10px; height:30px;">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="min-width:100px; padding:2.5px 10px 2.5px 10px; height:30px;">
 					<?php echo Yii::t('app','Close');?>
 				</button>
 			</div>

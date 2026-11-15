@@ -4,9 +4,7 @@
 		<div class="modal-content alert alert-danger">
 			<div class="modal-header">
 				<h5 class="modal-title" id="blockchainScanModalLabel"><?php echo Yii::t('app','Blockchain Reset');?></h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true" id="resetSliderAriablockchain">×</span>
-				</button>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="resetSliderAriablockchain"></button>
 			</div>
 			<div class="modal-body">
 				<p><?php echo Yii::t('app','WARNING - This operation tries to restore the transactions history. Scanning may consume a lot of memory and slow down normal phone activity.');?></p>
@@ -16,10 +14,10 @@
 			</div>
 			<div class="modal-footer">
 				<div class="form-group">
-					<button type="button" class="blockchainScanSliderBack2 btn btn-secondary" data-dismiss="modal" >
+					<button type="button" class="blockchainScanSliderBack2 btn btn-secondary" data-bs-dismiss="modal" >
 						<i class="fa fa-backward"></i> <?php echo Yii::t('app','Back');?>
 					</button>
-					<button type="button" class="btn btn-primary" data-dismiss="modal" id="showblockchainScan" data-toggle="modal" data-target="#showblockchainScanModal">
+					<button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="showblockchainScan" data-bs-toggle="modal" data-bs-target="#showblockchainScanModal">
 						<i class="fa fa-thumbs-up"></i> <?php echo Yii::t('app','Confirm');?>
 					</button>
 				</div>

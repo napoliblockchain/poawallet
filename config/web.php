@@ -10,6 +10,17 @@ $config = [
     'language' => 'en-US', // Specifies which language the application is targeted to
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+    // link vecchio schema (index.php?r=rotta: mail, notifiche salvate, app installate): stessa rotta, nessun redirect
+    'on beforeRequest' => static function () {
+        $request = Yii::$app->request;
+        $route = $request->getQueryParam('r');
+        if (is_string($route) && preg_match('~^[a-z0-9][a-z0-9/-]*$~', $route) && in_array($request->getPathInfo(), ['', 'index.php'], true)) {
+            $params = $request->getQueryParams();
+            unset($params['r']);
+            $request->setPathInfo($route);
+            $request->setQueryParams($params);
+        }
+    },
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
@@ -112,21 +123,23 @@ $config = [
         'db' => $db,
 
         //this component manage the url creation
-        // 'urlManager' => [
-        //     'enablePrettyUrl' => true,
-        //     'showScriptName' => false,
-        //     // 'rules' => [
-        //     //
-        //     //
-        //     // ],
-        // ],
+        // URL puliti (/wallet/index); Apache instrada su index.php con FallbackResource (config/apache.conf)
+        'urlManager' => [
+            'enablePrettyUrl' => true,
+            'showScriptName' => false,
+        ],
 
         // this component add timestamp to downloaded css or javascript
         // to avoid forced refresh during develop
         //
         // ?v=<mtime> sugli asset: il service worker mette in cache per URL, così le modifiche arrivano ai browser
         'assetManager' => [
-            'appendTimestamp' => true
+            'appendTimestamp' => true,
+            // Tabler locale al posto di Bootstrap 5 (CSS e JS), come nel backoffice Napay
+            'bundles' => [
+                'yii\bootstrap5\BootstrapAsset' => ['class' => app\assets\TablerAsset::class],
+                'yii\bootstrap5\BootstrapPluginAsset' => ['class' => app\assets\TablerPluginAsset::class],
+            ],
         ],
 
     ],

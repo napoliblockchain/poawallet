@@ -15,7 +15,7 @@ $this->title = $name;
     <div class="site-error">
       <div class="body-content dash-balance jumbotron pb-5">
         <div class="text-center">
-          <img src="css/images/logo.png" alt="" width="220">
+          <img src="/css/images/logo.png" alt="" width="220">
         </div>
         <div class="form-divider"></div>
         <h3><?= Html::encode($this->title) ?></h3>

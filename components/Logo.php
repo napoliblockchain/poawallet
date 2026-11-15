@@ -34,7 +34,7 @@ class Logo extends Component
     $logo = '
     <a href="'. Url::to(['site/index']) .'">
         <div style="padding: 0px;" >
-            <img alt="logo" style="display: block; margin-left: auto;	margin-right: auto; max-width: 150px; " src="css/images/logo.png">
+            <img alt="logo" style="display: block; margin-left: auto;	margin-right: auto; max-width: 150px; " src="/css/images/logo.png">
         </div>
     </a>
      ';

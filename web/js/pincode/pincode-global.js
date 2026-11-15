@@ -112,7 +112,7 @@ $(function () {
         // verifica il PIN digitato; se il server restituisce il PIN nel nuovo formato lo salva al posto del vecchio
         verify: function (typedPin) {
             return $.ajax({
-                url: 'index.php?r=wallet/verify-pin',
+                url: '/wallet/verify-pin',
                 type: "POST",
                 data: {'crypted_pin': pincode.cryptedPin, 'pin': typedPin},
                 dataType: "json"

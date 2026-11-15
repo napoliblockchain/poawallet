@@ -22,18 +22,18 @@
 			</div>
 			<div class="modal-footer">
                 <div class="form-group">
-					<button type="button" class="btn btn-secondary js-push-btn-modal-back" data-dismiss="modal" >
+					<button type="button" class="btn btn-secondary js-push-btn-modal-back" data-bs-dismiss="modal" >
 						<i class="fa fa-backward"></i> <?php echo Yii::t('app','back');?>
 					</button>
 				</div>
 
 				<div class="form-group">
-					<button type="button" class="js-push-btn btn btn-primary " data-dismiss="modal" >
+					<button type="button" class="js-push-btn btn btn-primary " data-bs-dismiss="modal" >
 						<i class="fa fa-thumbs-up"></i> <?php echo Yii::t('app','confirm');?>
 					</button>
 				</div>
                 <div class="form-group">
-					<button type="button" class="js-push-btn-remove btn btn-primary " data-dismiss="modal" style="display: none;">
+					<button type="button" class="js-push-btn-remove btn btn-primary " data-bs-dismiss="modal" style="display: none;">
 						<i class="fa fa-thumbs-down"></i> <?php echo Yii::t('app','remove');?>
 					</button>
 				</div>

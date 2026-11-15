@@ -1,6 +1,6 @@
 <?php
 use yii\helpers\Url;
-use yii\bootstrap4\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 
 $session = Yii::$app->session;

@@ -492,4 +492,12 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     'Back to login' => 'Torna all\'accesso',
     'Error! The registration time has expired. You have to register again!' => 'Errore! Il tempo per la registrazione è scaduto. Devi registrarti di nuovo!',
     'Error! Your account doesn\'t exist or you have already registered!' => 'Errore! L\'account non esiste o è già stato registrato!',
+    'Synchronized' => 'Sincronizzato',
+    'Synchronizing' => 'Sincronizzazione in corso',
+    'Server not reachable: retrying' => 'Server non raggiungibile: nuovo tentativo in corso',
+    'Update' => 'Aggiorna',
+    'Notifications' => 'Notifiche',
+    'Menu' => 'Menu',
+    'More' => 'Altro',
+    'Main menu' => 'Menu principale',
 ];

@@ -49,7 +49,7 @@ include ('manage-push_js.php');
 	<div class="resources-card-wrapper">
 		<div class="resources-card mr-10">
             <div class="d-flex flex-column flex-md-row">
-              <img src="css/img/content/ex2.png" class="max-w mb-10" alt="">
+              <img src="/css/img/content/ex2.png" class="max-w mb-10" alt="">
               <div class="d-flex flex-column ml-md-2">
                 <p class="text-muted mb-10 font-weight-medium"><?= Yii::t('app','Total Income') ?></p>
                 <div class="progress">
@@ -61,7 +61,7 @@ include ('manage-push_js.php');
         </div>
         <div class="resources-card ml-10">
             <div class="d-flex flex-column flex-md-row">
-              <img src="css/img/content/ex1.png" class="max-w mb-10" alt="">
+              <img src="/css/img/content/ex1.png" class="max-w mb-10" alt="">
               <div class="d-flex flex-column ml-md-2">
                 <p class="text-muted mb-10 font-weight-medium"><?= Yii::t('app','Expenses') ?></p>
                 <div class="progress">
@@ -79,7 +79,7 @@ include ('manage-push_js.php');
 	<div class="coin-box">
         <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-                <img class="img-xs" src="css/img/content/ref-icon3.png" alt="coin image">
+                <img class="img-xs" src="/css/img/content/ref-icon3.png" alt="coin image">
                 <div class="ml-10">
                   <h5 class="coin-name"><?= $node->smartContract->denomination; ?></h5>
                   <small class="text-muted"><?= WebApp::si_formatter($userAccountValueArray['balance']) ?> </small>
@@ -145,8 +145,8 @@ include ('manage-push_js.php');
 			<span class="list-item-title js-push-btn-modal-text"><?php echo Yii::t('app','PUSH notifications');?> <small class="text-muted"></small></span>
 
 			<div class="js-push-btn-modal sweet-check "
-					data-toggle="modal"
-					data-target="#pushEnableModal">
+					data-bs-toggle="modal"
+					data-bs-target="#pushEnableModal">
 				<div class="outline">
 					<span></span>
 				</div>

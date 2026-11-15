@@ -15,7 +15,7 @@ $(function () {
         // console.log(`[type of bcWorker]`,typeof(bcWorker));
 
         if (typeof bcWorker === "undefined") {
-            var bcWorker = new Worker("js/web-workers/latestWorker.js");
+            var bcWorker = new Worker("/js/web-workers/latestWorker.js");
         }
         bcWorker.onmessage = function(event) {
             // console.log('[From bc-latest] data:',event.data);

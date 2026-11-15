@@ -7,7 +7,7 @@ var userWalletAddress;
 if (("NDEFReader" in window)){
     $('.nfc-write-body').show();
     $.ajax({
-        url : 'index.php?r=receive/get-address',
+        url : '/receive/get-address',
         type: "GET",
         dataType: "json",
         success:function(data)

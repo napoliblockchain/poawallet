@@ -1,126 +1,71 @@
 <?php
 
-use yii\helpers\Url;
-use yii\helpers\Html;
-use yii\bootstrap4\NavBar; // needed to load bootstrap4 assets
 use app\components\UserRole;
+use app\components\WebApp;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
-// Ensure bootstrap4 assets are loaded.
-NavBar::begin();
-NavBar::end();
-
+/* Menu principale (in basso su mobile, in linea su desktop) e pannello "Altro" con le altre voci. */
 $route = Yii::$app->requestedRoute ?? '';
-$active = function (string $prefix) use ($route): string {
-    return str_starts_with($route, ltrim($prefix, '/')) ? 'active' : '';
-};
-
+$isActive = static fn(string $prefix): bool => str_starts_with($route, $prefix);
+$main = [
+    ['wallet', ['/wallet/index'], 'fas fa-wallet', Yii::t('app', 'My Wallet')],
+    ['send', ['/send/index'], 'far fa-paper-plane', Yii::t('app', 'Send')],
+    ['receive', ['/receive/index'], 'fas fa-qrcode', Yii::t('app', 'Receive')],
+    ['transactions', ['/transactions/index'], 'fas fa-list', Yii::t('app', 'Transactions')],
+];
+$more = [
+    ['mailbox', ['/mailbox/inbox'], 'fas fa-envelope', Yii::t('app', 'Mailbox')],
+    ['settings', ['/settings/index'], 'fas fa-network-wired', Yii::t('app', 'Network')],
+    ['nodes', ['/nodes/update'], 'fas fa-project-diagram', Yii::t('app', 'Select nodes')],
+    ['smartcontracts', ['/smartcontracts/index'], 'fas fa-star', Yii::t('app', 'Manage tokens')],
+    ['blockchains', ['/blockchains/index'], 'fas fa-link', Yii::t('app', 'Manage networks')],
+];
+if (UserRole::isWebmaster()) {
+    $more[] = ['standard-blockchain-values', ['/standard-blockchain-values/index'], 'fas fa-database', Yii::t('app', 'Standard networks')];
+    $more[] = ['standard-smart-contract-values', ['/standard-smart-contract-values/index'], 'fas fa-cubes', Yii::t('app', 'Standard tokens')];
+    $more[] = ['profiles', ['/profiles/index'], 'fas fa-id-badge', Yii::t('app', 'Profiles')];
+    $more[] = ['logs', ['/logs/index'], 'fas fa-clipboard-list', Yii::t('app', 'Logs')];
+}
+$more[] = ['users', ['/users/view', 'id' => WebApp::encrypt(Yii::$app->user->id)], 'fas fa-user-circle', Yii::t('app', 'Profile')];
+$moreActive = (bool) array_filter($more, static fn(array $item) => $isActive($item[0]));
 ?>
+<nav class="wallet-tabbar d-print-none" aria-label="<?= Html::encode(Yii::t('app', 'Main menu')) ?>">
+    <div class="container-xl">
+        <ul class="nav">
+            <?php foreach ($main as [$prefix, $url, $icon, $label]): ?>
+                <li class="nav-item">
+                    <a class="nav-link<?= $isActive($prefix) ? ' active' : '' ?>" href="<?= Url::to($url) ?>"<?= $isActive($prefix) ? ' aria-current="page"' : '' ?>>
+                        <i class="<?= $icon ?>" aria-hidden="true"></i><span><?= Html::encode($label) ?></span>
+                    </a>
+                </li>
+            <?php endforeach ?>
+            <li class="nav-item">
+                <a class="nav-link<?= $moreActive ? ' active' : '' ?>" href="#wallet-more" data-bs-toggle="offcanvas" role="button" aria-controls="wallet-more">
+                    <i class="fas fa-ellipsis-h" aria-hidden="true"></i><span><?= Html::encode(Yii::t('app', 'More')) ?></span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
 
-<div class="nav-menu" style="display: none;">
-    <nav class="menu">
-
-        <div class="nav-container">
-            <ul class="main-menu">
-                <li class="<?= $active('/wallet') ?>">
-                    <a href="<?= Url::to(['/wallet/index']) ?>">
-                        <i class="fas fa-wallet fa-lg text-primary"></i>
-                        <strong class="special"><?= Yii::t('app', 'My Wallet') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/send') ?>">
-                    <a href="<?= Url::to(['/send/index']) ?>">
-                        <i class="far fa-paper-plane fa-lg text-primary"></i>
-                        <strong class="special"><?= Yii::t('app', 'Send') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/receive') ?>">
-                    <a href="<?= Url::to(['/receive/index']) ?>">
-                        <i class="fas fa-download fa-lg text-primary"></i>
-                        <strong class="special"><?= Yii::t('app', 'Receive') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/transactions') ?>">
-                    <a href="<?= Url::to(['/transactions/index']) ?>">
-                        <i class="fa fa-list fa-lg text-primary"></i>
-                        <strong class="special"><?= Yii::t('app', 'Transactions') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/mailbox') ?>">
-                    <a href="<?= Url::to(['/mailbox/inbox']) ?>">
-                        <i class="fa fa-envelope fa-lg text-primary"></i>
-                        <strong class="special"><?= Yii::t('app', 'Mailbox') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/settings') ?>">
-                    <a href="<?= Url::to(['/settings/index']) ?>">
-                        <i class="fa fa-network-wired fa-lg text-primary"></i>
-                        <strong class="special"><?= Yii::t('app', 'Network') ?></strong>
-                    </a>
-                </li>
-
-                <!-- Step 1.2 admin/network entrypoints (tokenpay-compatible routes). -->
-                <li class="<?= $active('/nodes') ?>">
-                    <a href="<?= Url::to(['/nodes/update']) ?>">
-                        <i class="fa fa-project-diagram fa-lg text-info"></i>
-                        <strong class="special"><?= Yii::t('app', 'Select nodes') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/smartcontracts') ?>">
-                    <a href="<?= Url::to(['/smartcontracts/index']) ?>">
-                        <i class="fa fa-star fa-lg text-info"></i>
-                        <strong class="special"><?= Yii::t('app', 'Manage tokens') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/blockchains') ?>">
-                    <a href="<?= Url::to(['/blockchains/index']) ?>">
-                        <i class="fa fa-link fa-lg text-info"></i>
-                        <strong class="special"><?= Yii::t('app', 'Manage networks') ?></strong>
-                    </a>
-                </li>
-                <?php if (!Yii::$app->user->isGuest && UserRole::isWebmaster()): ?>
-                <li class="<?= $active('/standard-blockchain-values') ?>">
-                    <a href="<?= Url::to(['/standard-blockchain-values/index']) ?>">
-                        <i class="fa fa-database fa-lg text-secondary"></i>
-                        <strong class="special"><?= Yii::t('app', 'Standard networks') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/standard-smart-contract-values') ?>">
-                    <a href="<?= Url::to(['/standard-smart-contract-values/index']) ?>">
-                        <i class="fa fa-cubes fa-lg text-secondary"></i>
-                        <strong class="special"><?= Yii::t('app', 'Standard tokens') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/profiles') ?>">
-                    <a href="<?= Url::to(['/profiles/index']) ?>">
-                        <i class="fa fa-id-badge fa-lg text-warning"></i>
-                        <strong class="special"><?= Yii::t('app', 'Profiles') ?></strong>
-                    </a>
-                </li>
-                <li class="<?= $active('/logs') ?>">
-                    <a href="<?= Url::to(['/logs/index']) ?>">
-                        <i class="fa fa-clipboard-list fa-lg text-warning"></i>
-                        <strong class="special"><?= Yii::t('app', 'Logs') ?></strong>
-                    </a>
-                </li>
-                <?php endif ?>
-
-                <li class="<?= $active('/users') ?>">
-                    <a href="<?= Url::to(['users/view', 'id' => app\components\WebApp::encrypt(Yii::$app->user->identity->id)]); ?>">
-                        <i class="fas fa-user-circle fa-lg text-primary"></i>
-                        <strong class="special"><?= Yii::t('app', 'Profile') ?></strong>
-                    </a>
-                </li>
-                <li>
-                    <?php
-                    echo Html::beginForm(['/site/logout'], 'post')
-                        . Html::submitButton(
-                            '<i class="fa fa-sign-out-alt fa-lg mr-4"></i>' . Yii::t('app', 'Logout') . ' (' . Yii::$app->user->identity->first_name . ')',
-                            ['class' => 'btn btn-link logout']
-                        )
-                        . Html::endForm();
-                    ?>
-                </li>
-            </ul>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="wallet-more" aria-labelledby="wallet-more-title">
+    <div class="offcanvas-header">
+        <h2 class="offcanvas-title h3" id="wallet-more-title"><?= Html::encode(Yii::$app->user->identity->email ?? Yii::t('app', 'Menu')) ?></h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="<?= Html::encode(Yii::t('app', 'Close')) ?>"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div class="list-group list-group-flush">
+            <?php foreach ($more as [$prefix, $url, $icon, $label]): ?>
+                <a class="list-group-item list-group-item-action d-flex align-items-center gap-3<?= $isActive($prefix) ? ' active' : '' ?>" href="<?= Url::to($url) ?>">
+                    <i class="<?= $icon ?> fa-fw" aria-hidden="true"></i><?= Html::encode($label) ?>
+                </a>
+            <?php endforeach ?>
         </div>
-    </nav>
+        <div class="p-3">
+            <?= Html::beginForm(['/site/logout'], 'post')
+                . Html::submitButton('<i class="fas fa-sign-out-alt me-2" aria-hidden="true"></i>' . Html::encode(Yii::t('app', 'Logout')), ['class' => 'btn btn-outline-danger w-100'])
+                . Html::endForm() ?>
+        </div>
+    </div>
 </div>

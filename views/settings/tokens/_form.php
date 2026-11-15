@@ -5,7 +5,7 @@
 
 use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
-use yii\bootstrap4\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 use app\components\WebApp;
 use app\models\ContractType;
 use app\models\Blockchains;
