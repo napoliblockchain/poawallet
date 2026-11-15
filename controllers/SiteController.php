@@ -51,7 +51,7 @@ class SiteController extends Controller
      */
     public function actions()
     {
-        return [
+        $actions = [
             'error' => [
                 'class' => 'yii\web\ErrorAction',
             ],
@@ -59,23 +59,18 @@ class SiteController extends Controller
                 'class' => 'yii\captcha\CaptchaAction',
                 'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
             ],
-            'auth' => [
-                'class' => 'yii\authclient\AuthAction',
-                'successCallback' => [$this, 'onAuthSuccess'],
-            ]
         ];
+        // accessi social (Google, Facebook, GitHub) spenti finché SOCIAL_LOGIN non è attivo: solo email e password
+        if (Yii::$app->params['socialLogin']) {
+            $actions['auth'] = ['class' => 'yii\authclient\AuthAction', 'successCallback' => [$this, 'onAuthSuccess']];
+        }
+        return $actions;
     }
 
     public function onAuthSuccess($client)
     {
         (new AuthHandler($client))->handle();
     }
-
-    public function beforeAction($action)
-	{
-    	$this->enableCsrfValidation = false;
-    	return parent::beforeAction($action);
-	}
 
 
     public function actionError(){
@@ -184,7 +179,7 @@ class SiteController extends Controller
                 // verifica che non sia attivo e lo cancella
                 if ($user->status_activation_code == 0) {
                     $user->delete();
-                    Yii::$app->session->setFlash('registerError', Yii::t('app', '<strong>Error!</strong> The registration time has expired. You have to register again!'));
+                    Yii::$app->session->setFlash('registerError', Yii::t('app', 'Error! The registration time has expired. You have to register again!'));
                 }
             }
             // Now do the sign
@@ -201,11 +196,11 @@ class SiteController extends Controller
                 // exit;
             } else {
                 $user->delete();
-                Yii::$app->session->setFlash('registerError', Yii::t('app', '<strong>Error!</strong> The registration time has expired. You have to register again!'));
+                Yii::$app->session->setFlash('registerError', Yii::t('app', 'Error! The registration time has expired. You have to register again!'));
             }
 
         } else {
-            Yii::$app->session->setFlash('registerError', Yii::t('app', '<strong>Error!</strong> Your account doesn\'t exist or you have already registered!'));
+            Yii::$app->session->setFlash('registerError', Yii::t('app', 'Error! Your account doesn\'t exist or you have already registered!'));
         }
         // exit;
         return $this->render('activate', [

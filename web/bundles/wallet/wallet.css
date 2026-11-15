@@ -1,0 +1,32 @@
+/* Poa Wallet: strato grafico sopra Tabler (mobile-first). */
+:root {
+    --wallet-brand: #2a4fa0;
+    --wallet-brand-dark: #1b3474;
+    --wallet-accent: #f7931a;
+}
+
+/* Pagine di accesso: sfondo del marchio, scheda chiara centrata */
+.wallet-auth {
+    min-height: 100vh;
+    background: linear-gradient(160deg, var(--wallet-brand) 0%, var(--wallet-brand-dark) 100%);
+}
+.wallet-auth .container-tight { max-width: 26rem; }
+.wallet-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    color: #fff;
+    text-decoration: none;
+}
+.wallet-brand:hover { color: #fff; text-decoration: none; }
+.wallet-brand img { width: 56px; height: auto; }
+.wallet-brand span { font-size: 1.75rem; font-weight: 300; letter-spacing: .02em; }
+.wallet-auth .card { border: 0; border-radius: 1rem; box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .25); }
+.wallet-auth .card-title { font-weight: 600; }
+.wallet-auth .btn-primary { background-color: var(--wallet-brand); border-color: var(--wallet-brand); }
+.wallet-auth .btn-primary:hover, .wallet-auth .btn-primary:focus { background-color: var(--wallet-brand-dark); border-color: var(--wallet-brand-dark); }
+.wallet-auth .wallet-switch { color: rgba(255, 255, 255, .85); }
+.wallet-auth .wallet-switch a { color: #fff; font-weight: 600; }
+.wallet-footer { color: rgba(255, 255, 255, .7); font-size: .8rem; text-align: center; }
+.wallet-footer a { color: #fff; }

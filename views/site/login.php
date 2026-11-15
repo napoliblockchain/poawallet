@@ -1,146 +1,30 @@
 <?php
 
 /* @var $this yii\web\View */
-/* @var $form yii\bootstrap\ActiveForm */
 /* @var $model app\models\LoginForm */
 
+use app\widgets\WalletForm;
 use yii\helpers\Html;
-use yii\bootstrap4\ActiveForm;
 use yii\helpers\Url;
-use yii\web\View;
 
-use jambtc\oauthtelegram;
-use app\components\Settings;
-$checkTelegramAuthorization = Url::to(['oauthtelegram/check-authorization']);
-$this->title = 'Login';
+$this->title = Yii::t('app', 'Login');
 ?>
-<div class="container h-100">
-  <div class="row h-100 justify-content-center align-items-center">
-    <div class="site-login">
-      <div class="body-content dash-balance jumbotron pb-2">
-          <div class="d-flex">
-              <img src="css/images/logo.png" alt="" width="120">
-              <h2 style="color: #ffffff;
-                /* font-family: 'Lato', sans-serif; */
-                font-size: 50px;
-                font-weight: 300;
-                line-height: 58px;
-                margin: 0 0 0 20px;
-                "><?= Yii::$app->name ?> </h2>
-          </div>
-          <div class="form-divider"></div>
-
-        <?php $form = ActiveForm::begin([
-            'id' => 'login-form',
-            'layout' => 'horizontal',
-            'fieldConfig' => [
-        		'template' => "{label}\n<div class=\"col-lg-12\">{input}</div>\n{error}\n<div class=\"col-lg-8\">{error}</div>",
-        		'labelOptions' => ['class' => 'col-lg-1 control-label'],
-        	],
-        ]); ?>
-
-        <?php $fieldOptions1 = [
-            'inputTemplate' => '
-                                <div class="form-row-group with-icons">
-                                    <div class="form-row no-padding">
-                                        <i class="fa fa-envelope"></i>
-                                        {input}
-                                    </div>
-                                </div>',
-            'inputOptions' => ['class' => ['widget' => 'form-element']]
-
-        ];
-          ?>
-          <?php $fieldOptions2 = [
-              'inputTemplate' => '
-                                  <div class="form-row-group mt-2 with-icons">
-                                      <div class="form-row no-padding">
-                                          <i class="fa fa-lock"></i>
-                                          {input}
-                                      </div>
-                                  </div>',
-              'inputOptions' => ['class' => ['widget' => 'form-element']]
-
-          ];
-            ?>
-
-        <?= $form->field($model, 'username', $fieldOptions1)->textInput(['autofocus' => false, 'autocomplete'=>"off"])->label(false) ?>
-        <?= $form->field($model, 'password', $fieldOptions2)->passwordInput(['autocomplete'=>"new-password"])->label(false) ?>
-        <?= $form->field($model, 'oauth_provider')->hiddenInput(['value'=>'mail'])->label(false) ?>
-
-        <div class="txt-left">
-            <?= $form->errorSummary($model, ['id' => 'error-summary','class'=>'col-lg-12']) ?>
+<div class="card card-md">
+    <div class="card-body">
+        <h2 class="card-title text-center mb-4"><?= Html::encode(Yii::t('app', 'Sign in to your wallet')) ?></h2>
+        <?php $form = WalletForm::begin(['id' => 'login-form']); ?>
+        <?= $form->field($model, 'username')->input('email', ['autocomplete' => 'username', 'placeholder' => 'nome@esempio.it']) ?>
+        <?= $form->field($model, 'password', ['template' => "{label}\n{input}\n{error}\n<div class=\"form-hint text-end mt-1\">"
+            . Html::a(Html::encode(Yii::t('app', 'Forgot password?')), ['site/request-password-reset']) . '</div>'])
+            ->passwordInput(['autocomplete' => 'current-password']) ?>
+        <?= Html::activeHiddenInput($model, 'oauth_provider', ['value' => 'mail']) ?>
+        <div class="form-footer">
+            <?= Html::submitButton(Html::encode(Yii::t('app', 'Login')), ['class' => 'btn btn-primary w-100', 'name' => 'login-button']) ?>
         </div>
-
-
-
-
-        <div class="form-group row mt-2">
-            <div class="col-sm-12">
-                <?= Html::submitButton(Yii::t('app','Login'), ['class' => 'btn btn-block btn-primary', 'name' => 'login-button']) ?>
-            </div>
-
-        </div>
-        <div class="form-row text-center mt-15 mb-5 text-light">
-          <a style="color: #dee2e6;" href="<?= Url::to(['site/request-password-reset'])?>" data-loader="show">Forgot password?</a>
-        </div>
-        <div class="form-divider"></div>
-        <div class="form-label-divider"><span>OR</span></div>
-        <div class="form-divider"></div>
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="d-flex flex-column">
-            <?php
-            $authAuthChoice = yii\authclient\widgets\AuthChoice::begin([
-                'baseAuthUrl' => ['site/auth'],
-                'popupMode' => false, // don't show the popup window
-            ]) ?>
-                <?php
-                foreach ($authAuthChoice->getClients() as $client) : ?>
-                    <li class="auth-clients-holder w-100">
-                    <?=
-                        $authAuthChoice->clientLink($client,
-                            '<span class="btn btn-block btn-primary mb-3">
-                                <div class="d-flex flex-row">
-                                    <span class="ml-0 mr-4 auth-icon ' . $client->getName() . '"></span>
-                                    <span class="block">'.Yii::t('app','Sign with').' '.$client->getTitle() . '</span>
-                                </div>
-                            </span>',
-                            [
-                                'class' => ''
-                            ]) ?>
-                    </li>
-                <?php endforeach; ?>
-
-                <?php yii\authclient\widgets\AuthChoice::end() ?>
-
-                <div id="w1" class="auth-clients-holder w-100">
-                    <ul class="auth-clients">
-                        <li>
-                            <a class="telegram auth-link" href="#" title="Telegram">
-                                <?php
-                                $loginTelegram = new jambtc\oauthtelegram\telegram(
-                                    Yii::$app->params['telegram.clientId'],
-                                    Yii::$app->params['telegram.clientSecret']);
-                                echo $loginTelegram->loginButton($checkTelegramAuthorization,'large');
-                                ?>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                </div>
-            </div>
-        </div>
-        <div class="form-mini-divider"></div>
-
-
-
-
-        <div class="form-row txt-center text-light mt-15">
-          <?= Yii::t('app','Don\'t you have an account yet?') ?> <a style="color:#007bff;" href="<?php echo Url::to(['site/register']); ?>" data-loader="show"><?= Yii::t('app','Sign Up') ?></a>
-        </div>
-        <?php ActiveForm::end(); ?>
-      </div>
+        <?php WalletForm::end(); ?>
     </div>
-  </div>
 </div>
+<p class="text-center wallet-switch mt-3">
+    <?= Html::encode(Yii::t('app', 'Don\'t you have an account yet?')) ?>
+    <?= Html::a(Html::encode(Yii::t('app', 'Sign Up')), ['site/register']) ?>
+</p>

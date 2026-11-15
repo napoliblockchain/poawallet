@@ -15,6 +15,7 @@ use yii\helpers\Url;
     <div class="container">
       <div class="float-left">
         <form action="<?php echo Url::to(['/site/logout']); ?>" method="POST" id="form-logout">
+            <?= \yii\helpers\Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
             <a href="#">
                 <button class="btn btn-warning btn-md site-logout">
                     <i class="fas fa-sign-out-alt"></i> <?php echo Yii::t('app','Logout');?></button>

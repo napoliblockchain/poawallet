@@ -3,84 +3,43 @@
 /* @var $this \yii\web\View */
 /* @var $content string */
 
-use app\widgets\Alert;
-
-use yii\helpers\Html;
-use yii\bootstrap4\Nav;
-use yii\bootstrap4\NavBar;
-use yii\widgets\Breadcrumbs;
-use app\assets\AppAsset;
 use app\assets\ServiceWorkerAsset;
-
+use app\assets\WalletAuthAsset;
 use app\components\Logo;
-use app\components\Settings;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
-
-
-
-// Yii::$classMap['logo'] = Yii::getAlias('@packages').'/logo.php';
-// Yii::$classMap['settings'] = Yii::getAlias('@packages').'/settings.php';
-
-AppAsset::register($this);
+WalletAuthAsset::register($this);
 ServiceWorkerAsset::register($this);
-
-
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>">
+<html lang="<?= Html::encode(Yii::$app->language) ?>">
 <head>
-    <meta charset="<?= Yii::$app->charset ?>">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="<?= Html::encode(Yii::$app->charset) ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#2a4fa0">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
-
-    <!-- Manifest Progressive Web App -->
     <link rel="manifest" href="manifest.json">
-
-    <!-- Google font file. If you want you can change. -->
-  	<link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600,700,900" rel="stylesheet">
-
-    <!-- Fontawesome font file css -->
-  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
-
     <?php $this->head() ?>
-
 </head>
-<body>
+<body class="wallet-auth">
 <?php $this->beginBody() ?>
-
-<div class="wrapper-inline">
-    <?php
-    // mi serve per far caricare bootstrap4
-    // NavBar::begin();
-    // NavBar::end();
-    ?>
-
-        <main class="margin mt-0 h-100">
-
-            <?= Alert::widget() ?>
-            <?= $content ?>
-        </main>
-        <?php //$this->endContent() ?>
-        <footer class="footer">
-            <div class="container">
-              <?= Logo::footer(); ?>
-            </div>
-        </footer>
-
-
-
-
-
-
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-4">
+            <a href="<?= Url::to(['site/index']) ?>" class="wallet-brand">
+                <img src="css/images/logo.png" alt="">
+                <span><?= Html::encode(Yii::$app->name) ?></span>
+            </a>
+        </div>
+        <?= $this->render('_flash') ?>
+        <?= $content ?>
+        <div class="wallet-footer mt-4"><?= Logo::footer() ?></div>
+    </div>
 </div>
-
-<?php //echo $this->render('_oauth-modal'); ?>
-
 <?php $this->endBody() ?>
-
 </body>
 </html>
 <?php $this->endPage() ?>

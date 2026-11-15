@@ -124,9 +124,10 @@ $config = [
         // this component add timestamp to downloaded css or javascript
         // to avoid forced refresh during develop
         //
-        // 'assetManager' => [
-        //     'appendTimestamp' => true
-        // ],
+        // ?v=<mtime> sugli asset: il service worker mette in cache per URL, così le modifiche arrivano ai browser
+        'assetManager' => [
+            'appendTimestamp' => true
+        ],
 
     ],
     'params' => $params,

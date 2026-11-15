@@ -1,31 +1,15 @@
 <?php
-use yii\helpers\Url;
 
-$this->title = Yii::$app->id;
+/* @var $this yii\web\View */
+
+use yii\helpers\Html;
+
+$this->title = Yii::$app->name;
 ?>
-
-<div class="container h-100">
-  <div class="row h-100 justify-content-center align-items-center">
-    <div class="site-login">
-      <div class="body-content dash-balance jumbotron  text-center pb-5">
-        <img src="css/images/logo.png" alt="" width="220">
-        <div class="form-divider"></div>
-        <h3  class="txt-white"><?php echo Yii::$app->id; ?></h3>
-        <div class="form-divider"></div>
-
-        <h5 class="txt-white">
-          <?php echo Yii::$app->id; ?> – <?= Yii::t('app','a Progressive Web App. It works with several crypto tokens and blockchains. With Poa Wallet, you are in control over your funds. Receive, send, store and exchange your cryptocurrency within the mobile interface.') ?>
-        </h5>
-
-        <div class="form-divider"></div>
-
-          <div class="form-row">
-            <a href="<?php echo Url::to(['site/login']); ?>" class="button circle block orange"><?= Yii::t('app','Start') ?></a>
-          </div>
-          <div class="form-divider"></div>
-          <div class="form-divider"></div>
-
-      </div>
+<div class="card card-md">
+    <div class="card-body text-center">
+        <h2 class="card-title mb-3"><?= Html::encode(Yii::$app->name) ?></h2>
+        <p class="text-secondary mb-4"><?= Html::encode(Yii::t('app', 'a Progressive Web App. It works with several crypto tokens and blockchains. With Poa Wallet, you are in control over your funds. Receive, send, store and exchange your cryptocurrency within the mobile interface.')) ?></p>
+        <?= Html::a(Html::encode(Yii::t('app', 'Start')), ['site/login'], ['class' => 'btn btn-primary w-100']) ?>
     </div>
-  </div>
 </div>

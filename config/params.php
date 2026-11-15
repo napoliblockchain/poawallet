@@ -57,6 +57,8 @@ return [
 
 
     // Telegram login informations
+    // accessi social (Google, Facebook, GitHub, Telegram): spenti salvo SOCIAL_LOGIN=true
+    'socialLogin' => filter_var($env('SOCIAL_LOGIN', 'false'), FILTER_VALIDATE_BOOLEAN),
     'telegram.clientId' => $env('TELEGRAM_CLIENT_ID', null),
     'telegram.clientSecret' => $env('TELEGRAM_CLIENT_SECRET', null),
 

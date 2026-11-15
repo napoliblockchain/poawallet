@@ -23,6 +23,13 @@ class OauthtelegramController extends Controller
 	public $bot_token;
 	public $bot_username;
 
+	/** Accesso Telegram spento finché SOCIAL_LOGIN non è attivo. */
+	public function beforeAction($action)
+	{
+		if (!Yii::$app->params['socialLogin']) throw new \yii\web\NotFoundHttpException();
+		return parent::beforeAction($action);
+	}
+
 	public function actionCheckAuthorization()
 	{
 

@@ -487,4 +487,9 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     '{param0} unfollowed you.' => '{param0} ti ha rimosso dai contatti.',
     '{param} is following you.' => '{param} ti ha aggiunto ai contatti.',
     '{param} unfollowed you.' => '{param} ti ha rimosso dai contatti.',
+    'Sign in to your wallet' => 'Accedi al tuo wallet',
+    'Already have an account?' => 'Hai già un account?',
+    'Back to login' => 'Torna all\'accesso',
+    'Error! The registration time has expired. You have to register again!' => 'Errore! Il tempo per la registrazione è scaduto. Devi registrarti di nuovo!',
+    'Error! Your account doesn\'t exist or you have already registered!' => 'Errore! L\'account non esiste o è già stato registrato!',
 ];
