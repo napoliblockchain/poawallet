@@ -153,9 +153,9 @@ class NotificationService
         return [
             'title' => '[' . self::title($notification->type) . '] - ' . Yii::t('app', 'New message'),
             'body' => $notification->description,
-            'icon' => 'src/images/icons/app-icon-96x96.png',
-            'badge' => 'src/images/icons/app-icon-96x96.png',
-            'image' => 'css/images/logo.png',
+            'icon' => '/src/images/icons/app-icon-96x96.png',
+            'badge' => '/src/images/icons/app-icon-96x96.png',
+            'image' => '/css/images/logo.png',
             'sound' => 'src/sounds/notify.mp3',
             'vibrate' => [200, 100, 200, 100, 200],
             'tag' => 'notify',
@@ -168,8 +168,8 @@ class NotificationService
                 'app' => $app,
             ],
             'actions' => [
-                ['action' => 'openUrl', 'title' => Yii::t('app', 'Yes'), 'icon' => 'css/images/chk_on.png'],
-                ['action' => 'close', 'title' => Yii::t('app', 'No'), 'icon' => 'css/images/chk_off.png'],
+                ['action' => 'openUrl', 'title' => Yii::t('app', 'Yes'), 'icon' => '/css/images/chk_on.png'],
+                ['action' => 'close', 'title' => Yii::t('app', 'No'), 'icon' => '/css/images/chk_off.png'],
             ],
         ];
     }

@@ -39,8 +39,8 @@ if ($argv[1] === 'setup') {
         $db->createCommand()->insert('mp_wallets', ['id_user' => $user, 'wallet_address' => $user === $sender ? strtolower($address) : $address, 'blocknumber' => '0x0'])->execute();
     }
     $contract = (int) $db->createCommand('SELECT id FROM smart_contract WHERE id_user=:u', [':u' => $sender])->queryScalar();
-    foreach (['sentByWallet' => [$t['receiver'], 12.34], 'failed' => [$t['receiver'], 99999999999]] as $key => [$to, $amount]) {
-        $db->createCommand()->insert('transactions', ['id_user' => $sender, 'type' => 'token', 'id_smart_contract' => $contract, 'status' => 'new',
+    foreach (['sentByWallet' => [$t['receiver'], 12.34, 'new'], 'failed' => [$t['receiver'], 99999999999, 'new'], 'closedByWallet' => [$t['receiver'], 2, 'complete']] as $key => [$to, $amount, $status]) {
+        $db->createCommand()->insert('transactions', ['id_user' => $sender, 'type' => 'token', 'id_smart_contract' => $contract, 'status' => $status,
             'token_price' => $amount, 'token_received' => 0, 'invoice_timestamp' => time(), 'expiration_timestamp' => time() + 900,
             'from_address' => $t['holder'], 'to_address' => $to, 'blocknumber' => '0x0', 'txhash' => $t[$key], 'message' => 'memo'])->execute();
     }
@@ -67,6 +67,10 @@ check(count($notes($receiver)) === 2 && in_array('You received a new transaction
 check(count($notes($sender)) === 3 && in_array('A transaction you sent of 1 TTS has been completed.', $notes($sender), true), 'Sender notified once per completed transfer');
 $cursor = $db->createCommand('SELECT last_block FROM chain_index_cursors WHERE chain_id=:c AND contract=:a', [':c' => '2118', ':a' => strtolower($t['token'])])->queryScalar();
 check($cursor !== false && (int) $cursor > 0, 'Cursor saved for the token');
-check((int) $db->createCommand('SELECT COUNT(*) FROM transactions WHERE txhash IN (:a,:b,:c,:d)', [':a' => $t['sentByWallet'], ':b' => $t['incoming'], ':c' => $t['toOutsider'], ':d' => $t['failed']])->queryScalar() === 4,
+$closed = $row($t['closedByWallet']);
+check(count($closed) === 1 && $closed[0]['status'] === 'complete' && (float) $closed[0]['token_received'] === 2.0
+    && !in_array('You received a new transaction of 2 TTS.', $notes($receiver), true) && !in_array('A transaction you sent of 2 TTS has been completed.', $notes($sender), true),
+    'Transfer already closed by the wallet (PHP): received amount filled, no second notification');
+check((int) $db->createCommand('SELECT COUNT(*) FROM transactions WHERE txhash IN (:a,:b,:c,:d,:e)', [':a' => $t['sentByWallet'], ':b' => $t['incoming'], ':c' => $t['toOutsider'], ':d' => $t['failed'], ':e' => $t['closedByWallet']])->queryScalar() === 5,
     'Second indexer run created no duplicates');
 echo "PASS $checks realtime indexer checks\n";

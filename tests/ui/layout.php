@@ -129,6 +129,7 @@ check(preg_match('~id="pinRequestModal"[^>]*>\s*<div class="modal-dialog modal-f
     && !preg_match('~id="pinRequestModal"[\s\S]*?btn-close[\s\S]*?id="pinRequestButton"~', $wallet), 'PIN lock screen is full screen with no way to close it');
 check(!str_contains($wallet, $evil) && str_contains($wallet, htmlspecialchars($evil, ENT_QUOTES)), 'Transaction memo encoded in the row');
 check(str_contains($wallet, 'href="/transactions/view?id='), 'Transaction row links to the clean detail URL');
+check(str_contains($wallet, 'From: 0xabababababab…abababababab') === false && str_contains($wallet, 'title="0x' . str_repeat('ab', 20) . '"') && str_contains($wallet, '0xabababababab…ababababab'), 'Counterpart address shortened in the row, full in the title');
 $send = $render('send/index');
 check(str_contains($send, 'id="send-form"') && str_contains($send, 'id="activate-camera-btn"') && str_contains($send, 'id="sellOrder"') && str_contains($send, 'class="modal fade" id="cameraPopup"'),
     'Send: form, camera button, confirmation and camera dialogs');

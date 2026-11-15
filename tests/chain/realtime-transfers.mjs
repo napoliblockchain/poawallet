@@ -19,9 +19,10 @@ const startBlock = await provider.getBlockNumber();
 const sentByWallet = await send(receiver, '12.34');   // riga già creata dal wallet (stato new): va completata
 const incoming = await send(receiver, '5');            // nessuna riga: nuova transazione per il destinatario
 const toOutsider = await send(outsider, '1');          // destinatario esterno: riga per il mittente
+const closedByWallet = await send(receiver, '2');      // riga già chiusa da PHP (validate-transaction): nessuna notifica
 // trasferimento oltre il saldo: minato con esito negativo (ricevuta con stato 0)
 const reverted = await token.transfer(receiver, parseUnits('99999999999', 2), { ...options, gasLimit: 200000n });
 let failed = reverted.hash;
 try { await reverted.wait(); } catch (error) { failed = error.receipt ? error.receipt.hash : reverted.hash; }
 
-process.stdout.write(JSON.stringify({ startBlock, token: tts.address, holder: holder.address, receiver, outsider, sentByWallet, incoming, toOutsider, failed }) + '\n');
+process.stdout.write(JSON.stringify({ startBlock, token: tts.address, holder: holder.address, receiver, outsider, sentByWallet, incoming, toOutsider, closedByWallet, failed }) + '\n');

@@ -351,7 +351,9 @@ class WebApp extends Component
         $message = $data->message != '' ? '<div class="small text-secondary text-truncate"><i class="far fa-comment me-1" aria-hidden="true"></i>' . Html::encode($data->message) . '</div>' : '';
         return Html::a(
             '<span class="wallet-tx-icon"><i class="fas ' . ($outgoing ? 'fa-arrow-up' : 'fa-arrow-down') . '" aria-hidden="true"></i></span>'
-            . '<span class="wallet-tx-body"><span class="d-block text-truncate">' . Html::encode($label . $counterpart) . '</span>'
+            // indirizzo accorciato come sul POS (inizio…fine), completo al passaggio del mouse
+            . '<span class="wallet-tx-body"><span class="d-block text-truncate" title="' . Html::encode($counterpart) . '">'
+            . Html::encode($label . (strlen((string) $counterpart) > 24 ? substr($counterpart, 0, 12) . '…' . substr($counterpart, -10) : $counterpart)) . '</span>'
             . '<span class="d-block small text-secondary">' . $meta . '</span>' . $message . '</span>'
             . '<span class="wallet-tx-amount">' . ($outgoing ? '&minus; ' : '+ ') . Html::encode($amount) . ' <small>' . Html::encode($data->smartContract->symbol) . '</small></span>',
             ['/transactions/view', 'id' => self::encrypt($data->id)],

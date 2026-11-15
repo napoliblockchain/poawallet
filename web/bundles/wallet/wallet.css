@@ -120,7 +120,8 @@
 .wallet-action i { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(42, 79, 160, .1); color: var(--wallet-brand); font-size: 1.05rem; }
 
 /* Righe transazione (WebApp::showTransactionRow, anche dentro le tabelle aggiornate da wallet-sync.js) */
-.wallet-tx-table td { padding: 0; border: 0; }
+.wallet-tx-table { table-layout: fixed; width: 100%; }
+.wallet-tx-table td { padding: 0; border: 0; width: 100%; overflow: hidden; }
 .wallet-tx-table tr + tr .wallet-tx { border-top: 1px solid var(--tblr-border-color, #e6e7e9); }
 .wallet-tx { display: flex; align-items: center; gap: .85rem; padding: .85rem 1rem; color: inherit; text-decoration: none; }
 .wallet-tx:hover { background: rgba(42, 79, 160, .04); color: inherit; text-decoration: none; }

@@ -271,10 +271,16 @@ func (ix *Indexer) storeTransfer(ctx context.Context, tx *sql.Tx, contract *Cont
 	err = tx.QueryRowContext(ctx, "SELECT id, status, token_received FROM transactions WHERE txhash = ? ORDER BY id LIMIT 1 FOR UPDATE", transfer.TxHash).Scan(&id, &status, &received)
 	switch {
 	case err == nil:
-		// invio fatto dal wallet (riga creata da PHP con lo stesso hash): ora confermato dalla chain
-		if status == "complete" && received != 0 {
+		// riga già in stato finale (completata da PHP, send/validate-transaction): chi l'ha chiusa ha già notificato
+		if status == "complete" || status == "failed" {
+			if status == "complete" && received == 0 {
+				if _, err := tx.ExecContext(ctx, "UPDATE transactions SET token_received = ? WHERE id = ?", amount, id); err != nil {
+					return fmt.Errorf("received amount: %w", err)
+				}
+			}
 			return nil
 		}
+		// invio fatto dal wallet (riga creata da PHP con lo stesso hash), non ancora chiuso: lo chiude e notifica qui
 		if _, err := tx.ExecContext(ctx, "UPDATE transactions SET status = 'complete', token_received = ?, blocknumber = ? WHERE id = ?", amount, blockHex, id); err != nil {
 			return fmt.Errorf("complete transaction: %w", err)
 		}

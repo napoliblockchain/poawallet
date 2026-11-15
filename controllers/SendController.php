@@ -344,15 +344,19 @@ class SendController extends Controller
 				'success' => false,
 			];
 		} else {
-			$tokens->status = 'complete';
-			//$tokens->token_received = 0; // fix la velocità sul server
-			$tokens->blocknumber = $receipt->blockNumber;
-
-			if (!($tokens->save())){
-				throw new HttpException(404,$tokens->errors);
-			}
+			// esito dalla ricevuta: una transazione fallita sulla chain non è "complete"
+			$succeeded = in_array(strtolower((string) ($receipt->status ?? '')), ['0x1', '1'], true);
+			// passaggio atomico allo stato finale: anche l'indicizzatore wallet-realtime lo tenta (riga bloccata);
+			// notifica solo chi lo fa davvero, così ogni trasferimento ha una sola coppia di notifiche
+			$changed = Transactions::updateAll(
+				['status' => $succeeded ? 'complete' : 'failed', 'blocknumber' => $receipt->blockNumber, 'token_received' => $succeeded ? $tokens->token_price : 0],
+				['and', ['id' => $tokens->id], ['not in', 'status', ['complete', 'failed']]]
+			);
+			$tokens->refresh();
 
 			$settings = Settings::poa($tokens->id_user);
+		}
+		if ($receipt !== null && $changed === 1 && $tokens->status === 'complete') {
 
 			// notifica per chi ha inviato (from_address)
 			$id_user_from = MPWallets::find()->userIdFromAddress($tokens->from_address);
@@ -382,7 +386,8 @@ class SendController extends Controller
 				]);
 				NotificationService::notify($notification);
 			}
-
+		}
+		if ($receipt !== null) {
 			//adesso posso uscire CON IL JSON DA REGISTRARE NEL SW.
 			$balance = $ERC20->tokenBalance($tokens->from_address);
 			$data = [
@@ -391,7 +396,7 @@ class SendController extends Controller
 				'success' => true,
 				'row' => $WebApp->showTransactionRow($tokens,$tokens->from_address,false,'send'),
 				'balance' => $balance,
-				'pushoptions' => $pushOptions,
+				'pushoptions' => $pushOptions ?? null,
 				'formatted_balance' => $WebApp->si_formatter($balance),
 			];
 
