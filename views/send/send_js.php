@@ -52,44 +52,25 @@ $wallet_send = <<<JS
     var stepButton = document.querySelector('#getCheckedButton1');
     var submitButton = document.querySelector('.pay-submit');
 
+    // controlli prima della conferma: messaggio sotto il form oppure finestra di conferma
     stepButton.addEventListener('click', function(event){
-        $('.amount-to-send').text($('#sendform-amount').val());
+        var amount = $('#sendform-amount').val();
+        var error = null;
+        $('.amount-to-send').text(amount);
         $('#error-summary').hide().text('');
 
-        if ($("#sendform-amount").val() <= 0 ){
-            $('#error-summary').show().text(yiiOptions.invalidAmountError);
-            event.stopPropagation();
-		}
+        if ($("#sendform-to").val() == '') error = yiiOptions.recipientError;
+        else if (!(Number(amount) > 0)) error = yiiOptions.invalidAmountError;
+        else if (countDecimals(amount) > yiiOptions.poaDecimals) error = yiiOptions.decimalError;
+        else if (Number(amount) > Number($("#sendform-balance").val())) error = yiiOptions.higherError;
+        else if (yiiOptions.zerogas != 1 && Number($("#sendform-balance_gas").val()) <= 0) error = yiiOptions.nogasError;
 
-        if (countDecimals($("#sendform-amount").val()) > yiiOptions.poaDecimals){
-			$('#error-summary').show().text(yiiOptions.decimalError);
-			event.stopPropagation();
-		}
-
-		if (eval($("#sendform-amount").val()) > eval($("#sendform-balance").val())){
-            $('#error-summary').show().text(yiiOptions.higherError);
-            event.stopPropagation();
-		}
-
-		if ($("#sendform-to").val() == ''){
-            $('#error-summary').show().text(yiiOptions.recipientError);
-            event.stopPropagation();
-		}
-
-        if (yiiOptions.zerogas != 1){
-            if ($("#sendform-balance_gas").val() <= 0  ){
-                $('#error-summary').show().text(yiiOptions.nogasError);
-                event.stopPropagation();
-            }
-
-            if (gasLimit() == false){
-                $('#error-summary').show().text(yiiOptions.enoughgasError);
-                event.stopPropagation();
-            }
-        } else {
-            var outcome = gasLimit();
+        if (error !== null) {
+            $('#error-summary').show().text(error);
+            return;
         }
-
+        gasLimit();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('sellOrder')).show();
 	});
 
 
@@ -110,11 +91,12 @@ $wallet_send = <<<JS
                 console.log('[gaslimit]: data from send/gaslimit controller',data);
                 if (data.success){
                     $('#amount-to-send-gas').text(data.gasLimit);
-                    $('.js-confirm-submit').removeClass('disabled')
-                } else {
-                    return false;
+                    $('.js-confirm-submit').removeClass('disabled');
+                } else if (yiiOptions.zerogas != 1) {
+                    $('#amount-to-send-gas').text('');
+                    $('#error-summary').show().text(yiiOptions.enoughgasError);
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('sellOrder')).hide();
                 }
-                return true;
             },
             error: function(j){
                 console.log(j);

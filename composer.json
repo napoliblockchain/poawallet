@@ -18,7 +18,6 @@
         "yiisoft/yii2": "~2.0.14",
         "yiisoft/yii2-symfonymailer": "^2.0",
         "jambtc/yii2-oauth-telegram": "^1.0",
-        "2amigos/qrcode-library": "~1.1",
         "yiisoft/yii2-httpclient": "^2.0",
         "drsdre/yii2-wizardwidget": "*",
         "brainfoolong/js-aes-php": "^1.0",
@@ -27,7 +26,8 @@
         "yiisoft/yii2-redis": "^2.1",
         "web3p/web3.php": "^0.3.2",
         "kornrunner/ethereum-offline-raw-tx": "^0.9",
-        "yiisoft/yii2-bootstrap5": "2.0.51"
+        "yiisoft/yii2-bootstrap5": "2.0.51",
+        "tecnickcom/tc-lib-barcode": "2.17.3"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

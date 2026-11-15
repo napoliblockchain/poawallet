@@ -1,161 +1,51 @@
 <?php
 
-use yii\helpers\Html;
-use yii\widgets\DetailView;
 use app\components\WebApp;
+use yii\helpers\Html;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\BoltTokens */
+/* @var $model app\models\Transactions */
 
-$this->title = Yii::t('app','Transaction details') .' - '. $model->id;
-\yii\web\YiiAsset::register($this);
+$this->title = Yii::t('app', 'Transaction details');
+include('view_js.php');
 
-include ('view_js.php');
+$explorer = rtrim((string) $model->smartContract->blockchain->url_block_explorer, '/');
+// link all'explorer solo se l'indirizzo configurato è http(s)
+$explorerLink = static function (string $text, string $path) use ($explorer): string {
+    if ($text === '' || !preg_match('~^https?://~i', $explorer)) return Html::encode($text);
+    return Html::a(Html::encode($text), $explorer . $path, ['target' => '_blank', 'rel' => 'noopener', 'class' => 'wallet-address']);
+};
+$pending = $model->status == 'new' && $model->txhash != '';
+$status = $pending ? Yii::t('app', 'Pending...') : $model->status;
 ?>
-<div class="dash-balance ref-card c10">
-    <div class="ref-card c2 mb-3">
-		<div class="dash-content relative">
-			<h3 class="w-text"><?= Yii::t('app','Transaction details');?></h3>
-			<!-- <div class="notification">
-				<a href="#"><i class="fa fa-plus"></i></a>
-			</div> -->
-		</div>
-	</div>
-    <section class="bg-transparent trans-sec mt-0" style="padding:15px 0px 0px 0px !important;">
-
-		<div class=" ">
-			<div class="d-flex align-items-center">
-                <div class="d-flex flex-grow">
-                  <div class="mr-auto">
-                    <!-- <h1 class="b-val"> $1,249.03 </h1>
-                    <p class="g-text mb-10">Ready to Payout</p>
-                    <div class="badge badge-pill"> This month 07.44% <i class="txt-green fa fa-arrow-up ml-10"></i></div> -->
-                    <?= DetailView::widget([
-                        'model' => $model,
-                        'options' => ['class' => 'table txt-white txt-left d-flex flex-grow '],
-                        'attributes' => [
-                            // 'id_token',
-                            [
-                                'type'=>'raw',
-                                'attribute'=>Yii::t('app','Transaction ID'),
-                                'value'=>WebApp::encrypt($model->id),
-                                'contentOptions' => ['class' => 'text-break']
-                            ],
-                            [
-                                'type'=>'raw',
-                                'attribute'=>Yii::t('app','status'),
-                                'value'=> function ($data) {
-                                    if ($data->status == 'new' && $data->txhash != ''){
-                                        return Yii::t('app','Pending...');
-                                    } else {
-                                        return $data->status;
-                                    }
-                                },
-                                'contentOptions' => [
-                                    'class' => ($model->status == 'complete') ?
-                                        'trans-get button circle block green text-capitalize'
-                                        : 'trans-get button circle block yellow text-capitalize',
-                                    'id' => 'trans-get-'.$model->id
-                                ]
-                            ],
-                            'invoice_timestamp:datetime',
-                            // 'token_price',
-                            [
-                                'format' => 'raw',
-                                'attribute' => 'token_price',
-                                'value' => function ($data) {
-                                    // return WebApp::si_formatter($data->token_price, 'long') . '<span class="ml-2">' . $data->smartContract->symbol . '</span>';
-                                    return Yii::$app->formatter->asDecimal(
-                                        $data->token_price
-                                    ) . '<span class="ml-2">' . $data->smartContract->symbol . '</span>';
-                                },
-                            ],
-                            [
-                                'format' => 'raw',
-                                'attribute' => 'from_address',
-                                'value' => function ($data) {
-                                    return Html::a($data->from_address, $data->smartContract->blockchain->url_block_explorer.'/address/'.$data->from_address,
-                                        [
-                                            'class' => 'btn btn-primary btn-sm center-block text-break ',
-                                            'target' => '_blank'
-                                        ]
-                                    );
-                                },
-                            ],
-                            // [
-                            //     'type'=>'raw',
-                            //     'attribute'=>Yii::t('app','from_address'),
-                            //     'value'=>$model->from_address,
-                            //     'contentOptions' => ['class' => 'text-break']
-                            // ],
-                            // [
-                            //     'type'=>'raw',
-                            //     'attribute'=>Yii::t('app','to_address'),
-                            //     'value'=>$model->to_address,
-                            //     'contentOptions' => ['class' => 'text-break']
-                            // ],
-                            [
-                                'format' => 'raw',
-                                'attribute' => 'to_address',
-                                'value' => function ($data) {
-                                    return Html::a($data->to_address, $data->smartContract->blockchain->url_block_explorer.'/address/'.$data->to_address,
-                                        [
-                                            'class' => 'btn btn-primary btn-sm center-block text-break ',
-                                            'target' => '_blank'
-                                        ]
-                                    );
-                                },
-                            ],
-
-                            [
-                                'format' => 'raw',
-                                'attribute' => 'txhash',
-                                'value' => function ($data) {
-                                    return Html::a($data->txhash, $data->smartContract->blockchain->url_block_explorer.'/tx/'.$data->txhash,
-                                        [
-                                            'class' => 'btn btn-primary btn-sm center-block text-break ',
-                                            'target' => '_blank'
-                                        ]
-                                    );
-                                },
-                            ],
-                            // [
-                            //     'type'=>'raw',
-                            //     'attribute'=>Yii::t('app','blocknumber'),
-                            //     'value'=>$model->blocknumber,
-                            //     'contentOptions' => ['class' => 'text-break']
-                            // ],
-                            [
-                                'format' => 'raw',
-                                'attribute' => 'blocknumber',
-                                'value' => function ($data) {
-                                    return Html::a($data->blocknumber, $data->smartContract->blockchain->url_block_explorer.'/block/'.hexdec($data->blocknumber),
-                                        [
-                                            'class' => 'btn btn-primary btn-sm center-block text-break ',
-                                            'target' => '_blank'
-                                        ]
-                                    );
-                                },
-                            ],
-                            [
-                                'type'=>'raw',
-                                'attribute'=>Yii::t('app','memo'),
-                                'value'=>$model->message,
-                                'contentOptions' => ['class' => 'text-break']
-                            ],
-                            // '',
-
-                        ],
-                    ]) ?>
-                  </div>
-                </div>
-             </div>
-		</div>
-
-	</section>
-
-
-
-
-
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"><?= Html::encode($this->title) ?></h2>
+        <div class="card-actions">
+            <button type="button" class="btn btn-sm <?= $model->status == 'complete' ? 'btn-success' : 'btn-warning' ?> trans-get text-capitalize" id="trans-get-<?= (int) $model->id ?>"
+                title="<?= Html::encode(Yii::t('app', 'Refresh status')) ?>"><i class="fas fa-sync-alt me-1" aria-hidden="true"></i><?= Html::encode($status) ?></button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="text-center mb-4">
+            <div class="display-6 fw-bold"><?= Html::encode(Yii::$app->formatter->asDecimal($model->token_price)) ?> <small class="fs-4 text-secondary"><?= Html::encode($model->smartContract->symbol) ?></small></div>
+            <div class="text-secondary"><?= Html::encode(Yii::$app->formatter->asDatetime((int) $model->invoice_timestamp, 'php:d/m/Y H:i:s')) ?></div>
+        </div>
+        <dl class="row mb-0">
+            <dt class="col-sm-3"><?= Html::encode($model->getAttributeLabel('from_address')) ?></dt>
+            <dd class="col-sm-9"><?= $explorerLink((string) $model->from_address, '/address/' . rawurlencode((string) $model->from_address)) ?></dd>
+            <dt class="col-sm-3"><?= Html::encode($model->getAttributeLabel('to_address')) ?></dt>
+            <dd class="col-sm-9"><?= $explorerLink((string) $model->to_address, '/address/' . rawurlencode((string) $model->to_address)) ?></dd>
+            <dt class="col-sm-3"><?= Html::encode($model->getAttributeLabel('txhash')) ?></dt>
+            <dd class="col-sm-9"><?= $explorerLink((string) $model->txhash, '/tx/' . rawurlencode((string) $model->txhash)) ?></dd>
+            <dt class="col-sm-3"><?= Html::encode($model->getAttributeLabel('blocknumber')) ?></dt>
+            <dd class="col-sm-9"><?= $model->blocknumber ? $explorerLink((string) hexdec((string) $model->blocknumber), '/block/' . hexdec((string) $model->blocknumber)) : '&ndash;' ?></dd>
+            <?php if ((string) $model->message !== ''): ?>
+                <dt class="col-sm-3"><?= Html::encode(Yii::t('app', 'memo')) ?></dt>
+                <dd class="col-sm-9 text-break"><?= Html::encode($model->message) ?></dd>
+            <?php endif ?>
+            <dt class="col-sm-3"><?= Html::encode(Yii::t('app', 'Transaction ID')) ?></dt>
+            <dd class="col-sm-9 small text-secondary text-break mb-0"><?= Html::encode(WebApp::encrypt($model->id)) ?></dd>
+        </dl>
+    </div>
 </div>

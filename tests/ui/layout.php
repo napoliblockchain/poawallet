@@ -4,7 +4,11 @@
 // output trattenuto: la sessione web richiede che non siano ancora partiti header
 ob_start();
 error_reporting(E_ALL);
-set_error_handler(static function ($severity, $message, $file, $line) { throw new ErrorException($message, 0, $severity, $file, $line); });
+// avvisi ed errori diventano eccezioni; le deprecazioni delle librerie (es. bacon-qr-code) restano come in produzione
+set_error_handler(static function ($severity, $message, $file, $line) {
+    if (in_array($severity, [E_DEPRECATED, E_USER_DEPRECATED], true)) return true;
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
 define('YII_DEBUG', false);
 define('YII_ENV', 'test');
 $root = dirname(__DIR__, 2);
@@ -76,6 +80,39 @@ foreach (['id="quantity_circle"', 'id="quantity_notify"', 'id="notification-list
 check(str_contains($html, '/js/wallet-sync.js') && !str_contains($html, 'ws-websocket.js') && !str_contains($html, 'wss_server') && !str_contains($html, 'WebSocketServerAddress'),
     'Polling synchronization, no WebSocket client or blocking alert');
 check(!str_contains($html, 'data-toggle=') && !str_contains($html, 'data-dismiss="modal"') && !str_contains($html, 'class="close"'), 'No Bootstrap 4 data attributes in the layout');
+
+// --- pagine del wallet: transazione con dati malevoli (memo dalla chain), sempre codificati
+$evil = '<img src=x onerror=alert(1)>';
+$db->createCommand()->insert('transactions', ['id_user' => $userId, 'id_smart_contract' => $contractId, 'type' => 'token', 'status' => 'complete',
+    'token_price' => 12.34, 'token_received' => 12.34, 'invoice_timestamp' => time(), 'expiration_timestamp' => time() + 900,
+    'from_address' => '0x' . str_repeat('ab', 20), 'to_address' => $tts['holder'], 'blocknumber' => '0x10', 'txhash' => '0x' . str_repeat('cd', 32), 'message' => $evil])->execute();
+$txId = (int) $db->getLastInsertID();
+$render = static function (string $route, array $params = []) use ($app): string {
+    $app->requestedRoute = $route;
+    $app->response->clear();
+    $result = $app->runAction($route, $params);
+    return is_string($result) ? $result : (string) $app->response->content;
+};
+$wallet = $render('wallet/index');
+check(str_contains($wallet, 'wallet-hero') && str_contains($wallet, 'wallet-actions') && str_contains($wallet, 'class="wallet-tx wallet-tx-in"'), 'Wallet: balance card, quick actions, incoming transaction row');
+check(!str_contains($wallet, $evil) && str_contains($wallet, htmlspecialchars($evil, ENT_QUOTES)), 'Transaction memo encoded in the row');
+check(str_contains($wallet, 'href="/transactions/view?id='), 'Transaction row links to the clean detail URL');
+$send = $render('send/index');
+check(str_contains($send, 'id="send-form"') && str_contains($send, 'id="activate-camera-btn"') && str_contains($send, 'id="sellOrder"') && str_contains($send, 'class="modal fade" id="cameraPopup"'),
+    'Send: form, camera button, confirmation and camera dialogs');
+check(str_contains($send, 'import QrScanner from "/js/qrcodescanner/') && !str_contains($send, '"./js/'), 'QR scanner loaded from absolute paths');
+foreach (['sendform-to', 'sendform-amount', 'sendform-memo', 'sendform-from', 'sendform-balance', 'error-summary', 'amount-to-send-gas'] as $id) {
+    check(str_contains($send, 'id="' . $id . '"'), 'Send script hook kept: ' . $id);
+}
+$receive = $render('receive/index');
+check(str_contains($receive, '<svg') && !str_contains($receive, '<desc>') && str_contains($receive, 'id="inputcopyWalletAddress"') && str_contains($receive, 'copyonClickAddress')
+    && str_contains($receive, htmlspecialchars($tts['holder'])), 'Receive: QR, address and copy button');
+$list = $render('transactions/index');
+check(str_contains($list, 'table-96') && str_contains($list, 'wallet-tx') && !str_contains($list, $evil), 'Transactions: list with encoded rows');
+$detail = $render('transactions/view', ['id' => app\components\WebApp::encrypt($txId)]);
+check(str_contains($detail, 'trans-get') && str_contains($detail, '12.34') && !str_contains($detail, $evil) && str_contains($detail, htmlspecialchars($evil, ENT_QUOTES)),
+    'Transaction detail: amount, refresh button, encoded memo');
+$db->createCommand()->delete('transactions', ['id' => $txId])->execute();
 
 foreach (['mp_wallets' => 'id_user', 'nodes' => 'id_user', 'smart_contract' => 'id_user', 'blockchains' => 'id_user', 'mp_users' => 'id'] as $table => $column) {
     $db->createCommand()->delete($table, [$column => $userId])->execute();

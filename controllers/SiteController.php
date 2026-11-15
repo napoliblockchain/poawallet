@@ -54,6 +54,8 @@ class SiteController extends Controller
         $actions = [
             'error' => [
                 'class' => 'yii\web\ErrorAction',
+                // ospiti: pagina d'errore nel layout di accesso, senza menu del wallet
+                'layout' => Yii::$app->user->isGuest ? 'auth' : null,
             ],
             'captcha' => [
                 'class' => 'yii\captcha\CaptchaAction',

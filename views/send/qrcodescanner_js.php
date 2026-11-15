@@ -1,6 +1,6 @@
 <script type="module">
-  import QrScanner from "./js/qrcodescanner/qr-scanner/qr-scanner.min.js";
-  QrScanner.WORKER_PATH = './js/qrcodescanner/qr-scanner/qr-scanner-worker.min.js';
+  import QrScanner from "/js/qrcodescanner/qr-scanner/qr-scanner.min.js";
+  QrScanner.WORKER_PATH = '/js/qrcodescanner/qr-scanner/qr-scanner-worker.min.js';
 
   const video = document.getElementById('qr-video');
   const camQrResult = document.getElementById('sendform-to');
@@ -21,8 +21,7 @@
         $('#sendform-memo').prop('readonly','readonly');
     }
 
-    $('#cameraPopup').hide();
-    scanner.stop();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('cameraPopup')).hide();
   }
 
   // estrae un eventuale importo dal qrcode
@@ -50,16 +49,11 @@
 	const scanner = new QrScanner(video, result => setResult(camQrResult, result));
 
 	// al click del pulsante photo attivo la fotocamera
+    const cameraModal = document.getElementById('cameraPopup');
     document.querySelector('#activate-camera-btn').addEventListener('click', function(){
-        console.log('[qrcode] Open camera modal');
-        $('#cameraPopup').show();
-        //$('#popupCamera').appendTo("body").modal('show');
-		scanner.start();
+        bootstrap.Modal.getOrCreateInstance(cameraModal).show();
 	});
-
-	// all'uscita disattiva la cam
-	document.querySelector('#camera-close').addEventListener('click', function(){
-        $('#cameraPopup').hide();
-		scanner.stop();
-  });
+    // fotocamera accesa solo con la finestra aperta
+    cameraModal.addEventListener('shown.bs.modal', function(){ scanner.start(); });
+    cameraModal.addEventListener('hidden.bs.modal', function(){ scanner.stop(); });
 </script>

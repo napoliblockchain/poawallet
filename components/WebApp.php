@@ -329,87 +329,34 @@ class WebApp extends Component
         return $value;
     }
 
-    public static function showTransactionRow($data, $fromAddress,$newTransaction=false,$status=null){
-        $dateLN = date("d M `y",$data->invoice_timestamp);
-        $timeLN = date("H:i:s",$data->invoice_timestamp);
-
-        if ($data->from_address == $fromAddress){
-        //   $price = '- '.self::si_formatter($data->token_price);
-        $price = '- '. Yii::$app->formatter->asDecimal(
-                $data->token_price
-            );
-          $color = 'red';
-          $addressToShow = $data->to_address;
-          $coinImg = 'fa-arrow-up text-danger';
-          $recipient = Yii::t('app','To: ');
-        } else {
-            //   $price = self::si_formatter($data->token_price);
-            $price = Yii::$app->formatter->asDecimal(
-                $data->token_price
-            );
-          $color = 'green';
-          $addressToShow = $data->from_address;
-          $coinImg = 'fa-arrow-down text-success';
-          $recipient = Yii::t('app','From: ');
+    /**
+     * Riga di una transazione (elenchi, pagina invio, aggiornamenti di wallet-sync.js).
+     * Indirizzi, simbolo, stato e messaggio arrivano da dati utente o dalla chain: sempre codificati.
+     */
+    public static function showTransactionRow($data, $fromAddress, $newTransaction = false, $status = null)
+    {
+        $outgoing = $data->from_address == $fromAddress;
+        $amount = Yii::$app->formatter->asDecimal($data->token_price);
+        if ($data->status == 'new' && $data->txhash != '') {
+            $data->status = 'pending';
+            $status = true;
         }
-        // $coinImg = ($data->type == 'token') ? 'coin5' : 'coin2';
-
-        $classStatus = ($data->status == 'complete') ? 'bg-success' : 'bg-secondary';
-        $newTxClass = ($newTransaction == true) ? 'bg-newtransaction' : '';
-
-		if ($data->status == 'new' && $data->txhash != ''){
-			$data->status = 'pending';
-			$status = true;
-		}
-
-        $line = '
-        <a href="'. \yii\helpers\Html::encode(\yii\helpers\Url::to(['/transactions/view', 'id' => self::encrypt($data->id)])) . '" />
-        <div class="container-fluid m-0 p-0">
-              <div class="row d-flex justify-content-center">
-                  <div class="col-11 m-0 p-0">
-                      <div class="card shadow">
-                          <div class="transaction-card-horizontal '.$newTxClass.'">
-                              <div class="img-square-wrapper ">
-                                  <i class="pt-2 px-1 fas fa-2x '.$coinImg.'"></i>
-                              </div>
-                              <div class="transaction-card-body ml-1 mb-0">
-                                  <span class="card-title">
-                                    <small class="pt-1 d-inline-block text-truncate" style="max-width: 150px;">'.$recipient.$addressToShow.'</small>
-                                  </span>
-                                  <p class="card-text">
-                                  <small class="text-muted">'.$dateLN.' <span class="ml-10">'.$timeLN.'</span></small>
-                                  </p>
-                              </div>
-
-                              <div class="alert p-1 m-2">
-                                  <span class="mb-0 txt-'.$color.'">'.$price.'
-									  <small class="ml-1">
-									  	'.$data->smartContract->symbol.'
-									  </small>
-								  </span>
-								  ';
-		if ($status !== null){
-			$line .= '			</br>
-								<div class="d-flex justify-content-center">
-								<small class="text-light text-capitalize text-center pl-2 pr-2 '.$classStatus.'" id="transaction-status-'
-								.self::encrypt($data->id).'">'.$data->status.'</small>
-								</div>
-								';
-		}
-        $line .=             '</div>
-                      </div>';
-
-				          ($data->message != "")
-                          ?  $line .= '<small class="mx-2 alert alert-info d-inline-block text-truncate" style="max-width: 330px;">'.$data->message.'</small>'
-                          :  $line .= '';
-                          $line .= '
-                      </div>
-                  </div>
-              </div>
-          </div>
-          </a>
-          ';
-         return $line;
+        $counterpart = $outgoing ? $data->to_address : $data->from_address;
+        $label = $outgoing ? Yii::t('app', 'To: ') : Yii::t('app', 'From: ');
+        $meta = Html::encode(Yii::$app->formatter->asDatetime((int) $data->invoice_timestamp, 'php:d/m/Y H:i'));
+        if ($status !== null) {
+            $meta .= ' <span class="badge ' . ($data->status == 'complete' ? 'bg-success-lt' : 'bg-secondary-lt') . ' text-capitalize ms-1" id="transaction-status-'
+                . self::encrypt($data->id) . '">' . Html::encode($data->status) . '</span>';
+        }
+        $message = $data->message != '' ? '<div class="small text-secondary text-truncate"><i class="far fa-comment me-1" aria-hidden="true"></i>' . Html::encode($data->message) . '</div>' : '';
+        return Html::a(
+            '<span class="wallet-tx-icon"><i class="fas ' . ($outgoing ? 'fa-arrow-up' : 'fa-arrow-down') . '" aria-hidden="true"></i></span>'
+            . '<span class="wallet-tx-body"><span class="d-block text-truncate">' . Html::encode($label . $counterpart) . '</span>'
+            . '<span class="d-block small text-secondary">' . $meta . '</span>' . $message . '</span>'
+            . '<span class="wallet-tx-amount">' . ($outgoing ? '&minus; ' : '+ ') . Html::encode($amount) . ' <small>' . Html::encode($data->smartContract->symbol) . '</small></span>',
+            ['/transactions/view', 'id' => self::encrypt($data->id)],
+            ['class' => 'wallet-tx ' . ($outgoing ? 'wallet-tx-out' : 'wallet-tx-in') . ($newTransaction ? ' bg-newtransaction' : '')]
+        );
     }
 
     public static function Icon($type_notification,$type_transaction=null){
