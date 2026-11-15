@@ -14,7 +14,7 @@ $decimals = (int) $node->smartContract->decimals;
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-start mb-2">
             <span class="wallet-hero-label"><?= Html::encode(Yii::t('app', 'Balance on: ')) ?></span>
-            <a class="small" href="<?= Url::to(['/settings/nodes/update']) ?>"><i class="fas fa-network-wired me-1" aria-hidden="true"></i><?= Html::encode($node->blockchain->denomination) ?></a>
+            <a class="small" href="<?= Url::to(['/nodes/update']) ?>"><i class="fas fa-network-wired me-1" aria-hidden="true"></i><?= Html::encode($node->blockchain->denomination) ?></a>
         </div>
         <div class="wallet-balance">
             <i class="fa fa-star star-total-balance fa-xs me-1" aria-hidden="true"></i>

@@ -3,10 +3,9 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-// token di sessione per le pagine di ripristino e generazione
+// token di sessione per la pagina di ripristino
 $string = Yii::$app->security->generateRandomString(32);
 Yii::$app->session->set('token-restore', $string);
-Yii::$app->session->set('token-spawn', $string);
 ?>
 <h2 class="card-title"><?= Html::encode(Yii::t('app', 'Create or restore')) ?></h2>
 <div class="list-group mb-4">

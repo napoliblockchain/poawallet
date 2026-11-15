@@ -15,7 +15,7 @@ $main = [
     ['transactions', ['/transactions/index'], 'fas fa-list', Yii::t('app', 'Transactions')],
 ];
 $more = [
-    ['mailbox', ['/mailbox/inbox'], 'fas fa-envelope', Yii::t('app', 'Mailbox')],
+    ['messages', ['/messages/index'], 'fas fa-envelope', Yii::t('app', 'Notifications')],
     ['settings', ['/settings/index'], 'fas fa-network-wired', Yii::t('app', 'Network')],
     ['nodes', ['/nodes/update'], 'fas fa-project-diagram', Yii::t('app', 'Select nodes')],
     ['smartcontracts', ['/smartcontracts/index'], 'fas fa-star', Yii::t('app', 'Manage tokens')],

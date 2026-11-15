@@ -101,12 +101,12 @@ class OauthtelegramController extends Controller
 			$model->authKey = Yii::$app->security->generateRandomString();
 			$model->accessToken = Yii::$app->getSecurity()->generatePasswordHash($model->getAuthKey());
 			$model->email = $auth_data['email'];
-			$model->picture = (isset($auth_data['photo_url']) ? $auth_data['photo_url'] : 'css/images/anonymous.png');
+			$model->picture = (isset($auth_data['photo_url']) ? $auth_data['photo_url'] : '/css/images/anonymous.png');
 			$model->first_name = (isset($auth_data['first_name']) ? $auth_data['first_name'] : '');
 			$model->last_name = (isset($auth_data['last_name']) ? $auth_data['last_name'] : '');
 
 		}else{
-			$model->picture = (isset($auth_data['photo_url']) ? $auth_data['photo_url'] : 'css/images/anonymous.png');
+			$model->picture = (isset($auth_data['photo_url']) ? $auth_data['photo_url'] : '/css/images/anonymous.png');
 			$model->first_name = (isset($auth_data['first_name']) ? $auth_data['first_name'] : '');
 			$model->last_name = (isset($auth_data['last_name']) ? $auth_data['last_name'] : '');
 		}

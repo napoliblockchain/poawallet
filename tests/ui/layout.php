@@ -70,7 +70,7 @@ foreach (['/wallet/index', '/send/index', '/receive/index', '/transactions/index
     check(str_contains($html, 'href="' . $link . '"'), 'Main menu links to ' . $link);
 }
 check(preg_match('~<a class="nav-link active" href="/wallet/index" aria-current="page">~', $html) === 1, 'Current section marked in the menu');
-check(str_contains($html, 'id="wallet-more"') && str_contains($html, 'data-bs-toggle="offcanvas"') && str_contains($html, 'href="/mailbox/inbox"'), 'More panel with the other sections');
+check(str_contains($html, 'id="wallet-more"') && str_contains($html, 'data-bs-toggle="offcanvas"') && str_contains($html, 'href="/messages/index"'), 'More panel with the other sections');
 check(!str_contains($html, 'href="/logs/index"') && !str_contains($html, 'href="/profiles/index"'), 'Administration links hidden from a normal user');
 check(preg_match('~<form action="/site/logout" method="post">\s*<input type="hidden" name="_csrf"~', $html) === 1, 'Logout is a POST with CSRF token');
 check(!str_contains($html, '<b>Ui</b>'), 'User name never printed as HTML');
@@ -96,6 +96,13 @@ foreach (['settings/index' => 'blockchainRescan', 'network/index' => 'network-bl
     $page = $render($route);
     check(str_contains($page, $marker) && !str_contains($page, 'ref-card'), 'Settings page restyled: ' . $route);
 }
+
+// --- collegamenti morti tolti: nessuna rotta verso controller rimossi
+foreach (['spawn/index', 'mailbox/inbox', 'settings/nodes/update', 'settings/blockchains/index', 'settings/tokens/index'] as $deadRoute) {
+    try { $app->createController($deadRoute) === false ? check(true, 'Removed route: ' . $deadRoute) : check(false, 'Removed route: ' . $deadRoute); }
+    catch (yii\base\InvalidRouteException $e) { check(true, 'Removed route: ' . $deadRoute); }
+}
+check(str_contains($profile, "getOrCreateInstance(document.getElementById('pinNewModal'), {backdrop: 'static', keyboard: false}).show()"), 'PIN dialog opened with Bootstrap 5 show()');
 
 // --- procedura guidata (layout dedicato, quattro passi senza il vecchio widget Bootstrap 3)
 $wizard = $render('wizard/index');

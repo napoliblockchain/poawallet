@@ -3,8 +3,8 @@ importScripts('src/js/idb.js');
 importScripts('src/js/idb-utility.js');
 
 // cambiare la versione a ogni modifica di file statici senza ?v= (es. web worker): svuota le cache vecchie
-var CACHE_STATIC_NAME = 'poawallet-static-016';
-var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-016';
+var CACHE_STATIC_NAME = 'poawallet-static-017';
+var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-017';
 
 var OFFLINE_URL = 'offline.html';
 
@@ -13,18 +13,11 @@ var STATIC_FILES = [
 	OFFLINE_URL,
 	'manifest.json',
 	'favicon.ico',
-	'css/global.style.css',
-	'css/img/content/coin5.png',
-	'css/img/content/dash-bg.png',
-	'css/img/content/icons/2.png',
-	'css/img/content/icons/5.png',
 	'css/pincode.css',
-	'css/site.css',
-	'css/yiipager.css',
 
 	'js/global.script.js',
 	'js/clipboard-copy.js',
-	'js/ws-websocket.js',
+	'js/wallet-sync.js',
 	'js/web-workers/eth-tx.js',
 
 	// search latest transactions
@@ -95,6 +88,8 @@ self.addEventListener('message', function (event) {
 self.addEventListener('install', function (event) {
 	//console.log('[Service Worker] Installing Service worker...', event);
 	console.log('[Service Worker] Installing Service worker...');
+	// la nuova versione sostituisce subito la precedente (che può avere in cache file vecchi): activate svuota le cache
+	self.skipWaiting();
 	event.waitUntil(
 		//versioning della cache. Per aggiornare le versioni del software
 		caches.open(CACHE_STATIC_NAME)

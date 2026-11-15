@@ -9,10 +9,7 @@ $(function () {
     // leggo lo status attuale della tabella pin
     var masterseedSlider = document.querySelector('.masterseedSlider');
     masterseedSlider.addEventListener('click', function(){
-        $('#masterSeedModal').modal({
-			  backdrop: 'static',
-			  keyboard: false
-		});
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('masterSeedModal'), {backdrop: 'static', keyboard: false}).show();
 
     });
 

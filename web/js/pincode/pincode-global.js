@@ -98,15 +98,9 @@ $(function () {
             $('.easy-numpad-frame').css("top","1px");
 
             if (mask==0){
-                $('#pinRequestModal').modal({
-                    backdrop: 'static',
-                    keyboard: false
-                });
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('pinRequestModal'), {backdrop: 'static', keyboard: false}).show();
             }else{
-                $('#pinRemoveModal').modal({
-                  backdrop: 'static',
-                  keyboard: false
-                });
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('pinRemoveModal'), {backdrop: 'static', keyboard: false}).show();
             }
         },
         // verifica il PIN digitato; se il server restituisce il PIN nel nuovo formato lo salva al posto del vecchio
@@ -151,7 +145,7 @@ $(function () {
     			writeData('pin', post)
     				.then(function() {
     					console.log('[Pin Utility] Update pin info in indexedDB', post);
-    					$('#pinRequestModal').modal("hide");
+    					bootstrap.Modal.getOrCreateInstance(document.getElementById('pinRequestModal')).hide();
     					$('#pinRequestButtonText').show();
                         $('#pinRequestButton').prop('disabled',true);
                         $('.button-spinner').remove();

@@ -12,10 +12,7 @@ $(function () {
     blockchainRescanSlider.addEventListener('click', function(){
         // nessuna sincronizzazione durante la nuova scansione
         if (window.walletSync) walletSync.pause();
-        $('#blockchainScanModal').modal({
-			  backdrop: 'static',
-			  keyboard: false
-		});
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('blockchainScanModal'), {backdrop: 'static', keyboard: false}).show();
 
     });
 

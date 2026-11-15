@@ -10,7 +10,7 @@
      }
      navigator.clipboard.writeText($('#inputcopyWalletAddress').val()).then(function() {
          //console.log('Async: Copying to clipboard was successful!');
-         $('#copyAddressModal').modal('show');
+         bootstrap.Modal.getOrCreateInstance(document.getElementById('copyAddressModal')).show();
      }, function(err) {
          console.log('Async: Could not copy text: ', err);
      });
@@ -28,7 +28,7 @@
          var successful = document.execCommand('copy');
          var msg = successful ? 'successful' : 'unsuccessful';
          console.log('Fallback: Copying text command was ' + msg);
-         $('#copyAddressModal').modal('show');
+         bootstrap.Modal.getOrCreateInstance(document.getElementById('copyAddressModal')).show();
      } catch (err) {
          console.log('Fallback: Oops, unable to copy', err);
      }
