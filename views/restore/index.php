@@ -23,7 +23,7 @@ include('_js.php');
         <div class="alert alert-danger" id="seed-error" role="alert" style="display:none;"></div>
         <?= Html::activeHiddenInput($formModel, 'address') ?>
         <div class="d-flex justify-content-between gap-2 mt-4">
-            <a class="btn btn-outline-secondary" href="<?= Url::to(['/wizard/index', 'token' => $string]) ?>"><i class="fa fa-arrow-left me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'back')) ?></a>
+            <a class="btn btn-outline-secondary" href="<?= Url::to(['/wizard/index', 'token' => $string]) ?>"><i class="fa fa-arrow-left me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Back')) ?></a>
             <button type="button" class="btn btn-success seed-submit"><i class="fa fa-check me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Confirm')) ?></button>
         </div>
     </div>

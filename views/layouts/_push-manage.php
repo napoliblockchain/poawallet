@@ -22,13 +22,13 @@
 			</div>
 			<div class="modal-footer d-flex justify-content-between">
 				<button type="button" class="btn btn-secondary js-push-btn-modal-back" data-bs-dismiss="modal" >
-						<i class="fa fa-arrow-left me-1" aria-hidden="true"></i> <?php echo Yii::t('app','back');?>
+						<i class="fa fa-arrow-left me-1" aria-hidden="true"></i> <?php echo Yii::t('app', 'Back');?>
 					</button>
 				<button type="button" class="js-push-btn btn btn-primary " data-bs-dismiss="modal" >
-						<i class="fa fa-check me-1" aria-hidden="true"></i> <?php echo Yii::t('app','confirm');?>
+						<i class="fa fa-check me-1" aria-hidden="true"></i> <?php echo Yii::t('app', 'Confirm');?>
 					</button>
 				<button type="button" class="js-push-btn-remove btn btn-primary " data-bs-dismiss="modal">
-						<i class="fa fa-times me-1" aria-hidden="true"></i> <?php echo Yii::t('app','remove');?>
+						<i class="fa fa-times me-1" aria-hidden="true"></i> <?php echo Yii::t('app','Remove');?>
 					</button>
 			</div>
 		</div>

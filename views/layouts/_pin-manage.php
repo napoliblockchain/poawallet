@@ -17,8 +17,8 @@ use yii\helpers\Html;
                 <input type="hidden" id="pin_password" readonly="readonly">
                 <div class="pin-numpad pin-newframe-numpad"></div>
                 <div class="wallet-pin-actions">
-                    <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal" id="pinNewButtonBack"><i class="fa fa-arrow-left me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'back')) ?></button>
-                    <button type="button" disabled="disabled" class="btn btn-primary btn-lg disabled" id="pinNewButton"><i class="fa fa-check me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'confirm')) ?></button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal" id="pinNewButtonBack"><i class="fa fa-arrow-left me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Back')) ?></button>
+                    <button type="button" disabled="disabled" class="btn btn-primary btn-lg disabled" id="pinNewButton"><i class="fa fa-check me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Confirm')) ?></button>
                 </div>
             </div>
         </div>
@@ -37,8 +37,8 @@ use yii\helpers\Html;
                 <input type="hidden" id="pin_password_confirm" readonly="readonly">
                 <div class="pin-confirm-numpad pin-newframe-numpad"></div>
                 <div class="wallet-pin-actions">
-                    <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal" id="pinVerifyButtonBack"><i class="fa fa-arrow-left me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'back')) ?></button>
-                    <button type="button" disabled="disabled" class="btn btn-primary btn-lg disabled" id="pinVerifyButton"><i class="fa fa-check me-2" aria-hidden="true"></i><span id="pinVerifyButtonText"><?= Html::encode(Yii::t('app', 'confirm')) ?></span></button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal" id="pinVerifyButtonBack"><i class="fa fa-arrow-left me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Back')) ?></button>
+                    <button type="button" disabled="disabled" class="btn btn-primary btn-lg disabled" id="pinVerifyButton"><i class="fa fa-check me-2" aria-hidden="true"></i><span id="pinVerifyButtonText"><?= Html::encode(Yii::t('app', 'Confirm')) ?></span></button>
                 </div>
             </div>
         </div>
@@ -56,8 +56,8 @@ use yii\helpers\Html;
                 </div>
                 <div class="pin-remove-numpad pin-newframe-numpad"></div>
                 <div class="wallet-pin-actions">
-                    <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal" id="pinRemoveButtonBack"><i class="fa fa-arrow-left me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'back')) ?></button>
-                    <button type="button" disabled="disabled" class="btn btn-primary btn-lg disabled" id="pinRemoveButton"><i class="fa fa-check me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'confirm')) ?></button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal" id="pinRemoveButtonBack"><i class="fa fa-arrow-left me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Back')) ?></button>
+                    <button type="button" disabled="disabled" class="btn btn-primary btn-lg disabled" id="pinRemoveButton"><i class="fa fa-check me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Confirm')) ?></button>
                 </div>
             </div>
         </div>
