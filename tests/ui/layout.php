@@ -154,6 +154,14 @@ check(str_contains($detail, 'trans-get') && str_contains($detail, '12.34') && !s
     'Transaction detail: amount, refresh button, encoded memo');
 $db->createCommand()->delete('transactions', ['id' => $txId])->execute();
 
+// --- pagina di accesso comune alle app Napay: catena animata, marchio, supporter
+$app->user->setIdentity(null);
+$login = $render('site/login');
+check(str_contains($login, 'class="wallet-auth auth auth--wallet"') && str_contains($login, '<canvas class="auth-chain" aria-hidden="true">')
+    && str_contains($login, '/bundles/auth/auth.css') && str_contains($login, '/bundles/auth/auth-chain.js'), 'Login: shared auth layout with animated chain');
+check(str_contains($login, 'na<span>pay</span><small>Wallet</small>') && str_contains($login, 'id="login-form"') && str_contains($login, 'class="auth-submit"')
+    && str_contains($login, 'napoli-blockchain.png') && str_contains($login, 'parthenope.jpg') && !str_contains($login, 'wallet-brand'), 'Login: wordmark, form, supporters, old header gone');
+
 foreach (['mp_wallets' => 'id_user', 'mp_users' => 'id'] as $table => $column) {
     $db->createCommand()->delete($table, [$column => $userId])->execute();
 }
