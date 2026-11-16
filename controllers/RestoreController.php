@@ -5,19 +5,12 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
-use yii\web\HttpException;
-use yii\filters\VerbFilter;
-
-use yii\base\Model;
-use yii\db\ActiveRecord;
 
 use app\models\WizardWalletForm;
 use app\models\MPWallets;
 use app\models\Nodes;
 
 use yii\bootstrap5\ActiveForm;
-use yii\helpers\Json;
-use yii\helpers\Url;
 
 use app\components\Networks;
 
@@ -28,7 +21,6 @@ class RestoreController extends Controller
     	$this->enableCsrfValidation = false;
     	return parent::beforeAction($action);
 	}
-
 
 	/**
 	 * {@inheritdoc}
@@ -71,7 +63,6 @@ class RestoreController extends Controller
 		];
 	}
 
-
 	/**
 	 * Show Restore old wallet page
 	 */
@@ -83,7 +74,6 @@ class RestoreController extends Controller
 
 		if (Yii::$app->request->isAjax && $formModel->load(Yii::$app->request->post())) {
 		    Yii::$app->response->format = Response::FORMAT_JSON;
-			// echo '<pre>'.print_r(ActiveForm::validate($sendTokenForm),true).'</pre>';
 		    return ActiveForm::validate($formModel);
 		}
 
@@ -93,14 +83,9 @@ class RestoreController extends Controller
 			$boltWallet = MPWallets::find()->where( [ 'id_user' => Yii::$app->user->id ] )->one();
 			$node = Nodes::find()->where(['id_user'=>Yii::$app->user->id])->one();
 
-			// echo '<pre> '.print_r($boltWallet,true);;
-			// echo '<pre> '.print_r($node,true);;exit;
-			// echo '<pre> '.print_r($user->getWallets(),true);exit;
-
 			if(null === $boltWallet) {
 				$boltWallet = new MPWallets;
 				$boltWallet->id_user = Yii::$app->user->id;
-				//$boltWallet->wallet_address = Yii::$app->request->post('WizardWalletForm')['address'];
 
 				if (null === $node){
 					$defaultNetworkExist = true;
@@ -132,7 +117,6 @@ class RestoreController extends Controller
 		$ERC20 = new Yii::$app->Erc20(Yii::$app->user->id);
 		$block = $ERC20->getBlockInfo();
 
-		// echo '<pre>'.print_r($block,true);exit;
 		$json = null;
 		if (!is_object($block)){
 			$json = json_decode($block);

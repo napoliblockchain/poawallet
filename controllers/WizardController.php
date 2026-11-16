@@ -5,42 +5,21 @@ namespace app\controllers;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
-use yii\web\HttpException;
-use yii\filters\VerbFilter;
-
-use yii\base\Model;
-use yii\data\ActiveDataProvider;
-use yii\db\ActiveRecord;
-
 
 use app\models\WizardWalletForm;
 use app\models\MPWallets;
 use app\models\Nodes;
 
-use yii\helpers\Url;
-
 use app\components\Networks;
-
 
 class WizardController extends Controller
 {
-
 	public function beforeAction($action)
 	{
     	$this->enableCsrfValidation = false;
 
-		// $session = Yii::$app->session;
-		// $token = $session->get('token-wizard');
-		// if ($token === null || $token != $_GET['token']) {
-		// 	Yii::$app->response->statusCode = 403;
-		// 	return false;
-		// }
-		// $session->remove('token-wizard');
-
     	return parent::beforeAction($action);
 	}
-
-
 
 	/**
 	 * {@inheritdoc}
@@ -77,12 +56,6 @@ class WizardController extends Controller
 		];
 	}
 
-
-
-
-
-
-
 	/**
 	 * Show wizard generation first wallet address page
 	 */
@@ -105,7 +78,6 @@ class WizardController extends Controller
 					$defaultNetworkExist = true;
 					$node = Networks::createDefaults();
 				}
-				// echo '<pre>node'.print_r($node,true);exit;
 				$boltWallet->blocknumber = $this->getLatestBlockNumber();
 			}
 			$boltWallet->wallet_address = Yii::$app->request->post('WizardWalletForm')['address'];
@@ -131,7 +103,6 @@ class WizardController extends Controller
 		$ERC20 = new Yii::$app->Erc20(Yii::$app->user->id);
 		$block = $ERC20->getBlockInfo();
 
-		// echo '<pre>'.print_r($block,true);exit;
 		$json = null;
 		if (!is_object($block)) {
 			$json = json_decode($block);
@@ -143,7 +114,5 @@ class WizardController extends Controller
 			return '0x0';
 		}
 	}
-
-
 
 }

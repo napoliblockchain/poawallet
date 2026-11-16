@@ -10,17 +10,12 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
-use yii\web\HttpException;
 
 use app\models\PushSubscriptions;
-
-use yii\helpers\Json;
-use yii\helpers\Url;
 
 use app\components\WebApp;
 use app\components\Settings;
 use yii\filters\AccessControl;
-
 
 /**
  * UsersController implements the CRUD actions for Users model.
@@ -57,7 +52,6 @@ class UsersController extends Controller
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		return $data;
 	}
-
 
     /**
      * Displays a single BoltSocialusers model.
@@ -101,8 +95,6 @@ class UsersController extends Controller
             ->select('token_price, from_address, to_address')
             ->all();
 
-        // echo '<pre>'.print_r($wallet->wallet_address,true);exit;
-
         $userAccountValues = [0.01];
         $increase = 0;
         $color = 'gray';
@@ -111,8 +103,6 @@ class UsersController extends Controller
             $actualPrice = 0;
             $symbol = '';
             foreach ($chart as $item){
-                // echo '<pre>'.print_r($item,true);exit;
-
                 if ($item->from_address == $wallet->wallet_address){
                     $actualPrice -= $item['token_price'];
                 } else {
@@ -123,8 +113,6 @@ class UsersController extends Controller
 
             }
 
-            // echo count($userAccountValues);
-            // exit;
             $last1 = $userAccountValues[count($userAccountValues)-1];
             $last2 = $userAccountValues[count($userAccountValues)-2];
 
@@ -142,8 +130,6 @@ class UsersController extends Controller
             }
         }
 
-
-
         $userAccountValueArray = [
             'accountValues' => $userAccountValues,
             'balance' => $received['sum'] - $sent['sum'],
@@ -151,9 +137,6 @@ class UsersController extends Controller
             'color' => $color,
             'arrow' => $arrow,
         ];
-
-
-        // echo '<pre>'.print_r($userAccountValueArray,true);exit;
 
         return $this->render('view', [
             'model' => $this->findModel(WebApp::decrypt($id)),
@@ -176,7 +159,6 @@ class UsersController extends Controller
 	public function actionSaveSubscription()
 	{
  		$raw = json_decode($_POST['subscription']);
-        // echo var_dump ($raw);
 		$browser = $_SERVER['HTTP_USER_AGENT'];
 
 		$vapid = PushSubscriptions::find()
@@ -210,8 +192,6 @@ class UsersController extends Controller
 		return $this->json($data);
 	}
 
-
-
     /**
      * Updates an existing BoltSocialusers model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -231,7 +211,6 @@ class UsersController extends Controller
             'model' => $model,
         ]);
     }
-
 
     /**
      * Finds the BoltSocialusers model based on its user_id value.

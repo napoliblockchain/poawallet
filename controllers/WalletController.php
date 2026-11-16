@@ -6,12 +6,7 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
-use yii\web\HttpException;
 use yii\filters\VerbFilter;
-
-use yii\base\Model;
-use yii\data\ActiveDataProvider;
-use yii\db\ActiveRecord;
 
 use app\models\search\TransactionsSearch;
 use app\models\MPWallets;
@@ -19,16 +14,10 @@ use app\models\Users;
 use app\models\Nodes;
 use app\models\Logs;
 
-use yii\bootstrap5\ActiveForm;
-use yii\helpers\Json;
-use yii\helpers\Url;
-
 use app\components\WebApp;
 
 class WalletController extends Controller
 {
-
-
 	public function beforeAction($action)
 	{
 		Yii::$app->user->authTimeout = Yii::$app->params['user.rememberMeDuration'];
@@ -36,7 +25,6 @@ class WalletController extends Controller
     	$this->enableCsrfValidation = in_array($action->id, ['verify-pin', 'reveal-seed'], true);
     	return parent::beforeAction($action);
 	}
-
 
 	/**
 	 * {@inheritdoc}
@@ -83,11 +71,6 @@ class WalletController extends Controller
 	}
 
 	// public function actionError(){
-    //     $this->layout = 'auth';
-    //     return $this->render('error');
-    // }
-
-
 	private function loadSocialUser()
 	{
 		$user = Users::find()
@@ -105,14 +88,11 @@ class WalletController extends Controller
 
 		$model = MPWallets::find()->byUserId(Yii::$app->user->id)->one();
 		$model->blocknumber = '0x0';
-		//$model->save();
 
 		return $this->json([
 			'success' => $model->save(),
 		]);
 	}
-
-
 
 	/**
 	 * Lists wallet dashboard page
@@ -132,7 +112,6 @@ class WalletController extends Controller
 			return $this->redirect(['wizard/index','token' => $string]);
 		}
 
-
 		$searchModel = new TransactionsSearch();
 		$dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 		$dataProvider->setPagination(['pageSize' => 5]);
@@ -140,16 +119,6 @@ class WalletController extends Controller
 		$dataProvider->query
 					->orwhere(['=','to_address', $fromAddress])
 					->orwhere(['=','from_address', $fromAddress]);
-
-        // $dataProvider->query->andwhere(['=','id_smart_contract', $node->id_smart_contract]);
-
-		// $ERC20 = new Yii::$app->Erc20(Yii::$app->user->id);
-		//
-		// $balance =
-		// echo '<pre>'.print_r($ERC20->tokenBalance($fromAddress),true).'</pre>';
-		// exit;
-
-
 
 		return $this->render('index', [
 				'searchModel' => $searchModel,
@@ -161,7 +130,6 @@ class WalletController extends Controller
 				'node' => $node,
 		]);
 	}
-
 
 	private static function json ($data)
 	{
@@ -263,10 +231,5 @@ class WalletController extends Controller
 		$key = self::attemptsKey($kind);
 		Yii::$app->cache->set($key, (int) Yii::$app->cache->get($key) + 1, self::SECRET_ATTEMPTS[$kind][1]);
 	}
-
-
-
-
-
 
 }

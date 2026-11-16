@@ -41,7 +41,6 @@ class MessagesController extends Controller
         ];
     }
 
-
     /**
      * Lists all BoltTokens models.
      * @return mixed
@@ -62,7 +61,6 @@ class MessagesController extends Controller
                 ]
             ],
         ]);
-
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
@@ -91,7 +89,6 @@ class MessagesController extends Controller
      */
     public function actionDelete()
     {
-        //echo '<pre>'.print_r($_POST,true);
         $json = json_decode($_POST['keys']);
 
         foreach ($json as $idx => $key)
@@ -99,10 +96,6 @@ class MessagesController extends Controller
 
         return $this->redirect(['index']);
     }
-
-
-
-
 
     /**
      * Finds the BoltTokens model based on its primary key value.

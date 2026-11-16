@@ -7,22 +7,12 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\web\HttpException;
-use yii\filters\VerbFilter;
-
-use yii\base\Model;
-use yii\data\ActiveDataProvider;
-use yii\db\ActiveRecord;
 
 use app\models\Transactions;
 use app\components\WalletKeyCipher;
-use app\models\search\TransactionsSearch;
 use app\models\MPWallets;
-use app\models\Users;
 use app\models\SendForm;
-use app\models\WizardWalletForm;
-use app\models\PushSubscriptions;
 use app\models\Nodes;
-
 
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Json;
@@ -34,7 +24,6 @@ use app\components\Settings;
 use app\components\Erc20;
 use app\components\NotificationService;
 
-
 class SendController extends Controller
 {
 	public function beforeAction($action)
@@ -42,7 +31,6 @@ class SendController extends Controller
     	$this->enableCsrfValidation = false;
     	return parent::beforeAction($action);
 	}
-
 
 	/**
 	 * {@inheritdoc}
@@ -78,24 +66,11 @@ class SendController extends Controller
 			],
 		];
 	}
-
-	private function loadSocialUser()
-	{
-		$user = Users::find()
- 	     		->andWhere(['id'=>Yii::$app->user->id])
- 	    		->one();
-
-		return $user;
-	}
-
-
 	/**
 	 * List send page
 	 */
 	public function actionIndex()
  	{
-		// echo '<pre>'.print_r($_POST,true).'</pre>';
-		// exit;
  		$fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
 		if (null === $fromAddress){
 			$session = Yii::$app->session;
@@ -108,14 +83,12 @@ class SendController extends Controller
 
 		if (Yii::$app->request->isAjax && $formModel->load(Yii::$app->request->post())) {
 		    Yii::$app->response->format = Response::FORMAT_JSON;
-			// echo '<pre>'.print_r(ActiveForm::validate($sendTokenForm),true).'</pre>';
 		    return ActiveForm::validate($formModel);
 		}
 
 		if ($formModel->load(Yii::$app->request->post()) && $formModel->validate()) {
         	return $this->redirect(['/wallet/index']);
     	}
-		// $ERC20 = new Yii::$app->Erc20(1);
 
 		$node = Nodes::find()
  	     		->andWhere(['id_user'=>Yii::$app->user->id])
@@ -127,13 +100,10 @@ class SendController extends Controller
 			'balance' => Yii::$app->Erc20->tokenBalance($fromAddress),
 			'balance_gas' => Yii::$app->Erc20->gasBalance($fromAddress),
 			'node' => $node,
-			// 'userImage' => $this->loadSocialUser()->picture,
  		]);
  	}
 	public function actionGasLimit()
 	{
-		// echo '<pre>'.print_r($_POST,true).'</pre>';
-		// exit;
 		$fromAddress = $_POST['from'];
 		$toAddress = $_POST['to'];
 		$amount = $_POST['amount'];
@@ -142,17 +112,11 @@ class SendController extends Controller
 
 		$formModel = new SendForm; //form di input dei dati
 		if (!$formModel->validate(Yii::$app->request->post())) {
-		    // Yii::$app->response->format = Response::FORMAT_JSON;
-			// $response = [ActiveForm::validate($formModel), $return];
 		    return $response;
 		}
 
-
-
 		$ERC20 = new Yii::$app->Erc20(Yii::$app->user->id);
 		$gasLimit = $ERC20->getGasLimit($toAddress,$fromAddress,$amount);
-
-
 
 		if (null !== $gasLimit){
 			$return = ['success'=>true,'gasLimit'=>$gasLimit];
@@ -179,18 +143,11 @@ class SendController extends Controller
 		}
 		$passphrase = $storedPassword['value'];
 		$decrypted = is_string($encrypted) ? WalletKeyCipher::decrypt($encrypted, $passphrase) : null;
-		// print_r($decrypted);
-		// exit;
 		if (null === $decrypted){
 			throw new HttpException(404,'Cannot decrypt private key.');
 		}
 
-
 		$id_user = Yii::$app->user->id;
-		// echo '<pre>' . print_r($id_user, true) . '</pre>';
-		// exit;
-
-
 
 		$settings = Settings::poa($id_user);
 		$ERC20 = new Yii::$app->Erc20($id_user);
@@ -200,7 +157,6 @@ class SendController extends Controller
 		// nel DB
 		// zerogas => 1
 
-		// echo '<pre>'.print_r($settings,true).'</pre>';exit;
 		if ($settings->blockchain->zerogas == 1){
 			$gasBalance = $ERC20->loadGas($fromAccount);
 		} else {
@@ -212,9 +168,6 @@ class SendController extends Controller
 
 		// imposto il valore del nonce attuale
 		$nonce = $ERC20->getNonce($fromAccount);
-
-        // echo '<pre>' . print_r($nonce, true) . '</pre>';exit;
-
 
 		// genero la transazione nell'intervallo del nonce
 		$maxNonce = $nonce + 10;
@@ -240,8 +193,6 @@ class SendController extends Controller
 				$nonce++;
 			}
 		}
-		// echo '<pre>'.print_r($tx,true).'</pre>';
-		// exit;
 		if ($tx['success'] == false){
 			throw new HttpException(505,'Error: '.$tx['message']);
 		}
@@ -253,9 +204,6 @@ class SendController extends Controller
 		//calcolo expiration time
 		$totalseconds = 15 * 60; //poa_expiration è in minuti, * 60 lo trasforma in secondi
 		$expiration_timestamp = $timestamp + $totalseconds; //DEFAULT = 15 MINUTES
-
-		//$rate = $this->getFiatRate(); // al momento il token è peggato 1/1 sull'euro
-		// $rate = 1; //eth::getFiatRate('token'); //
 
 		$tokens = new Transactions;
 		$tokens->id_user = $id_user;
@@ -275,7 +223,6 @@ class SendController extends Controller
 		if (!($tokens->save())){
 			throw new HttpException(404,print_r($tokens->errors));
 		}
-
 
 		// notifica per chi ha inviato (from_address)
 		$notification = [
@@ -357,7 +304,6 @@ class SendController extends Controller
 			$settings = Settings::poa($tokens->id_user);
 		}
 		if ($receipt !== null && $changed === 1 && $tokens->status === 'complete') {
-
 			// notifica per chi ha inviato (from_address)
 			$id_user_from = MPWallets::find()->userIdFromAddress($tokens->from_address);
 			$notification = [
@@ -405,7 +351,6 @@ class SendController extends Controller
 		return $this->json($data);
 
 	}
-
 
 	private static function json ($data)
 	{

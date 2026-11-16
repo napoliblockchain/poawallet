@@ -45,8 +45,6 @@ class TransactionsController extends Controller
         ];
     }
 
-
-
     /**
      * Lists all Transactions models.
      * @return mixed
@@ -72,9 +70,6 @@ class TransactionsController extends Controller
 		$dataProvider->query
 					->orwhere(['=','to_address', $fromAddress])
 					->orwhere(['=','from_address', $fromAddress]);
-
-        // $dataProvider->query->andwhere(['=','id_smart_contract', $node->id_smart_contract]);
-        // echo '<pre>'.print_r($dataProvider,true);exit;
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -135,10 +130,7 @@ class TransactionsController extends Controller
 		$ERC20 = new Yii::$app->Erc20(Yii::$app->user->id);
 
         if ($txhash != '0x0'){
-
             $receipt = $ERC20->getReceipt($txhash);
-            // echo "<pre>".print_r($receipt,true)."</pre>";
-            // exit;
             if (null !== $receipt){
                 $success = true;
                 // update transactions
@@ -150,9 +142,6 @@ class TransactionsController extends Controller
                     $node->smartContract->decimals
                 );
 
-                // echo "<pre>".print_r($transactionValue,true)."</pre>";
-                // echo "<pre>".print_r($transaction,true)."</pre>";exit;
-
                 $transaction->blocknumber = $receipt->blockNumber;
                 $transaction->token_received = $transactionValue;
                 $transaction->status = 'complete';
@@ -161,7 +150,6 @@ class TransactionsController extends Controller
                     die();
                 }
             }
-
 
         }
         $return = [
@@ -172,9 +160,6 @@ class TransactionsController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         return $return;
     }
-
-
-
 
     /**
      * Finds the Transactions model based on its primary key value.

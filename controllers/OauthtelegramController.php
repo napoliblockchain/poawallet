@@ -3,20 +3,11 @@ namespace app\controllers;
 
 use Yii;
 use yii\web\Controller;
-use yii\base\Model;
-use yii\db\ActiveRecord;
 use app\models\Users;
-use app\models\LoginForm;
 use app\models\Auth;
 use yii\helpers\Json;
 
 use jambtc\oauthtelegram;
-
-use app\components\Settings;
-
-
-// Yii::$classMap['settings'] = Yii::getAlias('@packages').'/settings.php';
-// Yii::$classMap['telegram'] = Yii::getAlias('@packages').'/OAuth/oauth-telegram/telegram.php';
 
 class OauthtelegramController extends Controller
 {
@@ -32,7 +23,6 @@ class OauthtelegramController extends Controller
 
 	public function actionCheckAuthorization()
 	{
-
 		$bot_username = Yii::$app->params['telegram.clientId']; // place username of your bot here
 		$bot_token = Yii::$app->params['telegram.clientSecret']; // place bot token of your bot here
 
@@ -43,20 +33,7 @@ class OauthtelegramController extends Controller
 		$auth_data['email'] = $auth_data['id'] .'@telegram.com';
 		$auth_data['oauth_provider'] = 'telegram';
 
-		// echo "<pre>".print_r($auth_data,true)."</pre>";
-		// exit;
-
-		// $model = $this->saveUserData($auth_data);
-		//
-		// $model=new Users;
-		// $model->username = $auth_data['email'];
-		// $model->password = $auth_data['id'];
-		// $model->oauth_provider = $auth_data['oauth_provider'];
-		// //
-
 		$user = $this->saveUserData($auth_data);
-
-		// echo '<pre>'.print_r($user,true);exit;
 
 		$auth = new Auth([
 			'user_id' => $user['model']->id,
@@ -79,7 +56,6 @@ class OauthtelegramController extends Controller
 		return $this->goHome();
 
   }
-
 
 	private function saveUserData($auth_data)
 	{

@@ -6,29 +6,16 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
-use yii\web\HttpException;
-use yii\filters\VerbFilter;
-
-use yii\base\Model;
-use yii\data\ActiveDataProvider;
-use yii\db\ActiveRecord;
-
-use yii\helpers\Json;
 
 use app\models\MPWallets;
 
-
-
 class ReceiveController extends Controller
 {
-
-
 	public function beforeAction($action)
 	{
     	$this->enableCsrfValidation = false;
     	return parent::beforeAction($action);
 	}
-
 
 	/**
 	 * {@inheritdoc}
@@ -65,9 +52,6 @@ class ReceiveController extends Controller
 		];
 	}
 
-
-
-
 	/**
 	 * List receive page
 	 */
@@ -97,8 +81,5 @@ class ReceiveController extends Controller
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		return $data;
 	}
-
-
-
 
 }

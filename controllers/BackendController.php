@@ -6,29 +6,19 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
-use yii\web\HttpException;
 use yii\filters\VerbFilter;
-
-use yii\base\Model;
-use yii\data\ActiveDataProvider;
-use yii\db\ActiveRecord;
 
 use app\models\Notifications;
 use app\models\NotificationsReaders;
-use app\models\query\NotificationsReadersQuery;
 use app\models\MPWallets;
 
-
-use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\helpers\Html;
 
 use app\components\WebApp;
 
-
 class BackendController extends Controller
 {
-
 	/**
 	 * {@inheritdoc}
 	 */
@@ -118,7 +108,6 @@ class BackendController extends Controller
 		$fromAddress = null;
 		$userId = Yii::$app->user->id;
 
-
 		if ($userId !== null) {
 			$fromAddress = MPWallets::find()->userAddress($userId);
 		}
@@ -127,9 +116,6 @@ class BackendController extends Controller
             ->andWhere(['id_user' => $userId])
             ->latest()
             ->all();
-
-		// echo "<pre>".print_r($news,true)."</pre>";
-		// exit;
 
        $response['userId'] = (int)$userId;
 	   $response['countedRead'] = 0;
@@ -143,14 +129,9 @@ class BackendController extends Controller
 		   ($item->alreadyread == 0 ? $response['countedUnread'] ++ : $response['countedRead'] ++);
 	   }
 
-
 	   $x=1;
 	   foreach ($news as $key => $item) {
-		   // echo "<pre>".print_r($item,true)."</pre>";
-		   // exit;
-
 		   if ($x == 1){
-
 			   $response['htmlTitle'] .= '<li>
 		 			 <div class="d-flex align-items-center justify-content-between">
 		 				 <div class="d-flex align-items-center">
@@ -171,16 +152,12 @@ class BackendController extends Controller
 		   $notify = Notifications::findOne($item->id_notification);
            if ($notify === null) { continue; }
 
-		   //if ($data->from_address == $fromAddress){
-
-		   //$notify = Notifications::model()->findByPk($item->id_notification);
 		   $notifi__icon = WebApp::Icon($notify->type.'err');
 		   $notifi__color = WebApp::Color($notify->status);
 
 		   // verifico che sia un allarme
 		   if ($notify->type == 'alarm' && $item->alreadyread == 0)
 			   $response['playAlarm'] = true;
-
 
 			$parsedurl = parse_url($notify->url);
 
@@ -206,24 +183,15 @@ class BackendController extends Controller
 
 							<div class="text-right">';
 							 // se il tipo notifica è help o contact ovviamente non mostro il prezzo della transazione
-							 // if ($notify->type <> 'help'
 								// 	 && $notify->type <> 'contact'
 								// 	 && $notify->type <> 'alarm'
-							 // ){
-								//  $response['htmlContent'] .= '<b class="d-block mb-0 float-left txt-dark">'.$notify->price.'</b>';
-								//  //VERIFICO QUESTE ULTIME 3 TRANSAZIONI PER AGGIORNARE IN REAL-TIME LO STATO (IN CASO CI SI TROVA SULLA PAGINA TRANSACTIONS)
-								//  // $response['status'][$notify->id_tocheck] = $notify->status;
-							 // }
 							 	$response['htmlContent'] .= '
 								 <small class="text-muted">'.Yii::$app->formatter->asRelativeTime($notify->timestamp).'</small>
 							 </div>
 
-
-
 	               </div>
 			   </a>
 	   		</li>';
-
 
 		   $x++;
 		   if ($x>5)
@@ -234,11 +202,7 @@ class BackendController extends Controller
 		   $response['htmlContent'] .= '<p>' . Yii::t('app','You have no messages to read.') . '</p>';
 		   $response['htmlContent'] .= '</div>';
 	   }else{
-		   // $response['htmlContent'] .= '
-			//    <div class="notifi__footer">
-			// 	   <a id="seeAllMessages" onclick="backend.openAllEnvelopes();" href="'.htmlentities(Url::to(['messages/index'])).'">'.Yii::t('app','See all messages').'</a>
 			//    </div>
-		   // ';
 		   $response['htmlContent'] .= '<li>
    			<div class="d-flex align-items-center justify-content-between">
                    <div class="d-flex align-items-center">
@@ -248,17 +212,9 @@ class BackendController extends Controller
    		</li>';
 	   }
 
-	   // $response['url'] = parse_url($notify->url);
-
-
 	   Yii::$app->response->format = Response::FORMAT_JSON;
 	   return $response;
 
 	}
-
-
-
-
-
 
 }

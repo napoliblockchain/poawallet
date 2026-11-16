@@ -54,7 +54,6 @@ COPY commands    commands
 COPY components  components
 COPY config      config
 COPY controllers controllers
-COPY daemons     daemons
 COPY mail        mail
 COPY logs        logs
 COPY messages    messages
