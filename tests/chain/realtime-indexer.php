@@ -25,22 +25,14 @@ $sender = 990101;
 $receiver = 990102;
 
 if ($argv[1] === 'setup') {
-    $contractType = (int) (new yii\db\Query())->select('id')->from('contract_type')->orderBy('id')->scalar();
     foreach ([$sender => $t['holder'], $receiver => $t['receiver']] as $user => $address) {
         $db->createCommand()->insert('mp_users', ['id' => $user, 'username' => "rt$user@example.com", 'password' => 'x', 'oauth_provider' => 'test',
             'email' => "rt$user@example.com", 'status_activation_code' => 1])->execute();
-        $db->createCommand()->insert('blockchains', ['id_user' => $user, 'denomination' => 'Dev QBFT', 'chain_id' => '2118',
-            'url' => 'http://attacker.example.invalid', 'symbol' => 'ETH', 'url_block_explorer' => '', 'zerogas' => 1])->execute();
-        $chain = (int) $db->getLastInsertID();
-        $db->createCommand()->insert('smart_contract', ['id_user' => $user, 'id_blockchain' => $chain, 'id_contract_type' => $contractType,
-            'denomination' => 'TTS dev', 'smart_contract_address' => $t['token'], 'decimals' => 2, 'symbol' => 'TTS'])->execute();
-        $db->createCommand()->insert('nodes', ['id_user' => $user, 'id_blockchain' => $chain, 'id_smart_contract' => (int) $db->getLastInsertID()])->execute();
         // indirizzi salvati come li scrive il wallet (minuscolo o con checksum): confronto senza maiuscole
         $db->createCommand()->insert('mp_wallets', ['id_user' => $user, 'wallet_address' => $user === $sender ? strtolower($address) : $address, 'blocknumber' => '0x0'])->execute();
     }
-    $contract = (int) $db->createCommand('SELECT id FROM smart_contract WHERE id_user=:u', [':u' => $sender])->queryScalar();
     foreach (['sentByWallet' => [$t['receiver'], 12.34, 'new'], 'failed' => [$t['receiver'], 99999999999, 'new'], 'closedByWallet' => [$t['receiver'], 2, 'complete']] as $key => [$to, $amount, $status]) {
-        $db->createCommand()->insert('transactions', ['id_user' => $sender, 'type' => 'token', 'id_smart_contract' => $contract, 'status' => $status,
+        $db->createCommand()->insert('transactions', ['id_user' => $sender, 'type' => 'token', 'status' => $status,
             'token_price' => $amount, 'token_received' => 0, 'invoice_timestamp' => time(), 'expiration_timestamp' => time() + 900,
             'from_address' => $t['holder'], 'to_address' => $to, 'blocknumber' => '0x0', 'txhash' => $t[$key], 'message' => 'memo'])->execute();
     }

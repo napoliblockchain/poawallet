@@ -36,23 +36,22 @@ function check($condition, string $label): void {
     echo "  ok  $label\n";
 }
 
-// --- fixture: utente con rete, token, nodo e wallet (indirizzo del detentore dei token di sviluppo)
+// --- fixture: utente con wallet (indirizzo del detentore dei token di sviluppo); rete e token dalle variabili
 $userId = 990002;
-foreach (['nodes' => 'id_user', 'smart_contract' => 'id_user', 'blockchains' => 'id_user', 'mp_wallets' => 'id_user', 'mp_users' => 'id'] as $table => $column) {
+foreach (['mp_wallets' => 'id_user', 'mp_users' => 'id'] as $table => $column) {
     $db->createCommand()->delete($table, [$column => $userId])->execute();
 }
 $db->createCommand()->insert('mp_users', ['id' => $userId, 'username' => 'ui-test@example.com', 'password' => 'x', 'first_name' => '<b>Ui</b>',
     'oauth_provider' => 'mail', 'email' => 'ui-test@example.com', 'status_activation_code' => 1])->execute();
-$contractTypeId = (int) (new yii\db\Query())->select('id')->from('contract_type')->orderBy('id')->scalar();
-$db->createCommand()->insert('blockchains', ['id_user' => $userId, 'denomination' => 'Dev QBFT', 'chain_id' => (string) $tts['chainId'],
-    'url' => $rpcUrl, 'symbol' => 'ETH', 'url_block_explorer' => '', 'zerogas' => 1])->execute();
-$blockchainId = (int) $db->getLastInsertID();
-$db->createCommand()->insert('smart_contract', ['id_user' => $userId, 'id_blockchain' => $blockchainId, 'id_contract_type' => $contractTypeId,
-    'denomination' => 'TTS dev', 'smart_contract_address' => $tts['address'], 'decimals' => $tts['decimals'], 'symbol' => $tts['symbol']])->execute();
-$contractId = (int) $db->getLastInsertID();
-$db->createCommand()->insert('nodes', ['id_user' => $userId, 'id_blockchain' => $blockchainId, 'id_smart_contract' => $contractId])->execute();
 $db->createCommand()->insert('mp_wallets', ['id_user' => $userId, 'wallet_address' => $tts['holder'], 'blocknumber' => '0x0'])->execute();
 $app->user->setIdentity(app\models\Users::findOne($userId));
+
+// --- SIP-032: niente più righe per utente di rete/token né il vecchio indicizzatore PHP
+$gone = true;
+foreach (['nodes', 'smart_contract', 'blockchains', 'contract_type', 'standard_blockchain_values', 'standard_smart_contract_values', 'ethtxs', 'ethtxs_status'] as $table) {
+    $gone = $gone && $db->getTableSchema($table, true) === null;
+}
+check($gone && $db->getTableSchema('transactions', true)->getColumn('id_smart_contract') === null, 'Database: per-user network tables, ethtxs and transactions.id_smart_contract dropped');
 
 // --- URL puliti
 check($app->urlManager->createUrl(['/wallet/index']) === '/wallet/index' && $app->urlManager->createUrl(['/site/activate', 'id' => 'a', 'sign' => 'b']) === '/site/activate?id=a&sign=b',
@@ -126,7 +125,7 @@ check(!str_contains($wizard, '<b>Ui</b>'), 'Wizard greeting encodes the user nam
 
 // --- pagine del wallet: transazione con dati malevoli (memo dalla chain), sempre codificati
 $evil = '<img src=x onerror=alert(1)>';
-$db->createCommand()->insert('transactions', ['id_user' => $userId, 'id_smart_contract' => $contractId, 'type' => 'token', 'status' => 'complete',
+$db->createCommand()->insert('transactions', ['id_user' => $userId, 'type' => 'token', 'status' => 'complete',
     'token_price' => 12.34, 'token_received' => 12.34, 'invoice_timestamp' => time(), 'expiration_timestamp' => time() + 900,
     'from_address' => '0x' . str_repeat('ab', 20), 'to_address' => $tts['holder'], 'blocknumber' => '0x10', 'txhash' => '0x' . str_repeat('cd', 32), 'message' => $evil])->execute();
 $txId = (int) $db->getLastInsertID();
@@ -155,7 +154,7 @@ check(str_contains($detail, 'trans-get') && str_contains($detail, '12.34') && !s
     'Transaction detail: amount, refresh button, encoded memo');
 $db->createCommand()->delete('transactions', ['id' => $txId])->execute();
 
-foreach (['mp_wallets' => 'id_user', 'nodes' => 'id_user', 'smart_contract' => 'id_user', 'blockchains' => 'id_user', 'mp_users' => 'id'] as $table => $column) {
+foreach (['mp_wallets' => 'id_user', 'mp_users' => 'id'] as $table => $column) {
     $db->createCommand()->delete($table, [$column => $userId])->execute();
 }
 echo "PASS $checks UI layout checks\n";

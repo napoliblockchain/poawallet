@@ -10,7 +10,6 @@ use Yii;
  * @property int $id
  * @property int $id_user
  * @property string $type
- * @property int|null $id_smart_contract
  * @property string $status
  * @property float $token_price
  * @property float $token_received
@@ -41,7 +40,7 @@ class Transactions extends \yii\db\ActiveRecord
     {
         return [
             [['id_user', 'type', 'status', 'token_price', 'token_received', 'invoice_timestamp', 'expiration_timestamp', 'from_address', 'to_address', 'blocknumber'], 'required'],
-            [['id_user', 'id_smart_contract', 'invoice_timestamp', 'expiration_timestamp'], 'integer'],
+            [['id_user', 'invoice_timestamp', 'expiration_timestamp'], 'integer'],
             [['token_price', 'token_received'], 'number'],
             [['type', 'status'], 'string', 'max' => 20],
             [['from_address', 'to_address'], 'string', 'max' => 100],
@@ -61,7 +60,6 @@ class Transactions extends \yii\db\ActiveRecord
             'id' => Yii::t('app', 'ID'),
             'id_user' => Yii::t('app', 'Id User'),
             'type' => Yii::t('app', 'Type'),
-            'id_smart_contract' => Yii::t('app', 'Smart Contract'),
             'status' => Yii::t('app', 'Status'),
             'token_price' => Yii::t('app', 'Amount'),
             'token_received' => Yii::t('app', 'Received'),

@@ -39,7 +39,6 @@ final class ChainConfig
                 'zerogas' => self::env('CHAIN_ZERO_GAS', '1') === '1' ? 1 : 0,
             ],
             'smartContract' => (object) [
-                'id' => null,
                 'denomination' => self::env('TTS_TOKEN_NAME', 'TTS'),
                 'symbol' => self::tokenSymbol(),
                 'decimals' => self::tokenDecimals(),

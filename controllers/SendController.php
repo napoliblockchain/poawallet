@@ -206,7 +206,6 @@ class SendController extends Controller
 		$tokens->id_user = $id_user;
 		$tokens->status = 'new';
 		$tokens->type = 'token';
-		$tokens->id_smart_contract = $settings->smartContract->id;
 		$tokens->token_price = $amount;
 		$tokens->token_received = 0;
 		$tokens->invoice_timestamp = $invoice_timestamp;

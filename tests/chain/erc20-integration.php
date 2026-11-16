@@ -59,25 +59,13 @@ function waitReceipt($hash, $erc20) {
     throw new RuntimeException("receipt not found for $hash");
 }
 
-// --- fixture: utente, rete, contratto, nodo, wallet ---
+// --- fixture: utente e wallet (rete e token dalle variabili d'ambiente) ---
 $holder = $tts['holder'];
 $userId = 990001;
-$db->createCommand()->delete('nodes', ['id_user' => $userId])->execute();
-$db->createCommand()->delete('smart_contract', ['id_user' => $userId])->execute();
-$db->createCommand()->delete('blockchains', ['id_user' => $userId])->execute();
 $db->createCommand()->delete('mp_wallets', ['id_user' => $userId])->execute();
 $db->createCommand()->delete('mp_users', ['id' => $userId])->execute();
 $db->createCommand()->insert('mp_users', ['id' => $userId, 'username' => 'chain-it@example.com', 'password' => 'x',
     'oauth_provider' => 'test', 'email' => 'chain-it@example.com', 'status_activation_code' => 1])->execute();
-$contractTypeId = (int) (new yii\db\Query())->select('id')->from('contract_type')->orderBy('id')->scalar();
-check($contractTypeId > 0, 'ERC20 contract type seeded by migrations');
-$db->createCommand()->insert('blockchains', ['id_user' => $userId, 'denomination' => 'Dev QBFT', 'chain_id' => (string) $tts['chainId'],
-    'url' => $rpcUrl, 'symbol' => 'ETH', 'url_block_explorer' => '', 'zerogas' => 1])->execute();
-$blockchainId = (int) $db->getLastInsertID();
-$db->createCommand()->insert('smart_contract', ['id_user' => $userId, 'id_blockchain' => $blockchainId, 'id_contract_type' => $contractTypeId,
-    'denomination' => 'TTS dev', 'smart_contract_address' => $tts['address'], 'decimals' => $tts['decimals'], 'symbol' => $tts['symbol']])->execute();
-$contractId = (int) $db->getLastInsertID();
-$db->createCommand()->insert('nodes', ['id_user' => $userId, 'id_blockchain' => $blockchainId, 'id_smart_contract' => $contractId])->execute();
 $db->createCommand()->insert('mp_wallets', ['id_user' => $userId, 'wallet_address' => $holder, 'blocknumber' => '0x0'])->execute();
 $app->user->setIdentity(app\models\Users::findOne($userId));
 
@@ -196,9 +184,6 @@ for ($i = 0; $i < 30 && $erc20->gasBalance($recipient) < 1; $i++) sleep(1);
 check($erc20->gasBalance($recipient) >= 1, 'loadGas: faucet sent 1 ETH to recipient');
 
 // --- cleanup fixture ---
-$db->createCommand()->delete('nodes', ['id_user' => $userId])->execute();
-$db->createCommand()->delete('smart_contract', ['id_user' => $userId])->execute();
-$db->createCommand()->delete('blockchains', ['id_user' => $userId])->execute();
 $db->createCommand()->delete('mp_wallets', ['id_user' => $userId])->execute();
 $db->createCommand()->delete('mp_users', ['id' => $userId])->execute();
 
