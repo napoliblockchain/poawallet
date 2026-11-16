@@ -153,8 +153,8 @@ class NotificationService
         return [
             'title' => '[' . self::title($notification->type) . '] - ' . Yii::t('app', 'New message'),
             'body' => $notification->description,
-            'icon' => '/src/images/icons/app-icon-96x96.png',
-            'badge' => '/src/images/icons/app-icon-96x96.png',
+            'icon' => '/brand/icon-192.png',
+            'badge' => '/brand/icon-192.png',
             'image' => '/css/images/logo.png',
             'sound' => 'src/sounds/notify.mp3',
             'vibrate' => [200, 100, 200, 100, 200],
@@ -176,6 +176,6 @@ class NotificationService
 
     private static function title(?string $type): string
     {
-        return in_array($type, ['token', 'contact'], true) ? 'Poa Wallet' : 'Wallet';
+        return in_array($type, ['token', 'contact'], true) ? 'Napay Wallet' : 'Wallet';
     }
 }

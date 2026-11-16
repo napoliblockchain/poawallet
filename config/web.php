@@ -6,7 +6,7 @@ $db = require __DIR__ . '/db.php';
 
 $config = [
     'id' => 'Poa Wallet',
-    'name' => 'Poa Wallet',
+    'name' => 'Napay Wallet',
     'language' => 'en-US', // Specifies which language the application is targeted to
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],

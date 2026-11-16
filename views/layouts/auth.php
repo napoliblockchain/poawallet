@@ -22,6 +22,9 @@ ServiceWorkerAsset::register($this);
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
     <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/brand/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
     <?php $this->head() ?>
 </head>
 <body class="wallet-auth">

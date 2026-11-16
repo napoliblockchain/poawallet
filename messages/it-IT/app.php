@@ -21,7 +21,7 @@ return [
     'Reload' => 'Aggiorna',
     'Try reloading the page, otherwise contact support.' => 'Prova ad aggiornare la pagina, altrimenti contatta il supporto tecnico.',
     'The server synchronization is not working.' => 'La sincronizzazione con il web server non sta funzionando.',
-    'a Progressive Web App. It works with several crypto tokens and blockchains. With Poa Wallet, you are in control over your funds. Receive, send, store and exchange your cryptocurrency within the mobile interface.' => 'una Progressive Web App. Funziona con molteplici token e blockchain. Con Poa Wallet, hai il pieno controllo dei tuoi soldi. Ricevi, invii, conservi e scambi le tue cryptomonete con un`interfaccia mobile user-friendly.',
+    'a Progressive Web App. It works with several crypto tokens and blockchains. With Napay Wallet, you are in control over your funds. Receive, send, store and exchange your cryptocurrency within the mobile interface.' => 'una Progressive Web App. Funziona con molteplici token e blockchain. Con Napay Wallet, hai il pieno controllo dei tuoi soldi. Ricevi, invii, conservi e scambi le tue cryptomonete con un`interfaccia mobile user-friendly.',
     'Click on address to copy in the clipboard' => 'Clicca sull\'indirizzo per copiarlo negli appunti',
     ' is following you.' => ' ti ha aggiunto ai contatti.',
     ' unfollowed you.' => ' ti ha rimosso dai contatti.',

@@ -66,7 +66,7 @@ check(count($app->redis->published) === 1, 'realtime published once');
 [$channel, $message] = $app->redis->published[0];
 $msg = json_decode($message, true);
 check($channel === 'poawallet:notify', 'realtime channel');
-check($msg['user_id'] === 7 && $msg['notification']['title'] === 'Poa Wallet', 'realtime payload has user and title');
+check($msg['user_id'] === 7 && $msg['notification']['title'] === 'Napay Wallet', 'realtime payload has user and title');
 check(!isset($msg['notification']['description']), 'realtime payload carries no transaction details');
 
 // 1b. utente inesistente: nessun salvataggio parziale, nessuna eccezione
