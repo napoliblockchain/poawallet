@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $node app\models\Nodes|null */
 
 $this->title = Yii::t('app', 'Network info');
-// valori dei blocchi aggiornati da wallet-sync.js (classi network-*)
+// blocchi aggiornati da wallet-sync.js (evento "status" del flusso in tempo reale, classi network-*)
 ?>
 <div class="network-details">
     <div class="card mb-3">
@@ -23,20 +23,12 @@ $this->title = Yii::t('app', 'Network info');
         <div class="col-md-6">
             <div class="card h-100"><div class="card-body">
                 <div class="d-flex justify-content-between"><span class="text-secondary"><i class="fas fa-cubes me-1" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Latest block')) ?></span><span class="network-block-number fw-bold"></span></div>
-                <div class="small text-break font-monospace mt-2 network-block-hash"></div>
             </div></div>
         </div>
         <div class="col-md-6">
             <div class="card h-100"><div class="card-body">
                 <div class="d-flex justify-content-between"><span class="text-secondary"><i class="fas fa-wallet me-1" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Wallet block')) ?></span>
                     <span><span class="network-block-percentage text-success"></span> <span class="network-block-wallet fw-bold"></span></span></div>
-                <div class="small text-break font-monospace mt-2 network-block-wallet-hash"></div>
-            </div></div>
-        </div>
-        <div class="col-12">
-            <div class="card"><div class="card-body d-flex justify-content-between">
-                <span class="text-secondary"><i class="fas fa-history me-1" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Remaining time')) ?></span>
-                <span class="network-block-relativeTime"></span>
             </div></div>
         </div>
     </div>

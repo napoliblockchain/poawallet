@@ -3,8 +3,8 @@ importScripts('src/js/idb.js');
 importScripts('src/js/idb-utility.js');
 
 // cambiare la versione a ogni modifica di file statici senza ?v= (es. web worker): svuota le cache vecchie
-var CACHE_STATIC_NAME = 'poawallet-static-019';
-var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-019';
+var CACHE_STATIC_NAME = 'poawallet-static-020';
+var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-020';
 
 var OFFLINE_URL = 'offline.html';
 

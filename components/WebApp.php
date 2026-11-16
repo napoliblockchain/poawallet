@@ -329,13 +329,21 @@ class WebApp extends Component
         return $value;
     }
 
+    /** Saldo token da unità minime a decimale leggibile (es. 1234 con 2 decimali -> 12,34). */
+    public static function tokenAmount($units, int $decimals): string
+    {
+        return Yii::$app->formatter->asDecimal($units / (10 ** $decimals), null,
+            [\NumberFormatter::MIN_FRACTION_DIGITS => 0, \NumberFormatter::MAX_FRACTION_DIGITS => $decimals]);
+    }
+
     /**
      * Riga di una transazione (elenchi, pagina invio, aggiornamenti di wallet-sync.js).
      * Indirizzi, simbolo, stato e messaggio arrivano da dati utente o dalla chain: sempre codificati.
      */
     public static function showTransactionRow($data, $fromAddress, $newTransaction = false, $status = null)
     {
-        $outgoing = $data->from_address == $fromAddress;
+        // indirizzi minuscoli o con checksum EIP-55 (righe dell'indicizzatore): confronto senza maiuscole
+        $outgoing = strcasecmp((string) $data->from_address, (string) $fromAddress) === 0;
         $amount = Yii::$app->formatter->asDecimal($data->token_price);
         if ($data->status == 'new' && $data->txhash != '') {
             $data->status = 'pending';

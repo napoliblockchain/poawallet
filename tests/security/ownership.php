@@ -25,6 +25,7 @@ new yii\web\Application([
         'user' => ['identityClass' => OwnershipTestIdentity::class, 'enableSession' => false],
         'db' => ['class' => yii\db\Connection::class, 'dsn' => 'sqlite::memory:'],
     ],
+    'params' => ['encryption' => ['secret_key' => 'fixture-only', 'secret_iv' => 'fixture-only', 'encrypt_method' => 'AES-256-CBC']],
 ]);
 $db = Yii::$app->db;
 foreach ([
@@ -34,6 +35,7 @@ foreach ([
     'CREATE TABLE mp_notifications_readers (id INTEGER PRIMARY KEY, id_user INTEGER, id_notification INTEGER, alreadyread INTEGER)',
     'CREATE TABLE blockchains (id INTEGER PRIMARY KEY, id_user INTEGER, denomination TEXT, chain_id TEXT, url TEXT, symbol TEXT, url_block_explorer TEXT, zerogas INTEGER)',
     'CREATE TABLE smart_contract (id INTEGER PRIMARY KEY, id_user INTEGER, id_blockchain INTEGER, id_contract_type INTEGER, denomination TEXT, smart_contract_address TEXT, decimals INTEGER, symbol TEXT)',
+    'CREATE TABLE nodes (id INTEGER PRIMARY KEY, id_user INTEGER, id_blockchain INTEGER, id_smart_contract INTEGER)',
 ] as $sql) {
     $db->createCommand($sql)->execute();
 }
@@ -42,9 +44,9 @@ $alice = '0x' . str_repeat('a', 40);
 $bob = '0x' . str_repeat('b', 40);
 $db->createCommand()->batchInsert('mp_users', ['id', 'username'], [[1, 'alice'], [2, 'bob'], [3, 'carol']])->execute();
 $db->createCommand()->batchInsert('mp_wallets', ['id_user', 'wallet_address', 'blocknumber'], [[1, $alice, '0x0'], [2, strtoupper($bob), '0x0']])->execute();
-$db->createCommand()->batchInsert('transactions', ['id', 'id_user', 'type', 'status', 'from_address', 'to_address'], [
-    [10, 1, 'token', 'complete', $alice, $bob],                        // Alice -> Bob, registered by Alice
-    [11, 2, 'token', 'complete', $bob, '0x' . str_repeat('c', 40)],    // Bob -> third party
+$db->createCommand()->batchInsert('transactions', ['id', 'id_user', 'type', 'id_smart_contract', 'status', 'token_price', 'invoice_timestamp', 'from_address', 'to_address', 'message'], [
+    [10, 1, 'token', 40, 'complete', 5, 1800000000, $alice, $bob, ''],                        // Alice -> Bob, registered by Alice
+    [11, 2, 'token', 41, 'complete', 2, 1800000000, $bob, '0x' . str_repeat('c', 40), ''],    // Bob -> third party
 ])->execute();
 $db->createCommand()->batchInsert('mp_notifications_readers', ['id', 'id_user', 'id_notification', 'alreadyread'], [[20, 1, 1, 0], [21, 2, 1, 0]])->execute();
 $db->createCommand()->batchInsert('blockchains', ['id', 'id_user', 'denomination', 'chain_id', 'url', 'symbol'], [[30, 1, 'A', '1', 'http://a', 'A'], [31, 2, 'B', '1', 'http://b', 'B']])->execute();
@@ -87,5 +89,22 @@ foreach ([app\controllers\BlockchainsController::class => [30, 31], app\controll
     check(load($class, $own, 1) !== null, "$class: own record");
     check(load($class, $other, 1) === null, "$class: other user record denied");
 }
+
+// riga per il flusso in tempo reale (evento "tx"): solo transazioni proprie, direzione anche con indirizzi in maiuscolo diverso
+function row($id, $userId) {
+    Yii::$app->user->setIdentity(new OwnershipTestIdentity($userId));
+    Yii::$app->set('response', new yii\web\Response());
+    try {
+        return (new app\controllers\TransactionsController('transactions', Yii::$app))->actionRow($id);
+    } catch (yii\web\NotFoundHttpException $e) {
+        return null;
+    }
+}
+$out = row('11', 2);
+check($out !== null && $out['id'] === 11 && str_contains($out['row'], 'wallet-tx-out') && $out['balance'] === null, 'row: own outgoing transfer even if the wallet address case differs, no balance without node');
+check(str_contains(row('10', 2)['row'] ?? '', 'wallet-tx-in'), 'row: incoming transfer for the recipient');
+check(row('11', 1) === null, 'row: other user transaction denied');
+check(row('11', 3) === null, 'row: user without wallet denied');
+check(row('x', 1) === null, 'row: malformed id denied');
 
 echo 'PASS ' . $checks . " ownership checks\n";

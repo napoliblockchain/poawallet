@@ -84,6 +84,27 @@ class TransactionsController extends Controller
     }
 
     /**
+     * Riga aggiornata di una transazione e saldo, per il flusso in tempo reale (wallet-sync.js, evento "tx").
+     * Solo transazioni dell'utente (findModel); saldo null se la chain non risponde.
+     */
+    public function actionRow($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel((int) $id);
+        $fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
+        $node = Nodes::find()->andWhere(['id_user' => Yii::$app->user->id])->one();
+        $balance = null;
+        if ($node !== null && $node->smartContract !== null) {
+            try {
+                $balance = WebApp::tokenAmount(Yii::$app->Erc20->tokenBalance($fromAddress), (int) $node->smartContract->decimals);
+            } catch (\Throwable $error) {
+                Yii::warning('Token balance not available.', __METHOD__);
+            }
+        }
+        return ['id' => (int) $model->id, 'row' => WebApp::showTransactionRow($model, $fromAddress, true), 'balance' => $balance];
+    }
+
+    /**
      * Displays a single Transactions model.
      * @param integer $id
      * @return mixed

@@ -68,6 +68,7 @@
 }
 .pulse-button-offline { background-color: #d63939; box-shadow: 0 0 0 0 rgba(214, 57, 57, .7); }
 .pulse-button-pending { background-color: #9ba9be; animation: none; }
+.pulse-button-lagging { background-color: #f59f00; animation: none; }
 @keyframes wallet-pulse { to { box-shadow: 0 0 0 10px rgba(47, 179, 68, 0); } }
 @media (prefers-reduced-motion: reduce) { .pulse-button { animation: none; } }
 .notify-quantity {

@@ -1,4 +1,4 @@
-// wallet-realtime: indicizzatore della chain per il wallet (SIP-029, passo 1).
+// wallet-realtime: indicizzatore della chain per il wallet (SIP-029, passo 1) e push SSE ai browser (passo 2).
 // Uso: wallet-realtime [--once] | wallet-realtime health
 package main
 
@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -21,6 +23,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 
 	"poawallet/realtime/internal/indexer"
+	"poawallet/realtime/internal/push"
 )
 
 type config struct {
@@ -30,6 +33,9 @@ type config struct {
 	interval                    time.Duration
 	batch, backfill, confirmTip uint64
 	heartbeat                   string
+	// push SSE: disattivato se manca la chiave condivisa con PHP
+	pushAddr string
+	pushKey  []byte
 }
 
 func env(name string) string { return strings.TrimSpace(os.Getenv(name)) }
@@ -119,6 +125,21 @@ func loadConfig() (config, error) {
 	if c.heartbeat == "" {
 		c.heartbeat = "/tmp/wallet-realtime-heartbeat.json"
 	}
+	if env("PUSH_KEY_FILE") != "" || env("PUSH_KEY") != "" {
+		key, err := secret("PUSH_KEY")
+		if err != nil {
+			return c, err
+		}
+		// stessa chiave di PHP (RealtimeTicket): 64 caratteri esadecimali
+		if !regexp.MustCompile(`^[0-9a-f]{64}$`).MatchString(key) {
+			return c, errors.New("invalid configuration: PUSH_KEY")
+		}
+		c.pushKey = []byte(key)
+		c.pushAddr = env("PUSH_ADDR")
+		if c.pushAddr == "" {
+			c.pushAddr = ":8080"
+		}
+	}
 	return c, nil
 }
 
@@ -177,6 +198,13 @@ func main() {
 	defer client.Close()
 
 	ix := &indexer.Indexer{DB: db, Chain: client, ChainID: cfg.chainID, BatchBlocks: cfg.batch, BackfillBlocks: cfg.backfill, Confirmations: cfg.confirmTip}
+	// limiti: 5 schede per utente, 2000 connessioni in tutto
+	hub := push.NewHub(5, 2000)
+	ix.OnChange = func(change indexer.Change) {
+		for _, user := range change.Users {
+			hub.Send(user, "tx", map[string]int64{"id": change.TxID})
+		}
+	}
 	failures := 0
 	tick := func() bool {
 		runCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
@@ -187,10 +215,12 @@ func main() {
 			// messaggio d'errore senza DSN né password (il driver non li include)
 			log.Error("index", "error", err.Error(), "failures", failures)
 			writeHeartbeat(cfg.heartbeat, heartbeat{OK: false, At: time.Now().UnixMilli(), Failures: failures})
+			hub.SetStatus(false, 0, 0, time.Now())
 			return false
 		}
 		failures = 0
 		writeHeartbeat(cfg.heartbeat, heartbeat{OK: true, At: time.Now().UnixMilli(), Head: summary.Head})
+		hub.SetStatus(true, summary.Head, summary.Indexed, time.Now())
 		if summary.Logs > 0 || summary.Failed > 0 {
 			log.Info("indexed", "summary", summary)
 		}
@@ -203,7 +233,10 @@ func main() {
 		}
 		return
 	}
-	log.Info("start", "chain_id", cfg.chainID, "interval", cfg.interval.String())
+	log.Info("start", "chain_id", cfg.chainID, "interval", cfg.interval.String(), "push", cfg.pushKey != nil)
+	if cfg.pushKey != nil {
+		go servePush(ctx, cfg, hub, db, log)
+	}
 	for {
 		wait := cfg.interval
 		if !tick() {
@@ -216,5 +249,38 @@ func main() {
 			return
 		case <-time.After(wait):
 		}
+	}
+}
+
+// servePush avvia /events (solo rete interna, dietro il gateway), il controllo delle notifiche e quello dei giri bloccati.
+func servePush(ctx context.Context, cfg config, hub *push.Hub, db *sql.DB, log *slog.Logger) {
+	go push.WatchNotifications(ctx, db, hub, time.Second, log)
+	go func() {
+		// giro dell'indicizzatore fermo da troppo: pallino giallo anche senza errori
+		maxAge := max(30*time.Second, 5*cfg.interval)
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case now := <-ticker.C:
+				hub.Stale(maxAge, now)
+			}
+		}
+	}()
+	// nessun WriteTimeout: i flussi SSE restano aperti fino alla scadenza del ticket
+	server := &http.Server{Addr: cfg.pushAddr, Handler: &push.Server{Hub: hub, Key: cfg.pushKey, Ping: 25 * time.Second},
+		ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 8 << 10,
+		// allo stop i flussi aperti si chiudono subito (contesto delle richieste annullato)
+		BaseContext: func(net.Listener) context.Context { return ctx }}
+	go func() {
+		<-ctx.Done()
+		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = server.Shutdown(shutdown)
+	}()
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Error("push", "error", err.Error())
 	}
 }

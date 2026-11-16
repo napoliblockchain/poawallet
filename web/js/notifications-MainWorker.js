@@ -1,5 +1,6 @@
 /**
- * Notification helpers + fallback polling worker.
+ * Elenco notifiche: letto all'apertura della pagina e a ogni evento "notify" del flusso in tempo reale
+ * (wallet-sync.js, che senza flusso lo richiama ogni 30 secondi).
  */
 
 var notify;
@@ -54,8 +55,10 @@ $(function () {
                         $(".markall").html(yiiGlobalOptions.spinner);
                     },
                 });
-                // il ciclo di notificationsWorker aggiorna l'elenco entro pochi secondi
-                if (response && response.success) $("#quantity_circle").hide();
+                if (response && response.success) {
+                    $("#quantity_circle").hide();
+                    notify.refresh();
+                }
             } catch (e) {
                 console.log("[notify] update-all-news error", e);
             }
@@ -85,17 +88,10 @@ $(function () {
         },
     };
 
-    if (typeof Worker === "undefined") {
-        console.log("[notify] Browser no support Web Workers");
-        return;
-    }
-
-    var notificationsWorker = new Worker("/js/web-workers/notificationsWorker.js");
-    notificationsWorker.onmessage = function (event) {
-        notify.handleResponse(event.data);
+    notify.refresh = function () {
+        $.ajax({ url: "/backend/notify", type: "GET", dataType: "json" })
+            .done(notify.handleResponse)
+            .fail(function () { return null; });
     };
-
-    notificationsWorker.postMessage({
-        action: "start",
-    });
+    notify.refresh();
 });

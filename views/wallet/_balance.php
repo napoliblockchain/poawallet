@@ -1,12 +1,13 @@
 <?php
 
-/* Saldo token e gas della rete selezionata (pagine Wallet e Invia). id total-balance aggiornato da wallet-sync.js. */
+/* Saldo token e gas della rete selezionata (pagine Wallet e Invia). id total-balance aggiornato da wallet-sync.js (flusso /events). */
 /* @var $balance string|int saldo token in unità minime */
 /* @var $balance_gas string|float */
 /* @var $node app\models\Nodes */
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\components\WebApp;
 
 $decimals = (int) $node->smartContract->decimals;
 ?>
@@ -18,8 +19,7 @@ $decimals = (int) $node->smartContract->decimals;
         </div>
         <div class="wallet-balance">
             <i class="fa fa-star star-total-balance fa-xs me-1" aria-hidden="true"></i>
-            <span id="total-balance"><?= Html::encode(Yii::$app->formatter->asDecimal($balance / (10 ** $decimals), null,
-                [NumberFormatter::MIN_FRACTION_DIGITS => 0, NumberFormatter::MAX_FRACTION_DIGITS => $decimals])) ?></span>
+            <span id="total-balance"><?= Html::encode(WebApp::tokenAmount($balance, $decimals)) ?></span>
             <small><?= Html::encode($node->smartContract->symbol) ?></small>
         </div>
         <div class="wallet-gas mt-1">

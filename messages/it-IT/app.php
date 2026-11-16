@@ -495,6 +495,8 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     'Synchronized' => 'Sincronizzato',
     'Synchronizing' => 'Sincronizzazione in corso',
     'Server not reachable: retrying' => 'Server non raggiungibile: nuovo tentativo in corso',
+    'Blockchain reading delayed' => 'Lettura della blockchain in ritardo',
+    'Realtime updates are not available.' => 'Aggiornamenti in tempo reale non disponibili.',
     'Update' => 'Aggiorna',
     'Notifications' => 'Notifiche',
     'Menu' => 'Menu',

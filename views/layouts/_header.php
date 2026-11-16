@@ -18,7 +18,8 @@ $wallet = Yii::$app->controller->id === 'wallet';
         <span class="d-inline-flex align-items-center px-2">
             <span class="pulse-button pulse-button-pending" role="status" aria-label="<?= Html::encode(Yii::t('app', 'Synchronizing')) ?>"
                 data-label-ok="<?= Html::encode(Yii::t('app', 'Synchronized')) ?>" data-label-pending="<?= Html::encode(Yii::t('app', 'Synchronizing')) ?>"
-                data-label-error="<?= Html::encode(Yii::t('app', 'Server not reachable: retrying')) ?>"></span>
+                data-label-error="<?= Html::encode(Yii::t('app', 'Server not reachable: retrying')) ?>"
+                data-label-lagging="<?= Html::encode(Yii::t('app', 'Blockchain reading delayed')) ?>"></span>
         </span>
         <button type="button" class="btn btn-icon" data-search="open" aria-label="<?= Html::encode(Yii::t('app', 'Notifications')) ?>">
             <i class="fas fa-bell" aria-hidden="true"></i>

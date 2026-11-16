@@ -1,105 +1,159 @@
 /**
- * Sincronizzazione del wallet con il server: interrogazione periodica (web worker eth-tx), nessun WebSocket.
- * Il pallino nella barra in alto mostra lo stato: in attesa, sincronizzato, errore dopo tre risposte fallite di fila.
- * Le notifiche hanno il loro ciclo (notifications-MainWorker.js).
+ * Aggiornamenti in tempo reale del wallet (SIP-029 passo 2): flusso SSE /events del servizio wallet-realtime.
+ * Ticket chiesto a PHP (POST /realtime/ticket, cookie HttpOnly) prima di aprire il flusso e alla sua scadenza.
+ * Eventi: "status" (pallino), "tx" (riga e saldo riletti da PHP), "notify" (elenco notifiche), "expired".
+ * Pallino: verde connesso e indicizzatore al passo, giallo lettura in ritardo, rosso connessione caduta.
+ * Senza flusso le notifiche si ricontrollano ogni 30 secondi.
  */
 $(function () {
     "use strict";
 
-    var INTERVAL = 6000;
-    var MAX_INTERVAL = 60000;
-    var FAILURES_FOR_ERROR = 3;
-    var failures = 0;
+    var MAX_RETRY = 60000;
+    var FALLBACK = 30000;
+    var source = null;
+    var retries = 0;
+    var retryTimer = null;
+    var fallbackTimer = null;
     var paused = false;
-    var timer = null;
 
     var status = {
         set: function (state) {
             var dot = $(".pulse-button");
-            dot.removeClass("pulse-button-offline pulse-button-pending");
+            dot.removeClass("pulse-button-offline pulse-button-pending pulse-button-lagging");
             if (state === "error") dot.addClass("pulse-button-offline");
             if (state === "pending") dot.addClass("pulse-button-pending");
-            var label = state === "error" ? dot.data("labelError") : state === "pending" ? dot.data("labelPending") : dot.data("labelOk");
+            if (state === "lagging") dot.addClass("pulse-button-lagging");
+            var labels = { error: "labelError", pending: "labelPending", lagging: "labelLagging", ok: "labelOk" };
+            var label = dot.data(labels[state]);
             if (label) dot.attr({ title: label, "aria-label": label });
         },
     };
 
-    if (typeof Worker === "undefined") {
-        console.log("[sync] Browser without Web Workers");
-        return;
-    }
-    var worker = new Worker("/js/web-workers/eth-tx.js");
-
-    function schedule() {
-        clearTimeout(timer);
-        if (paused) return;
-        // dopo un errore attesa crescente fino a un minuto
-        var wait = failures === 0 ? INTERVAL : Math.min(MAX_INTERVAL, INTERVAL * Math.pow(2, failures));
-        timer = setTimeout(poll, wait);
+    function refreshNotifications() {
+        if (typeof notify !== "undefined" && notify && typeof notify.refresh === "function") notify.refresh();
     }
 
-    function poll() {
-        if (paused) return;
-        worker.postMessage({ action: "start", user_id: yiiGlobalOptions.cryptedIdUser });
+    function startFallback() {
+        if (fallbackTimer) return;
+        fallbackTimer = setInterval(refreshNotifications, FALLBACK);
+    }
+
+    function stopFallback() {
+        clearInterval(fallbackTimer);
+        fallbackTimer = null;
+    }
+
+    function close() {
+        if (source) source.close();
+        source = null;
     }
 
     function failed() {
-        failures++;
-        if (failures >= FAILURES_FOR_ERROR) status.set("error");
-        schedule();
+        close();
+        status.set("error");
+        startFallback();
+        if (paused) return;
+        // nuovo tentativo con attesa crescente fino a un minuto
+        retries++;
+        clearTimeout(retryTimer);
+        retryTimer = setTimeout(connect, Math.min(MAX_RETRY, 2000 * Math.pow(2, retries)));
     }
 
-    worker.onmessage = function (event) {
-        var response = event.data;
-        if (typeof response === "string") {
-            try { response = JSON.parse(response); } catch (e) { response = null; }
-        }
-        if (!response || response.success !== true) return failed();
-        failures = 0;
-        status.set("ok");
-        sync.networkDetails(response);
-        (response.transactions || []).forEach(sync.showTransactionRow);
-        $(".header-message").text(response.difference > 1 ? $("<div>").html(response.headerMessage || "").text() : "");
-        schedule();
-    };
-    worker.onerror = function (event) {
-        console.error("[sync] worker error", event);
-        failed();
-    };
+    function connect() {
+        if (paused) return;
+        fetch("/realtime/ticket", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "X-CSRF-Token": yii.getCsrfToken(), "X-Requested-With": "XMLHttpRequest" },
+        })
+            .then(function (response) {
+                if (!response.ok) throw new Error("ticket " + response.status);
+                open();
+            })
+            .catch(failed);
+    }
+
+    function open() {
+        close();
+        source = new EventSource("/events");
+        source.onopen = function () {
+            retries = 0;
+            stopFallback();
+            // notifiche arrivate mentre il flusso era chiuso
+            refreshNotifications();
+        };
+        source.onerror = function () {
+            // CLOSED: rifiuto (ticket scaduto, troppe schede): ticket nuovo; altrimenti il browser riprova da sé
+            if (source && source.readyState === EventSource.CLOSED) return failed();
+            status.set("error");
+            startFallback();
+        };
+        source.addEventListener("status", function (event) {
+            var data = parse(event.data);
+            if (!data) return;
+            status.set(data.ok ? "ok" : "lagging");
+            sync.networkDetails(data);
+        });
+        source.addEventListener("tx", function (event) {
+            var data = parse(event.data);
+            if (data && data.id > 0) sync.loadTransaction(data.id);
+        });
+        source.addEventListener("notify", refreshNotifications);
+        source.addEventListener("expired", function () {
+            close();
+            connect();
+        });
+    }
+
+    function parse(text) {
+        try { return JSON.parse(text); } catch (e) { return null; }
+    }
 
     var sync = {
-        pause: function () { paused = true; clearTimeout(timer); status.set("pending"); },
-        resume: function () { if (!paused) return; paused = false; poll(); },
+        pause: function () { paused = true; clearTimeout(retryTimer); close(); status.set("pending"); },
+        resume: function () { if (!paused) return; paused = false; connect(); },
+        loadTransaction: function (id) {
+            fetch("/transactions/row?id=" + encodeURIComponent(id), { credentials: "same-origin", headers: { Accept: "application/json" } })
+                .then(function (response) { return response.ok ? response.json() : null; })
+                .then(function (tx) { if (tx) sync.showTransactionRow(tx); })
+                .catch(function () { return null; });
+        },
         showTransactionRow: function (tx) {
-            if (typeof window.showTransactionRow === "function") {
-                window.showTransactionRow(tx);
-                return;
-            }
-            var row = $('tr[data-key="' + tx.id_token + '"]');
+            var key = String(tx.id);
+            var row = $("tr").filter(function () { return String($(this).data("key")) === key; });
             if (row.length) {
-                row.html(tx.row);
+                row.children("td").first().html(tx.row);
             } else {
                 var target = $(".table-98 > tbody, .table-96 > tbody, .table-trades > tbody").first();
-                if (target.length) $('<tr data-key="' + tx.id_token + '"><td>' + tx.row + "</td></tr>").prependTo(target);
+                if (target.length) {
+                    target.find(".empty").closest("tr").remove();
+                    row = $("<tr><td></td></tr>").attr("data-key", key);
+                    row.children("td").html(tx.row);
+                    row.prependTo(target);
+                }
             }
-            $('tr[data-key="' + tx.id_token + '"]').addClass("animationTransaction");
-            $("#total-balance").addClass("animationBalanceIn").text(tx.balance);
-            $(".star-total-balance").addClass("animationStar");
+            row.addClass("animationTransaction");
+            if (tx.balance !== null && tx.balance !== undefined) {
+                $("#total-balance").addClass("animationBalanceIn").text(tx.balance);
+                $(".star-total-balance").addClass("animationStar");
+            }
         },
         networkDetails: function (data) {
             if (!$(".network-details").length) return;
-            $(".network-block-number").text(data.chainBlocknumber);
-            $(".network-block-wallet").text(data.walletBlocknumber);
-            $(".network-block-percentage").text(data.percentageCompletion);
-            $(".network-block-relativeTime").text(data.relativeTime);
-            $(".network-block-hash").html(data.latestBlockHash);
-            $(".network-block-wallet-hash").html(data.walletBlockHash);
+            $(".network-block-number").text(data.head);
+            $(".network-block-wallet").text(data.indexed);
+            $(".network-block-percentage").text(data.head > 0 ? Math.floor((data.indexed / data.head) * 10000) / 100 + "%" : "");
         },
     };
     window.walletSync = sync;
 
     status.set("pending");
-    poll();
+    if (typeof EventSource === "undefined") {
+        status.set("error");
+        startFallback();
+    } else {
+        connect();
+    }
     // invii rimasti in coda nel browser (offline): ricontrollati sul server (idb-utility.js)
     if (typeof checkPendingTransactions === "function") checkPendingTransactions();
 });

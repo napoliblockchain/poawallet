@@ -1,5 +1,6 @@
 #!/bin/sh
-# Esegue tests/chain/erc20-integration.php, tests/ui/layout.php e l'indicizzatore wallet-realtime (SIP-029) su MySQL e chain Besu usa-e-getta (rete interna, nessuna porta host).
+# Esegue tests/chain/erc20-integration.php, tests/ui/layout.php, l'indicizzatore wallet-realtime e il suo push SSE (SIP-029)
+# su MySQL e chain Besu usa-e-getta (rete interna, nessuna porta host).
 # Immagine wallet costruita da questo checkout (target dev); mai la sandbox o la chain condivise.
 # Richiede le immagini locali napay/chain-tools:dev e hyperledger/besu:26.9.0.
 set -eu
@@ -26,6 +27,10 @@ docker build -q -t "$realtime_image" "$root/realtime" >/dev/null
 db_password=$(openssl rand -hex 24)
 root_password=$(openssl rand -hex 24)
 indexer_password=$(openssl rand -hex 24)
+# chiave dei ticket /events (SIP-029 passo 2): file letto dal servizio Go (utente non root) e dal test PHP
+mkdir "$work/push"
+openssl rand -hex 32 > "$work/push/key"
+chmod 644 "$work/push/key"
 cat > "$work/wallet.env" <<ENV
 DB_DSN=mysql:host=mysql;dbname=wallet_test
 DB_USERNAME=wallet_test
@@ -107,6 +112,8 @@ services:
       DB_NAME: wallet_test
       DB_USER: wallet_indexer
       DB_PASSWORD: "$indexer_password"
+      PUSH_KEY_FILE: /run/push-key
+    volumes: ["$work/push/key:/run/push-key:ro"]
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -141,3 +148,17 @@ SQL
 compose run --rm --no-deps realtime --once
 compose run --rm --no-deps realtime --once
 compose run --rm --no-deps -T wallet php tests/chain/realtime-indexer.php verify < "$work/transfers.json"
+# SIP-029 passo 2: flusso /events aperto per mittente, destinatario ed estraneo, poi un trasferimento reale
+compose up -d --wait --wait-timeout 90 --no-deps realtime
+receiver=$(sed -n 's/.*"receiver":"\(0x[0-9a-fA-F]\{40\}\)".*/\1/p' "$work/transfers.json")
+compose run --rm --no-deps -T -v "$work/push:/push" wallet php tests/chain/realtime-push.php listen > "$work/push.log" 2>&1 &
+listener=$!
+for _ in $(seq 1 60); do [ -f "$work/push/ready" ] && break; sleep 1; done
+compose run --rm --no-deps -T -e RECEIVER="$receiver" chain-deploy node --input-type=module - < "$root/tests/chain/realtime-push-transfer.mjs" > "$work/push/transfer.json"
+push_status=0
+wait "$listener" || push_status=$?
+# solo righe di esito: mai l'output grezzo (niente segreti nei log dei test)
+grep -oE '^(  ok  .*|PASS .*)|FAIL: .{0,200}|Fatal error: .{0,200}' "$work/push.log" || true
+[ "$push_status" -eq 0 ]
+if compose logs realtime 2>&1 | grep -qF "$(cat "$work/push/key")"; then echo "FAIL: push key in realtime logs"; exit 1; fi
+echo "PASS realtime logs hold no push key"

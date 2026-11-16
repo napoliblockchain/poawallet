@@ -15,6 +15,7 @@ use app\models\PasswordResetRequestForm;
 use app\models\ResetPasswordForm;
 use app\components\WebApp;
 use app\components\AuthHandler;
+use app\components\RealtimeTicket;
 use app\models\Logs;
 
 class SiteController extends Controller
@@ -63,7 +64,7 @@ class SiteController extends Controller
             ],
         ];
         // accessi social (Google, Facebook, GitHub) spenti finché SOCIAL_LOGIN non è attivo: solo email e password
-        if (Yii::$app->params['socialLogin']) {
+        if (Yii::$app->params['socialLogin'] ?? false) {
             $actions['auth'] = ['class' => 'yii\authclient\AuthAction', 'successCallback' => [$this, 'onAuthSuccess']];
         }
         return $actions;
@@ -133,6 +134,7 @@ class SiteController extends Controller
     public function actionLogout()
     {
         Yii::$app->user->logout();
+        RealtimeTicket::clear();
         return $this->goHome();
     }
 

@@ -42,7 +42,15 @@ type Indexer struct {
 	BatchBlocks    uint64
 	BackfillBlocks uint64
 	Confirmations  uint64
-	blockTimes     map[uint64]uint64
+	// OnChange, se impostato, riceve dopo il commit ogni transazione toccata e gli utenti coinvolti (push SSE)
+	OnChange   func(Change)
+	blockTimes map[uint64]uint64
+}
+
+// Change è una riga di transactions scritta o aggiornata, con gli utenti registrati che la vedono.
+type Change struct {
+	TxID  int64
+	Users []int64
 }
 
 // Summary riassume un giro.
@@ -234,14 +242,19 @@ func (ix *Indexer) storeBatch(ctx context.Context, contract *Contract, logs []ty
 		return fmt.Errorf("begin: %w", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // dopo Commit non fa nulla
+	var changes []Change
 	for _, entry := range logs {
 		transfer, ok := ParseTransfer(entry)
 		if !ok {
 			continue
 		}
 		summary.Logs++
-		if err := ix.storeTransfer(ctx, tx, contract, transfer, wallets, summary); err != nil {
+		change, err := ix.storeTransfer(ctx, tx, contract, transfer, wallets, summary)
+		if err != nil {
 			return err
+		}
+		if change.TxID != 0 {
+			changes = append(changes, change)
 		}
 	}
 	if _, err := tx.ExecContext(ctx, `INSERT INTO chain_index_cursors (chain_id, contract, last_block, updated_at) VALUES (?, ?, ?, ?)
@@ -249,19 +262,39 @@ func (ix *Indexer) storeBatch(ctx context.Context, contract *Contract, logs []ty
 		strconv.FormatUint(ix.ChainID, 10), contract.Address, to, time.Now().Unix()); err != nil {
 		return fmt.Errorf("cursor: %w", err)
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	ix.publish(changes...)
+	return nil
 }
 
-func (ix *Indexer) storeTransfer(ctx context.Context, tx *sql.Tx, contract *Contract, transfer Transfer, wallets map[string]int64, summary *Summary) error {
+func (ix *Indexer) publish(changes ...Change) {
+	if ix.OnChange == nil {
+		return
+	}
+	for _, change := range changes {
+		ix.OnChange(change)
+	}
+}
+
+func (ix *Indexer) storeTransfer(ctx context.Context, tx *sql.Tx, contract *Contract, transfer Transfer, wallets map[string]int64, summary *Summary) (Change, error) {
+	var change Change
 	sender, senderOK := wallets[strings.ToLower(transfer.From.Hex())]
 	receiver, receiverOK := wallets[strings.ToLower(transfer.To.Hex())]
 	if !senderOK && !receiverOK {
-		return nil
+		return change, nil
+	}
+	if senderOK {
+		change.Users = append(change.Users, sender)
+	}
+	if receiverOK && (!senderOK || receiver != sender) {
+		change.Users = append(change.Users, receiver)
 	}
 	amount := FormatUnits(transfer.Value, contract.Decimals)
 	timestamp, err := ix.blockTime(ctx, transfer.Block)
 	if err != nil {
-		return err
+		return change, err
 	}
 	blockHex := "0x" + strconv.FormatUint(transfer.Block, 16)
 
@@ -271,18 +304,19 @@ func (ix *Indexer) storeTransfer(ctx context.Context, tx *sql.Tx, contract *Cont
 	err = tx.QueryRowContext(ctx, "SELECT id, status, token_received FROM transactions WHERE txhash = ? ORDER BY id LIMIT 1 FOR UPDATE", transfer.TxHash).Scan(&id, &status, &received)
 	switch {
 	case err == nil:
+		change.TxID = id
 		// riga già in stato finale (completata da PHP, send/validate-transaction): chi l'ha chiusa ha già notificato
 		if status == "complete" || status == "failed" {
 			if status == "complete" && received == 0 {
 				if _, err := tx.ExecContext(ctx, "UPDATE transactions SET token_received = ? WHERE id = ?", amount, id); err != nil {
-					return fmt.Errorf("received amount: %w", err)
+					return change, fmt.Errorf("received amount: %w", err)
 				}
 			}
-			return nil
+			return change, nil
 		}
 		// invio fatto dal wallet (riga creata da PHP con lo stesso hash), non ancora chiuso: lo chiude e notifica qui
 		if _, err := tx.ExecContext(ctx, "UPDATE transactions SET status = 'complete', token_received = ?, blocknumber = ? WHERE id = ?", amount, blockHex, id); err != nil {
-			return fmt.Errorf("complete transaction: %w", err)
+			return change, fmt.Errorf("complete transaction: %w", err)
 		}
 		summary.Completed++
 	case errors.Is(err, sql.ErrNoRows):
@@ -294,30 +328,34 @@ func (ix *Indexer) storeTransfer(ctx context.Context, tx *sql.Tx, contract *Cont
 		if !ok {
 			contractID = contract.FirstID
 		}
-		if _, err := tx.ExecContext(ctx, `INSERT INTO transactions (id_user, type, id_smart_contract, status, token_price, token_received,
+		result, err := tx.ExecContext(ctx, `INSERT INTO transactions (id_user, type, id_smart_contract, status, token_price, token_received,
 			invoice_timestamp, expiration_timestamp, from_address, to_address, blocknumber, txhash, message)
 			VALUES (?, 'token', ?, 'complete', ?, ?, ?, ?, ?, ?, ?, ?, '')`,
-			owner, contractID, amount, amount, timestamp, timestamp+900, transfer.From.Hex(), transfer.To.Hex(), blockHex, transfer.TxHash); err != nil {
-			return fmt.Errorf("insert transaction: %w", err)
+			owner, contractID, amount, amount, timestamp, timestamp+900, transfer.From.Hex(), transfer.To.Hex(), blockHex, transfer.TxHash)
+		if err != nil {
+			return change, fmt.Errorf("insert transaction: %w", err)
+		}
+		if change.TxID, err = result.LastInsertId(); err != nil {
+			return change, fmt.Errorf("insert transaction: %w", err)
 		}
 		summary.Inserted++
 	default:
-		return fmt.Errorf("find transaction: %w", err)
+		return change, fmt.Errorf("find transaction: %w", err)
 	}
 	// stessi testi di NotificationService (PHP): inglese, tradotti alla lettura
 	if senderOK {
 		if err := notify(ctx, tx, sender, timestamp, amount, fmt.Sprintf("A transaction you sent of %s %s has been completed.", amount, contract.Symbol)); err != nil {
-			return err
+			return change, err
 		}
 		summary.Notifications++
 	}
 	if receiverOK {
 		if err := notify(ctx, tx, receiver, timestamp, amount, fmt.Sprintf("You received a new transaction of %s %s.", amount, contract.Symbol)); err != nil {
-			return err
+			return change, err
 		}
 		summary.Notifications++
 	}
-	return nil
+	return change, nil
 }
 
 func notify(ctx context.Context, tx *sql.Tx, user int64, timestamp uint64, amount, description string) error {
@@ -338,18 +376,18 @@ func notify(ctx context.Context, tx *sql.Tx, user int64, timestamp uint64, amoun
 
 // failedPending segna come fallite le transazioni inviate dal wallet con ricevuta a stato 0.
 func (ix *Indexer) failedPending(ctx context.Context) (int, error) {
-	rows, err := ix.DB.QueryContext(ctx, "SELECT id, txhash FROM transactions WHERE status IN ('new', 'pending') AND txhash LIKE '0x%' ORDER BY id LIMIT 100")
+	rows, err := ix.DB.QueryContext(ctx, "SELECT id, id_user, txhash FROM transactions WHERE status IN ('new', 'pending') AND txhash LIKE '0x%' ORDER BY id LIMIT 100")
 	if err != nil {
 		return 0, fmt.Errorf("pending: %w", err)
 	}
 	type pending struct {
-		id   int64
-		hash string
+		id, user int64
+		hash     string
 	}
 	var list []pending
 	for rows.Next() {
 		var p pending
-		if err := rows.Scan(&p.id, &p.hash); err != nil {
+		if err := rows.Scan(&p.id, &p.user, &p.hash); err != nil {
 			rows.Close()
 			return 0, fmt.Errorf("pending: %w", err)
 		}
@@ -372,6 +410,7 @@ func (ix *Indexer) failedPending(ctx context.Context) (int, error) {
 			if _, err := ix.DB.ExecContext(ctx, "UPDATE transactions SET status = 'failed' WHERE id = ? AND status IN ('new', 'pending')", p.id); err != nil {
 				return failed, fmt.Errorf("failed transaction: %w", err)
 			}
+			ix.publish(Change{TxID: p.id, Users: []int64{p.user}})
 			failed++
 		}
 	}
