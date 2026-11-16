@@ -548,4 +548,5 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     'Forgot password?' => 'Password dimenticata?',
     'Sign Up' => 'Registrati',
     'The Napay wallet: receive and spend TTS in the shops of the network. Your keys stay on your device.' => 'Il wallet di Napay: ricevi e spendi TTS nei negozi del circuito. Le chiavi restano sul tuo dispositivo.',
+    'Invalid request.' => 'Richiesta non valida.',
 ];

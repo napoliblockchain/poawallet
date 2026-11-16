@@ -393,28 +393,35 @@ class Erc20 extends Component
     }
 
 
-    /*
-	 * funzione che riceve il valore della transazione nello smart contract
-	 * in formato: hex (0x000000000000000000000000000000000000000000000000000000000000012c)
-	 * e la trasforma in un numero intero, più i decimali del token
-	 */
-	public function wei2eth($wei,$decimals)
-	{
-		$value = substr_replace('0x','0',$wei);
-		$array = str_split($wei);
-		$number = '';
-		$flag = false;
-		foreach($array as $digit){
-			if ($digit != '0' && $flag == false){
-				$number .= $digit;
-				$flag = true;
-			}
-			if ($flag == true)
-				$number .= $digit;
+    /** Topic dell'evento ERC-20 Transfer(address,address,uint256). */
+    public const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
-		}
-		return hexdec($number) / pow(10, $decimals);
-	}
+    /**
+     * Valore uint256 esadecimale (campo data di un log Transfer, es. 0x...04d2) in token con $decimals decimali.
+     * Conversione esatta (GMP), nessun float intermedio sugli interi grandi.
+     */
+    public static function wei2eth($wei, $decimals): float
+    {
+        if (!is_string($wei) || preg_match('/^0x[0-9a-fA-F]{1,64}$/D', $wei) !== 1 || !is_int($decimals) || $decimals < 0 || $decimals > 18) {
+            throw new \InvalidArgumentException('invalid_token_amount');
+        }
+        $units = gmp_strval(gmp_init(substr($wei, 2), 16));
+        if ($decimals === 0) return (float) $units;
+        $units = str_pad($units, $decimals + 1, '0', STR_PAD_LEFT);
+        return (float) (substr($units, 0, -$decimals) . '.' . substr($units, -$decimals));
+    }
+
+    /** Importo del Transfer del token nella ricevuta (log del contratto indicato con topic Transfer), null se assente. */
+    public static function transferAmount(object $receipt, string $tokenAddress, int $decimals): ?float
+    {
+        foreach ((array) ($receipt->logs ?? []) as $log) {
+            if (!is_object($log) || strcasecmp((string) ($log->address ?? ''), $tokenAddress) !== 0) continue;
+            $topics = (array) ($log->topics ?? []);
+            if (strtolower((string) ($topics[0] ?? '')) !== self::TRANSFER_TOPIC) continue;
+            return self::wei2eth((string) ($log->data ?? ''), $decimals);
+        }
+        return null;
+    }
 
     /* funzione per codificare il valore $value del tipo $type in hex */
 	private function Encode(string $type, $value): string {

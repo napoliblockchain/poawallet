@@ -8,12 +8,13 @@ use app\models\search\TransactionsSearch;
 use app\models\MPWallets;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\BadRequestHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 
 use app\components\WebApp;
-use app\components\Settings;
 use app\components\ChainConfig;
+use app\components\Erc20;
 use yii\filters\AccessControl;
 
 /**
@@ -53,7 +54,6 @@ class TransactionsController extends Controller
     public function actionIndex()
     {
         $fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
-        $node = Settings::poa();
 
 		if (NULL === $fromAddress){
 			$session = Yii::$app->session;
@@ -116,43 +116,30 @@ class TransactionsController extends Controller
      */
     public function actionGetTransactionDetails($txhash)
     {
-        $receipt = null;
-        $success = false;
-
-        $node = Settings::poa();
-
-		$ERC20 = new Yii::$app->Erc20(Yii::$app->user->id);
-
-        if ($txhash != '0x0'){
-            $receipt = $ERC20->getReceipt($txhash);
-            if (null !== $receipt){
-                $success = true;
-                // update transactions
-                $transaction = Transactions::find()
-                ->findByHash($txhash);
-
-                $transactionValue = $ERC20->wei2eth(
-                    $receipt->logs[0]->data,
-                    $node->smartContract->decimals
-                );
-
-                $transaction->blocknumber = $receipt->blockNumber;
-                $transaction->token_received = $transactionValue;
-                $transaction->status = 'complete';
-                if (!$transaction->save()){
-                    var_dump( $transaction->getErrors());
-                    die();
-                }
-            }
-
-        }
-        $return = [
-            'success' => $success,
-            'receipt' => $receipt,
-        ];
-
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return $return;
+        if (!is_string($txhash) || preg_match('/^0x[0-9a-fA-F]{64}$/D', $txhash) !== 1) {
+            throw new BadRequestHttpException(Yii::t('app', 'Invalid request.'));
+        }
+        // solo una transazione dell'utente (autore, mittente o destinatario): mai aggiornare quella di un altro
+        $transaction = null;
+        foreach (Transactions::find()->where(['txhash' => $txhash])->all() as $candidate) {
+            if ($candidate->belongsToUser((int) Yii::$app->user->id)) { $transaction = $candidate; break; }
+        }
+        if ($transaction === null) throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
+
+        $receipt = (new Erc20(Yii::$app->user->id))->getReceipt($txhash);
+        if (!is_object($receipt)) return ['success' => false, 'receipt' => null];
+        // importo solo dal Transfer del token TTS e solo se la transazione è riuscita
+        $amount = ($receipt->status ?? null) === '0x1'
+            ? Erc20::transferAmount($receipt, ChainConfig::get()->smartContract->smart_contract_address, ChainConfig::tokenDecimals())
+            : null;
+        if ($amount !== null && ($transaction->status !== 'complete' || (float) $transaction->token_received !== $amount)) {
+            $transaction->blocknumber = (string) $receipt->blockNumber;
+            $transaction->token_received = $amount;
+            $transaction->status = 'complete';
+            if (!$transaction->save()) Yii::error('Transaction receipt update not saved.', __METHOD__);
+        }
+        return ['success' => $amount !== null, 'receipt' => $receipt];
     }
 
     /**

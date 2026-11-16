@@ -107,6 +107,7 @@ $receipt = waitReceipt($sent['tx'], $erc20);
 check($receipt->status === '0x1', 'sendToken: receipt status success');
 check(hexdec(rpc('eth_getTransactionByHash', [$sent['tx']])['gasPrice']) === 1000, 'sendToken: gasPrice 1000 wei on chain');
 check(tokenBalanceRpc($tts['address'], $recipient) === '1234', 'recipient received 12.34 TTS (1234 units)');
+check(app\components\Erc20::transferAmount($receipt, $tts['address'], 2) === 12.34, 'Real receipt: 12.34 TTS read from the token Transfer log');
 check(gmp_strval(gmp_sub($before, tokenBalanceRpc($tts['address'], $holder))) === '1234', 'holder balance decreased by 1234 units');
 check((string) $erc20->tokenBalance($recipient) === '1234', 'tokenBalance of recipient via Erc20');
 check(strlen(rpc('eth_getTransactionByHash', [$sent['tx']])['input']) === 2 + 68 * 2, 'sendToken without reference: plain transfer calldata');

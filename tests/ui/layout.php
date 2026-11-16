@@ -129,6 +129,15 @@ $db->createCommand()->insert('transactions', ['id_user' => $userId, 'type' => 't
     'token_price' => 12.34, 'token_received' => 12.34, 'invoice_timestamp' => time(), 'expiration_timestamp' => time() + 900,
     'from_address' => '0x' . str_repeat('ab', 20), 'to_address' => $tts['holder'], 'blocknumber' => '0x10', 'txhash' => '0x' . str_repeat('cd', 32), 'message' => $evil])->execute();
 $txId = (int) $db->getLastInsertID();
+// dettagli dalla ricevuta: hash validato, solo transazioni dell'utente, nessun aggiornamento senza Transfer del token
+$details = static function (string $hash) use ($app) {
+    $app->response->clear();
+    try { return $app->runAction('transactions/get-transaction-details', ['txhash' => $hash]); } catch (Throwable $e) { return get_class($e); }
+};
+check($details('0x' . str_repeat('cd', 32)) === ['success' => false, 'receipt' => null]
+    && $db->createCommand('SELECT status FROM transactions WHERE id=:id', [':id' => $txId])->queryScalar() === 'complete', 'Transaction details: own transaction not on chain, nothing changed');
+check($details('0x12') === yii\web\BadRequestHttpException::class && $details('0x' . str_repeat('ef', 32)) === yii\web\NotFoundHttpException::class,
+    'Transaction details: malformed hash 400, unknown or foreign transaction 404');
 $wallet = $render('wallet/index');
 check(str_contains($wallet, 'wallet-hero') && str_contains($wallet, 'wallet-actions') && str_contains($wallet, 'class="wallet-tx wallet-tx-in"'), 'Wallet: balance card, quick actions, incoming transaction row');
 check(preg_match('~id="pinRequestModal"[^>]*>\s*<div class="modal-dialog modal-fullscreen">~', $wallet) === 1
