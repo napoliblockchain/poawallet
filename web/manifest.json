@@ -38,7 +38,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f6f3e9",
-  "theme_color": "#3f51b5",
+  "theme_color": "#ffffff",
   "description": "Il wallet TTS di Napay",
   "dir": "ltr",
   "lang": "it-IT"

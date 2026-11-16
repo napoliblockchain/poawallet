@@ -2,15 +2,15 @@
 .wallet-pin-modal .modal-content { background: var(--tblr-bg-surface, #fff); }
 .wallet-pin-modal .modal-body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem; padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom)); }
 .wallet-pin-head { text-align: center; }
-.wallet-pin-head > i { font-size: 2rem; color: var(--wallet-brand, #2a4fa0); margin-bottom: .5rem; }
+.wallet-pin-head > i { font-size: 2rem; color: var(--wallet-brand, #9a7200); margin-bottom: .5rem; }
 .wallet-pin-head .modal-title { font-size: 1.5rem; font-weight: 600; }
 .wallet-pin { display: flex; flex-direction: column; align-items: center; gap: .75rem; width: 100%; max-width: 22rem; }
 .wallet-pin-dots { display: flex; gap: 1rem; }
 .wallet-pin-dots i { font-size: 1.1rem; color: #d5dbe3; transition: transform .15s, color .15s; }
-.wallet-pin-dots i.filled { color: var(--wallet-brand, #2a4fa0); transform: scale(1.2); }
+.wallet-pin-dots i.filled { color: var(--wallet-brand, #9a7200); transform: scale(1.2); }
 /* barra di esito: blu = completo/corretto, rosso = errato */
 .wallet-pin .easy-numpad-output { width: 6rem; height: 4px; border-radius: 2px; background: #e6e7e9; margin: 0; padding: 0; border: 0; }
-.wallet-pin .easy-numpad-output.alert-primary { background: var(--wallet-brand, #2a4fa0); }
+.wallet-pin .easy-numpad-output.alert-primary { background: var(--wallet-brand, #9a7200); }
 .wallet-pin .easy-numpad-output.alert-danger { background: #d63939; }
 .wallet-pin .pin_password_em_ { color: #d63939; font-weight: 600; margin: 0; min-height: 1.25rem; }
 .wallet-pin-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem 1.5rem; width: 100%; justify-items: center; }
@@ -19,11 +19,13 @@
     background: #eef1f5; color: #182433; font-size: clamp(1.75rem, 8vw, 2.25rem); font-weight: 500;
     display: grid; place-items: center; touch-action: manipulation; user-select: none;
 }
-.wallet-pin-key:active, .wallet-pin-key:focus-visible { background: var(--wallet-brand, #2a4fa0); color: #fff; outline: none; }
+.wallet-pin-key:active, .wallet-pin-key:focus-visible { background: var(--wallet-brand, #9a7200); color: #fff; outline: none; }
 .wallet-pin-key-text { background: transparent; font-size: 1.25rem; color: var(--tblr-secondary, #667382); }
 .wallet-pin-actions { display: flex; gap: .75rem; width: 100%; max-width: 22rem; }
 .wallet-pin-actions .btn { flex: 1 1 0; }
 /* Master seed: 12 parole numerate */
-.wallet-seed-words { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem 1rem; width: 100%; max-width: 24rem; margin: 0; padding-left: 2rem; font-family: var(--tblr-font-monospace, monospace); font-size: 1.1rem; user-select: none; }
-.wallet-seed-words li { padding: .35rem .5rem; border-radius: .5rem; background: #eef1f5; }
+/* numero dentro il riquadro della parola: con i marcatori dell'elenco, nella griglia il numero della seconda colonna finiva sulla prima */
+.wallet-seed-words { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem 1rem; width: 100%; max-width: 24rem; margin: 0; padding: 0; list-style: none; counter-reset: seed; font-family: var(--tblr-font-monospace, monospace); font-size: 1.1rem; user-select: none; }
+.wallet-seed-words li { display: flex; gap: .5rem; padding: .35rem .5rem; border-radius: .5rem; background: #eef1f5; counter-increment: seed; overflow-wrap: anywhere; }
+.wallet-seed-words li::before { content: counter(seed) "."; min-width: 1.8em; text-align: right; color: var(--tblr-secondary, #667382); }
 @media (min-width: 576px) { .wallet-seed-words { grid-template-columns: repeat(3, 1fr); max-width: 32rem; } }

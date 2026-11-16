@@ -6,13 +6,13 @@ use yii\helpers\Url;
 /* Barra in alto: indietro (fuori dal wallet), marchio, stato sincronizzazione, notifiche, menu "Altro". */
 $wallet = Yii::$app->controller->id === 'wallet';
 ?>
-<header class="navbar navbar-dark wallet-topbar sticky-top d-print-none">
+<header class="navbar wallet-topbar sticky-top d-print-none">
     <div class="container-xl gap-2 flex-nowrap">
         <?php if (!$wallet): ?>
             <a class="btn btn-icon" href="javascript:history.back();" aria-label="<?= Html::encode(Yii::t('app', 'Back')) ?>"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
         <?php endif ?>
         <a class="navbar-brand d-flex align-items-center me-auto" href="<?= Url::to(['/wallet/index']) ?>">
-            <img src="/css/images/logo.png" alt=""><span><?= Html::encode(Yii::$app->name) ?></span>
+            <img src="/brand/icon.svg" alt="" class="wallet-brand-icon"><span class="wallet-wordmark" aria-label="<?= Html::encode(Yii::$app->name) ?>"><span class="wallet-wordmark-name">na<span>pay</span></span><small>Wallet</small></span>
         </a>
         <small class="header-message d-none d-sm-inline text-truncate"></small>
         <span class="d-inline-flex align-items-center px-2">

@@ -155,7 +155,7 @@ class NotificationService
             'body' => $notification->description,
             'icon' => '/brand/icon-192.png',
             'badge' => '/brand/icon-192.png',
-            'image' => '/css/images/logo.png',
+            'image' => '/brand/icon-512.png',
             'sound' => 'src/sounds/notify.mp3',
             'vibrate' => [200, 100, 200, 100, 200],
             'tag' => 'notify',

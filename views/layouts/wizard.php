@@ -19,7 +19,7 @@ ServiceWorkerAsset::register($this);
 <head>
     <meta charset="<?= Html::encode(Yii::$app->charset) ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#2a4fa0">
+    <meta name="theme-color" content="#ffffff">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
     <link rel="manifest" href="/manifest.json">
@@ -30,9 +30,9 @@ ServiceWorkerAsset::register($this);
 </head>
 <body class="wallet-app">
 <?php $this->beginBody() ?>
-<header class="navbar navbar-dark wallet-topbar d-print-none">
+<header class="navbar wallet-topbar d-print-none">
     <div class="container-xl">
-        <span class="navbar-brand d-flex align-items-center"><img src="/css/images/logo.png" alt=""><span><?= Html::encode(Yii::$app->name) ?></span></span>
+        <span class="navbar-brand d-flex align-items-center"><img src="/brand/icon.svg" alt="" class="wallet-brand-icon"><span class="wallet-wordmark" aria-label="<?= Html::encode(Yii::$app->name) ?>"><span class="wallet-wordmark-name">na<span>pay</span></span><small>Wallet</small></span></span>
     </div>
 </header>
 <main class="page-wrapper">

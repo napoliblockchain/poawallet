@@ -44,7 +44,7 @@ NotificationsAsset::register($this);
 <head>
     <meta charset="<?= Html::encode(Yii::$app->charset) ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#2a4fa0">
+    <meta name="theme-color" content="#ffffff">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
     <link rel="manifest" href="/manifest.json">

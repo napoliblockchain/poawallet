@@ -1,14 +1,23 @@
-/* Poa Wallet: strato grafico sopra Tabler (mobile-first). */
+/* Napay Wallet: strato grafico sopra Tabler (mobile-first). Colore dell'app: giallo/oro (Napay verde, POS blu). */
 :root {
-    --wallet-brand: #2a4fa0;
-    --wallet-brand-dark: #1b3474;
-    --wallet-accent: #f7931a;
+    --wallet-brand: #9a7200;
+    --wallet-brand-dark: #6f5200;
+    --wallet-accent: #f4c949;
+    /* primario Tabler in oro scuro: testo bianco e link leggibili; il giallo resta per gli accenti */
+    --tblr-primary: #9a7200;
+    --tblr-primary-rgb: 154, 114, 0;
 }
+
+/* Marchio come sul POS: na (nero) pay (verde) in serif, sotto il nome dell'app */
+.wallet-wordmark { display: flex; flex-direction: column; line-height: 1; }
+.wallet-wordmark-name { font: 700 1.5rem Georgia, "DejaVu Serif", serif; letter-spacing: -.04em; color: #162626; }
+.wallet-wordmark-name span { color: #64763e; }
+.wallet-wordmark small { font-size: .62rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--tblr-secondary); margin-top: .2rem; }
 
 /* Pagine di accesso: sfondo del marchio, scheda chiara centrata */
 .wallet-auth {
     min-height: 100vh;
-    background: linear-gradient(160deg, var(--wallet-brand) 0%, var(--wallet-brand-dark) 100%);
+    background: var(--tblr-body-bg, #f6f8fb);
 }
 .wallet-auth .container-tight { max-width: 26rem; }
 .wallet-brand {
@@ -16,29 +25,33 @@
     align-items: center;
     justify-content: center;
     gap: .75rem;
-    color: #fff;
+    color: #162626;
     text-decoration: none;
 }
-.wallet-brand:hover { color: #fff; text-decoration: none; }
+.wallet-brand:hover { color: #162626; text-decoration: none; }
 .wallet-brand img { width: 56px; height: auto; }
-.wallet-brand span { font-size: 1.75rem; font-weight: 300; letter-spacing: .02em; }
-.wallet-auth .card { border: 0; border-radius: 1rem; box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .25); }
+.wallet-brand .wallet-wordmark { text-align: left; }
+.wallet-brand .wallet-wordmark-name { font-size: 2rem; }
+.wallet-auth .card { border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius-lg); box-shadow: var(--tblr-shadow-card); }
 .wallet-auth .card-title { font-weight: 600; }
 .wallet-auth .btn-primary { background-color: var(--wallet-brand); border-color: var(--wallet-brand); }
 .wallet-auth .btn-primary:hover, .wallet-auth .btn-primary:focus { background-color: var(--wallet-brand-dark); border-color: var(--wallet-brand-dark); }
-.wallet-auth .wallet-switch { color: rgba(255, 255, 255, .85); }
-.wallet-auth .wallet-switch a { color: #fff; font-weight: 600; }
-.wallet-footer { color: rgba(255, 255, 255, .7); font-size: .8rem; text-align: center; }
-.wallet-footer a { color: #fff; }
+.wallet-auth .wallet-switch { color: var(--tblr-secondary); }
+.wallet-auth .wallet-switch a { color: var(--wallet-brand); font-weight: 600; }
+.wallet-footer { color: var(--tblr-secondary); font-size: .8rem; text-align: center; }
+.wallet-footer a { color: var(--wallet-brand); }
 
 /* ---------- App: barra in alto, menu in basso (mobile) / in linea (desktop) ---------- */
 .wallet-app { background: var(--tblr-body-bg, #f6f8fb); }
-.wallet-topbar { background: linear-gradient(120deg, var(--wallet-brand) 0%, var(--wallet-brand-dark) 100%); color: #fff; }
-.wallet-topbar .navbar-brand { color: #fff; gap: .5rem; }
-.wallet-topbar .navbar-brand img { width: 32px; height: auto; }
-.wallet-topbar .btn-icon { color: #fff; background: transparent; border: 0; position: relative; font-size: 1.15rem; }
-.wallet-topbar .btn-icon:hover, .wallet-topbar .btn-icon:focus { color: #fff; background: rgba(255, 255, 255, .12); }
-.wallet-topbar .header-message { color: rgba(255, 255, 255, .85); }
+/* barra in alto come il POS: bianca, icona e marchio, bordo sotto */
+.wallet-topbar { background: var(--tblr-bg-surface, #fff); color: var(--tblr-body-color); border-bottom: 1px solid var(--tblr-border-color, #e6e7e9); }
+.wallet-topbar .navbar-brand { color: #162626; gap: .6rem; }
+.wallet-topbar .navbar-brand img { width: 34px; height: auto; }
+/* icona Napay Wallet (n con moneta): angoli come le icone delle app */
+.wallet-brand-icon { border-radius: 22%; }
+.wallet-topbar .btn-icon { color: var(--tblr-body-color); background: transparent; border: 0; position: relative; font-size: 1.15rem; }
+.wallet-topbar .btn-icon:hover, .wallet-topbar .btn-icon:focus { color: var(--wallet-brand); background: var(--tblr-bg-surface-secondary); }
+.wallet-topbar .header-message { color: var(--tblr-secondary); }
 .wallet-main { padding-bottom: 5.5rem; }
 
 .wallet-tabbar { background: #fff; border-top: 1px solid var(--tblr-border-color, #e6e7e9); }
@@ -97,7 +110,7 @@
 @keyframes wallet-balance-in { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .animationStar { animation: wallet-spin 1s linear; }
 @keyframes wallet-spin { to { transform: rotate(3600deg); } }
-.bg-newtransaction { background-color: rgba(42, 79, 160, .12) !important; }
+.bg-newtransaction { background-color: rgba(154, 114, 0, .12) !important; }
 .button-spinner { width: 1.3rem; height: 1.3rem; }
 
 /* ---------- Pagine del wallet ---------- */
@@ -118,14 +131,14 @@
     box-shadow: 0 .25rem .75rem rgba(24, 36, 51, .06); font-size: .85rem; font-weight: 500;
 }
 .wallet-action:hover { color: var(--wallet-brand); text-decoration: none; }
-.wallet-action i { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(42, 79, 160, .1); color: var(--wallet-brand); font-size: 1.05rem; }
+.wallet-action i { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(154, 114, 0, .12); color: var(--wallet-brand); font-size: 1.05rem; }
 
 /* Righe transazione (WebApp::showTransactionRow, anche dentro le tabelle aggiornate da wallet-sync.js) */
 .wallet-tx-table { table-layout: fixed; width: 100%; }
 .wallet-tx-table td { padding: 0; border: 0; width: 100%; overflow: hidden; }
 .wallet-tx-table tr + tr .wallet-tx { border-top: 1px solid var(--tblr-border-color, #e6e7e9); }
 .wallet-tx { display: flex; align-items: center; gap: .85rem; padding: .85rem 1rem; color: inherit; text-decoration: none; }
-.wallet-tx:hover { background: rgba(42, 79, 160, .04); color: inherit; text-decoration: none; }
+.wallet-tx:hover { background: rgba(154, 114, 0, .05); color: inherit; text-decoration: none; }
 .wallet-tx-icon { flex: 0 0 auto; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; }
 .wallet-tx-in .wallet-tx-icon { background: rgba(47, 179, 68, .12); color: #2fb344; }
 .wallet-tx-out .wallet-tx-icon { background: rgba(214, 57, 57, .1); color: #d63939; }
