@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 
 /* @var $this yii\web\View */
-/* @var $node app\models\Nodes|null */
+/* @var $node object rete e token da ChainConfig (SIP-032) */
 
 $this->title = Yii::t('app', 'Network info');
 // blocchi aggiornati da wallet-sync.js (evento "status" del flusso in tempo reale, classi network-*)
@@ -15,7 +15,8 @@ $this->title = Yii::t('app', 'Network info');
             <dl class="row mb-0">
                 <dt class="col-4 text-secondary fw-normal"><?= Html::encode(Yii::t('app', 'Network: ')) ?></dt><dd class="col-8"><?= Html::encode($node->blockchain->denomination ?? '') ?></dd>
                 <dt class="col-4 text-secondary fw-normal"><?= Html::encode(Yii::t('app', 'Token: ')) ?></dt><dd class="col-8"><?= Html::encode($node->smartContract->denomination ?? '') ?></dd>
-                <dt class="col-4 text-secondary fw-normal"><?= Html::encode(Yii::t('app', 'Url: ')) ?></dt><dd class="col-8 text-break mb-0"><?= Html::encode($node->blockchain->url ?? '') ?></dd>
+                <dt class="col-4 text-secondary fw-normal"><?= Html::encode(Yii::t('app', 'Chain ID')) ?></dt><dd class="col-8"><?= Html::encode((string) ($node->blockchain->chain_id ?? '')) ?></dd>
+                <dt class="col-4 text-secondary fw-normal"><?= Html::encode(Yii::t('app', 'Token contract')) ?></dt><dd class="col-8 text-break font-monospace mb-0" data-token-address><?= Html::encode($node->smartContract->smart_contract_address ?? '') ?></dd>
             </dl>
         </div>
     </div>

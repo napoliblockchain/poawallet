@@ -3,18 +3,10 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
 
-use yii\base\Model;
-use yii\db\ActiveRecord;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Json;
-use yii\helpers\Url;
-use yii\httpclient\Client;
 
-use app\models\Nodes;
-use app\models\Blockchains;
 use app\models\Notifications;
 
 class WebApp extends Component
@@ -24,41 +16,6 @@ class WebApp extends Component
     //  * @return nodeurl
     //  */
     // public static function getPoaNode($blockchain_id = 1)
-    // {
-    //     $blockchain = Blockchains::findOne($blockchain_id);
-    //     // $nodes = $blockchain->nodes;
-    //     //
-    //     // $nodelist = ArrayHelper::map(
-    //     //     $nodes,
-    //     //     'id_node',
-    //     //     function ($item, $defaultValue) {
-    //     //         return $item->url . ':' . $item->port;
-    //     //     }
-    //     // );
-    //     //
-    //     // $isdown = true;
-    //     // shuffle($nodelist);
-    //     // do {
-    //     //     $node = array_shift($nodelist);
-    //     //
-    //     //     if (empty($node)){
-    //     //         return false;
-    //     //     }
-    //     //
-    //     //     if( self::checkUrl( $node ) ) {
-    //     //         $isdown = false;
-    //     //     }
-    //     // } while ($isdown);
-    //
-    //     // return $node;
-    //
-    //     if( self::checkUrl( $blockchain->url ) ) {
-    //         return false;
-    //     }
-    //     // echo $blockchain->url;
-    //     // exit;
-    //     return $blockchain->url;
-    // }
     /**
 	 * PHP/cURL function to check a web site status. If HTTP status is not 200 or 302, or
 	 * the requests takes longer than 1 seconds, the website is unreachable.
@@ -92,19 +49,6 @@ class WebApp extends Component
 	}
 
     // public static function checkUrl($url) {
-    //     $client = new Client();
-    //
-    //     $request = $client->createRequest()
-    //         ->setMethod('GET')
-    //         ->setUrl($url)
-    //         ->setOptions([
-    //             'timeout' => 1, // set timeout to 1 seconds for the case server is not responding
-    //         ])
-    //         ->send();
-    //
-    //     return $request->getisOk();
-    // }
-
 	private static function si_classifier($val){
 		$suffixes = [
 			24 => [
@@ -198,7 +142,6 @@ class WebApp extends Component
 		return $suffixes[$exponent] ?? null;
 	}
 
-
 	// Best shortens a number and attaches K, M, B, etc. accordingly
 	public static function si_formatter($number, $style = 'short'){
 		$classifier = self::si_classifier($number);
@@ -218,9 +161,6 @@ class WebApp extends Component
 
 	// Shortens a number and attaches K, M, B, etc. accordingly
     // public function number_shorten($number, $precision = 3, $divisors = null) {
-    //     // Setup default $divisors if not provided
-    //     if (!isset($divisors)) {
-    //         $divisors = array(
 	// 			pow(1000, -4) => 'p', // 0.000000000001 pico
 	// 			pow(1000, -3) => 'n', // 0.000000001 nano
 	// 			pow(1000, -2) => 'µ', // 0.000001 micro
@@ -234,21 +174,6 @@ class WebApp extends Component
     //             pow(1000, 6) => 'E',// Yii::t('app','Quintillion'), // Exa - Quintillion
     //             gmp_strval('1000000000000000000000') => 'Z', //Yii::t('app','Sextillion'), // Sextillion
     //             gmp_strval('1000000000000000000000000') => 'Y', //Yii::t('app','Septillion'), // Septillion
-    //         );
-    //     }
-	//
-    //     // Loop through each $divisor and find the
-    //     // lowest amount that matches
-    //     foreach ($divisors as $divisor => $shorthand) {
-    //         if (abs($number) < ($divisor * 1000)) {
-    //             // We found a match!
-    //             break;
-    //         }
-    //     }
-    //     // We found our match, or there were no matches.
-    //     // Either way, use the last defined value for $divisor.
-    //     return round(number_format($number / $divisor, $precision),$precision) .' '. $shorthand;
-    // }
 
     /**
      * funzione che crypta un testo
@@ -380,10 +305,6 @@ class WebApp extends Component
                     $zmdicon = 'fa fa-exclamation';
                     break;
 
-
-            // case 'fattura':
-            //     $zmdicon = 'zmdi zmdi-collection-pdf';
-            //     break;
             case 'invoice':
                 $zmdicon = 'fab fa-btc';
                 break;
@@ -396,34 +317,14 @@ class WebApp extends Component
                     $zmdicon = 'fab fa-ethereum';
                     break;
 
-            // case 'withdraw':
-            //     $zmdicon = 'zmdi zmdi-balance';
-            //     break;
-
-            // case 'deposit':
-            //     $zmdicon = 'fa fa-eur';
-            //     break;
-
             case  'contact':
               $zmdicon = 'fa fa-users';
               break;
 
-
             case 'new':
             case 'complete':
-            // case 'paid':
-            // case 'confirmed':
-            // case 'invoice':
               $zmdicon = 'fa fa-star';
-                // $zmdicon = 'fab fa-btc';
                 break;
-
-
-            // case 'expired':
-            // case 'invalid':
-            // case 'failed':
-            //     $zmdicon = 'fa fa-exclamation';
-            //     break;
 
             default:
                 $zmdicon = 'fa fa-info';

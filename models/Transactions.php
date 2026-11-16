@@ -22,7 +22,6 @@ use Yii;
  * @property string|null $txhash
  * @property string|null $message
  *
- * @property SmartContracts $smartContract
  * @property Users $user
  */
 class Transactions extends \yii\db\ActiveRecord
@@ -49,7 +48,6 @@ class Transactions extends \yii\db\ActiveRecord
             [['blocknumber'], 'string', 'max' => 50],
             [['txhash'], 'string', 'max' => 250],
             [['message'], 'string', 'max' => 1000],
-            [['id_smart_contract'], 'exist', 'skipOnError' => true, 'targetClass' => SmartContracts::className(), 'targetAttribute' => ['id_smart_contract' => 'id']],
             [['id_user'], 'exist', 'skipOnError' => true, 'targetClass' => Users::className(), 'targetAttribute' => ['id_user' => 'id']],
         ];
     }
@@ -75,16 +73,6 @@ class Transactions extends \yii\db\ActiveRecord
             'txhash' => Yii::t('app', 'Transaction Hash'),
             'message' => Yii::t('app', 'Message'),
         ];
-    }
-
-    /**
-     * Gets query for [[SmartContract]].
-     *
-     * @return \yii\db\ActiveQuery|\app\models\query\SmartContractsQuery
-     */
-    public function getSmartContract()
-    {
-        return $this->hasOne(SmartContracts::className(), ['id' => 'id_smart_contract']);
     }
 
     /**

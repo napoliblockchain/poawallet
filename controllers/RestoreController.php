@@ -8,11 +8,8 @@ use yii\web\Response;
 
 use app\models\WizardWalletForm;
 use app\models\MPWallets;
-use app\models\Nodes;
 
 use yii\bootstrap5\ActiveForm;
-
-use app\components\Networks;
 
 class RestoreController extends Controller
 {
@@ -69,7 +66,6 @@ class RestoreController extends Controller
 	public function actionIndex()
  	{
 		$this->layout = 'wizard';
-		$defaultNetworkExist = false;
 		$formModel = new WizardWalletForm; //form di input dei dati
 
 		if (Yii::$app->request->isAjax && $formModel->load(Yii::$app->request->post())) {
@@ -80,32 +76,20 @@ class RestoreController extends Controller
 		if ($formModel->load(Yii::$app->request->post()) && $formModel->validate()) {
 			// se sono giunto qui, l'indirizzo dell'utente non doveva essere in tabella
 			// oppure non corrisponde a quello salvato in indexedDB
+			// rete e token dalle variabili d'ambiente (SIP-032): nessuna riga di rete per utente
 			$boltWallet = MPWallets::find()->where( [ 'id_user' => Yii::$app->user->id ] )->one();
-			$node = Nodes::find()->where(['id_user'=>Yii::$app->user->id])->one();
-
 			if(null === $boltWallet) {
 				$boltWallet = new MPWallets;
 				$boltWallet->id_user = Yii::$app->user->id;
-
-				if (null === $node){
-					$defaultNetworkExist = true;
-					$node = Networks::createDefaults();
-				}
 				$boltWallet->blocknumber = $this->getLatestBlockNumber();
 			}
 			$boltWallet->wallet_address = Yii::$app->request->post('WizardWalletForm')['address'];
 
 			if ($boltWallet->save()){
-				if (null === $node && $defaultNetworkExist === false){
-					Networks::createDefaults();
-				}
-
 				return $this->redirect(['/wallet/index']);
 			}
-			else
-				var_dump( $boltWallet->getErrors());
-
-			exit;
+			Yii::error('Restored wallet address not saved.', __METHOD__);
+			$formModel->addError('seed', Yii::t('app', 'Wallet not saved: please retry.'));
     	}
 
  		return $this->render('index', [

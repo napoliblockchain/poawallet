@@ -9,7 +9,7 @@ use yii\helpers\Url;
 /* @var $fromAddress string */
 /* @var $balance string */
 /* @var $balance_gas string */
-/* @var $node app\models\Nodes */
+/* @var $node object rete e token da ChainConfig (SIP-032) */
 
 $this->title = Yii::t('app', 'Wallet');
 

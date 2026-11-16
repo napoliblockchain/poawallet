@@ -538,4 +538,7 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     'Show the words again' => 'Mostra di nuovo le parole',
     'Create the wallet' => 'Crea il wallet',
     'Word no. {n}' => 'Parola n. {n}',
+    'Wallet not saved: please retry.' => 'Wallet non salvato: riprova.',
+    'Chain ID' => 'Chain ID',
+    'Token contract' => 'Contratto del token',
 ];

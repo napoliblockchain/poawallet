@@ -1,5 +1,5 @@
-// Package indexer legge dalla chain gli eventi Transfer dei token scelti dagli utenti e li registra per i wallet
-// (transazioni e notifiche), come faceva BlockchainController::actionEthtx in PHP ma fuori dalle richieste del browser.
+// Package indexer legge dalla chain gli eventi Transfer del token del wallet (configurato, SIP-032) e li registra per i
+// wallet degli utenti (transazioni e notifiche).
 // Idempotente: un cursore per contratto avanza nella stessa transazione dei dati; un hash già presente non crea doppioni.
 package indexer
 
@@ -42,6 +42,8 @@ type Indexer struct {
 	BatchBlocks    uint64
 	BackfillBlocks uint64
 	Confirmations  uint64
+	// Token indicizzato (indirizzo in minuscolo), dalle variabili d'ambiente
+	Token *Contract
 	// OnChange, se impostato, riceve dopo il commit ogni transazione toccata e gli utenti coinvolti (push SSE)
 	OnChange   func(Change)
 	blockTimes map[uint64]uint64
@@ -65,13 +67,11 @@ type Summary struct {
 	Failed        int    `json:"failed"`
 }
 
-// Contract è un token sulla chain configurata; ogni utente ha la sua riga smart_contract per lo stesso indirizzo.
+// Contract è il token del wallet, configurato dalle variabili d'ambiente (SIP-032): uno solo, uguale per tutti.
 type Contract struct {
 	Address  string
 	Decimals int
 	Symbol   string
-	ByUser   map[int64]int64
-	FirstID  int64
 }
 
 // Transfer è un evento Transfer già letto.
@@ -139,11 +139,10 @@ func (ix *Indexer) RunOnce(ctx context.Context) (Summary, error) {
 	if err != nil {
 		return summary, err
 	}
-	contracts, err := ix.contracts(ctx)
-	if err != nil {
-		return summary, err
+	if ix.Token == nil || !hexAddress.MatchString(ix.Token.Address) {
+		return summary, errors.New("token not configured")
 	}
-	for _, contract := range contracts {
+	for _, contract := range []*Contract{ix.Token} {
 		summary.Contracts++
 		if err := ix.indexContract(ctx, contract, summary.Indexed, wallets, &summary); err != nil {
 			return summary, err
@@ -170,38 +169,6 @@ func (ix *Indexer) wallets(ctx context.Context) (map[string]int64, error) {
 		wallets[strings.ToLower(address)] = user
 	}
 	return wallets, rows.Err()
-}
-
-func (ix *Indexer) contracts(ctx context.Context) ([]*Contract, error) {
-	rows, err := ix.DB.QueryContext(ctx, `SELECT s.id, s.id_user, s.smart_contract_address, s.decimals, s.symbol
-		FROM nodes n JOIN smart_contract s ON s.id = n.id_smart_contract JOIN blockchains b ON b.id = n.id_blockchain
-		WHERE b.chain_id = ? ORDER BY s.id`, strconv.FormatUint(ix.ChainID, 10))
-	if err != nil {
-		return nil, fmt.Errorf("contracts: %w", err)
-	}
-	defer rows.Close()
-	byAddress := map[string]*Contract{}
-	var ordered []*Contract
-	for rows.Next() {
-		var id, user int64
-		var address, symbol string
-		var decimals int
-		if err := rows.Scan(&id, &user, &address, &decimals, &symbol); err != nil {
-			return nil, fmt.Errorf("contracts: %w", err)
-		}
-		address = strings.ToLower(address)
-		if !hexAddress.MatchString(address) || decimals < 0 || decimals > 36 {
-			continue
-		}
-		contract, ok := byAddress[address]
-		if !ok {
-			contract = &Contract{Address: address, Decimals: decimals, Symbol: symbol, ByUser: map[int64]int64{}, FirstID: id}
-			byAddress[address] = contract
-			ordered = append(ordered, contract)
-		}
-		contract.ByUser[user] = id
-	}
-	return ordered, rows.Err()
 }
 
 func (ix *Indexer) indexContract(ctx context.Context, contract *Contract, head uint64, wallets map[string]int64, summary *Summary) error {
@@ -324,14 +291,10 @@ func (ix *Indexer) storeTransfer(ctx context.Context, tx *sql.Tx, contract *Cont
 		if receiverOK {
 			owner = receiver
 		}
-		contractID, ok := contract.ByUser[owner]
-		if !ok {
-			contractID = contract.FirstID
-		}
-		result, err := tx.ExecContext(ctx, `INSERT INTO transactions (id_user, type, id_smart_contract, status, token_price, token_received,
+		result, err := tx.ExecContext(ctx, `INSERT INTO transactions (id_user, type, status, token_price, token_received,
 			invoice_timestamp, expiration_timestamp, from_address, to_address, blocknumber, txhash, message)
-			VALUES (?, 'token', ?, 'complete', ?, ?, ?, ?, ?, ?, ?, ?, '')`,
-			owner, contractID, amount, amount, timestamp, timestamp+900, transfer.From.Hex(), transfer.To.Hex(), blockHex, transfer.TxHash)
+			VALUES (?, 'token', 'complete', ?, ?, ?, ?, ?, ?, ?, ?, '')`,
+			owner, amount, amount, timestamp, timestamp+900, transfer.From.Hex(), transfer.To.Hex(), blockHex, transfer.TxHash)
 		if err != nil {
 			return change, fmt.Errorf("insert transaction: %w", err)
 		}

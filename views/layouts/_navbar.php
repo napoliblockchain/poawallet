@@ -16,14 +16,10 @@ $main = [
 ];
 $more = [
     ['messages', ['/messages/index'], 'fas fa-envelope', Yii::t('app', 'Notifications')],
-    ['settings', ['/settings/index'], 'fas fa-network-wired', Yii::t('app', 'Network')],
-    ['nodes', ['/nodes/update'], 'fas fa-project-diagram', Yii::t('app', 'Select nodes')],
-    ['smartcontracts', ['/smartcontracts/index'], 'fas fa-star', Yii::t('app', 'Manage tokens')],
-    ['blockchains', ['/blockchains/index'], 'fas fa-link', Yii::t('app', 'Manage networks')],
+    // rete e token dalle variabili d'ambiente (SIP-032): solo la pagina informativa
+    ['network', ['/network/index'], 'fas fa-network-wired', Yii::t('app', 'Network info')],
 ];
 if (UserRole::isWebmaster()) {
-    $more[] = ['standard-blockchain-values', ['/standard-blockchain-values/index'], 'fas fa-database', Yii::t('app', 'Standard networks')];
-    $more[] = ['standard-smart-contract-values', ['/standard-smart-contract-values/index'], 'fas fa-cubes', Yii::t('app', 'Standard tokens')];
     $more[] = ['profiles', ['/profiles/index'], 'fas fa-id-badge', Yii::t('app', 'Profiles')];
     $more[] = ['logs', ['/logs/index'], 'fas fa-clipboard-list', Yii::t('app', 'Logs')];
 }

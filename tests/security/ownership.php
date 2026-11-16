@@ -85,10 +85,8 @@ check(load($messages, 21, 1) === null, 'message: other user notification denied'
 // controller doppioni /settings/* rimossi: reti e token solo da BlockchainsController e SmartcontractsController
 check(!class_exists('app\\controllers\\settings\\BlockchainsController') && !class_exists('app\\controllers\\settings\\TokensController'), 'duplicate settings controllers removed');
 
-foreach ([app\controllers\BlockchainsController::class => [30, 31], app\controllers\SmartcontractsController::class => [40, 41]] as $class => [$own, $other]) {
-    check(load($class, $own, 1) !== null, "$class: own record");
-    check(load($class, $other, 1) === null, "$class: other user record denied");
-}
+// SIP-032: reti e token non sono più dati per utente (variabili d'ambiente), niente pagine da proteggere
+check(!class_exists('app\\controllers\\BlockchainsController') && !class_exists('app\\controllers\\SmartcontractsController'), 'network and token management controllers removed');
 
 // riga per il flusso in tempo reale (evento "tx"): solo transazioni proprie, direzione anche con indirizzi in maiuscolo diverso
 function row($id, $userId) {

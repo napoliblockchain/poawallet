@@ -70,7 +70,10 @@ foreach (['/wallet/index', '/send/index', '/receive/index', '/transactions/index
     check(str_contains($html, 'href="' . $link . '"'), 'Main menu links to ' . $link);
 }
 check(preg_match('~<a class="nav-link active" href="/wallet/index" aria-current="page">~', $html) === 1, 'Current section marked in the menu');
-check(str_contains($html, 'id="wallet-more"') && str_contains($html, 'data-bs-toggle="offcanvas"') && str_contains($html, 'href="/messages/index"'), 'More panel with the other sections');
+check(str_contains($html, 'id="wallet-more"') && str_contains($html, 'data-bs-toggle="offcanvas"') && str_contains($html, 'href="/messages/index"')
+    && str_contains($html, 'href="/network/index"') && !str_contains($html, '/nodes/update') && !str_contains($html, '/smartcontracts/') && !str_contains($html, '/blockchains/'),
+    'More panel with the other sections; only Network info for the chain');
+check(substr_count($html, 'data-bs-toggle="offcanvas"') === 1 && !str_contains($html, 'fa-bars'), 'One menu only: no top-right menu button');
 check(!str_contains($html, 'href="/logs/index"') && !str_contains($html, 'href="/profiles/index"'), 'Administration links hidden from a normal user');
 check(preg_match('~<form action="/site/logout" method="post">\s*<input type="hidden" name="_csrf"~', $html) === 1, 'Logout is a POST with CSRF token');
 check(!str_contains($html, '<b>Ui</b>'), 'User name never printed as HTML');
@@ -93,17 +96,21 @@ $profile = $render('users/view', ['id' => app\components\WebApp::encrypt($userId
 check(str_contains($profile, 'pincodeslider') && str_contains($profile, 'masterseedSlider') && str_contains($profile, 'js-push-btn-modal') && str_contains($profile, 'id="pinNewModal"'),
     'Profile without transactions renders, switches and PIN dialogs present');
 check(!str_contains($profile, 'anonymous.png') && str_contains($profile, 'fa-user'), 'Profile shows the user icon, no picture');
-foreach (['settings/index' => 'blockchainRescan', 'network/index' => 'network-block-number', 'smartcontracts/index' => 'TTS dev', 'blockchains/index' => 'Dev QBFT',
-    'nodes/update' => 'nodes-id_blockchain', 'messages/index' => 'notifications-form'] as $route => $marker) {
+foreach (['network/index' => 'network-block-number', 'messages/index' => 'notifications-form'] as $route => $marker) {
     $page = $render($route);
     check(str_contains($page, $marker) && !str_contains($page, 'ref-card'), 'Settings page restyled: ' . $route);
 }
 
 // --- collegamenti morti tolti: nessuna rotta verso controller rimossi
-foreach (['spawn/index', 'mailbox/inbox', 'settings/nodes/update', 'settings/blockchains/index', 'settings/tokens/index'] as $deadRoute) {
+// SIP-032: rete e token dalle variabili d'ambiente, niente pagine di gestione
+foreach (['spawn/index', 'mailbox/inbox', 'settings/nodes/update', 'settings/blockchains/index', 'settings/tokens/index', 'settings/index', 'nodes/update',
+    'smartcontracts/index', 'blockchains/index', 'standard-blockchain-values/index', 'standard-smart-contract-values/index'] as $deadRoute) {
     try { $app->createController($deadRoute) === false ? check(true, 'Removed route: ' . $deadRoute) : check(false, 'Removed route: ' . $deadRoute); }
     catch (yii\base\InvalidRouteException $e) { check(true, 'Removed route: ' . $deadRoute); }
 }
+check(!method_exists(app\controllers\WalletController::class, 'actionRescan'), 'Removed action: wallet/rescan (blockchain reset)');
+$network = $render('network/index');
+check(str_contains($network, 'data-token-address') && !str_contains($network, 'http://besu'), 'Network info shows chain id and token contract, never the internal RPC URL');
 check(str_contains($profile, 'pin-seed-numpad') && !str_contains($profile, 'masterSeedPassword') && str_contains($profile, "'crypted_pin': storedPin.pin")
     && preg_match('~id="masterSeedModal"[^>]*>\s*<div class="modal-dialog modal-fullscreen">~', $profile) === 1, 'Master seed asks the PIN on the full-screen keypad, no hidden wallet password');
 foreach (['pinNewModal', 'pinVerifyModal', 'pinRemoveModal'] as $pinModal) {

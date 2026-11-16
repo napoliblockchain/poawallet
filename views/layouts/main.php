@@ -81,9 +81,6 @@ if (Yii::$app->controller->id == 'users'){
     echo $this->render('_masterseed');
 }
 
-if (Yii::$app->controller->id == 'settings'){
-    echo $this->render('_blockchainscan');
-}
 
 if (Yii::$app->controller->id == 'receive'){
     echo $this->render('_clipboard-copy');

@@ -81,20 +81,6 @@ class WalletController extends Controller
 	}
 
 	/**
-	 * @param POST string address the Ethereum Address to be rescanned
-	 */
-	public function actionRescan(){
-        //azzero il numero dei blocchi dell'indirizzo
-
-		$model = MPWallets::find()->byUserId(Yii::$app->user->id)->one();
-		$model->blocknumber = '0x0';
-
-		return $this->json([
-			'success' => $model->save(),
-		]);
-	}
-
-	/**
 	 * Lists wallet dashboard page
 	 */
 	public function actionIndex()

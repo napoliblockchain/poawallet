@@ -29,6 +29,8 @@ root_password=$(openssl rand -hex 24)
 indexer_password=$(openssl rand -hex 24)
 # chiave dei ticket /events (SIP-029 passo 2): file letto dal servizio Go (utente non root) e dal test PHP
 mkdir "$work/push"
+# SIP-032: token dell'indicizzatore, scritto dopo il deploy
+: > "$work/realtime.env"
 openssl rand -hex 32 > "$work/push/key"
 chmod 644 "$work/push/key"
 cat > "$work/wallet.env" <<ENV
@@ -111,6 +113,7 @@ services:
     networks: [internal]
   realtime:
     image: $realtime_image
+    env_file: [$work/realtime.env]
     environment:
       CHAIN_RPC_URL: http://besu:8545
       CHAIN_ID: "2118"
@@ -136,7 +139,7 @@ compose up -d --wait --wait-timeout 180 mysql besu
 compose run --rm chain-deploy >/dev/null
 # SIP-032: indirizzo del token appena deployato, nell'ambiente del wallet
 token=$(compose run --rm --no-deps -T --entrypoint cat chain-deploy /data/tts.json | sed -n 's/.*"address": *"\(0x[0-9a-fA-F]\{40\}\)".*/\1/p')
-case "$token" in 0x*) echo "TTS_TOKEN_ADDRESS=$token" >> "$work/wallet.env" ;; *) echo 'FAIL: token address not readable'; exit 1 ;; esac
+case "$token" in 0x*) echo "TTS_TOKEN_ADDRESS=$token" >> "$work/wallet.env"; echo "TTS_TOKEN_ADDRESS=$token" >> "$work/realtime.env" ;; *) echo 'FAIL: token address not readable'; exit 1 ;; esac
 compose run --rm --no-deps wallet php yii migrate --interactive=0 >/dev/null
 compose run --rm --no-deps wallet php tests/chain/erc20-integration.php
 compose run --rm --no-deps wallet php tests/ui/layout.php
@@ -146,9 +149,6 @@ compose run --rm --no-deps -T wallet php tests/chain/realtime-indexer.php setup 
 compose exec -T -e MYSQL_PWD="$root_password" mysql mysql -uroot wallet_test <<SQL
 CREATE USER 'wallet_indexer'@'%' IDENTIFIED BY '$indexer_password';
 GRANT SELECT ON wallet_test.mp_wallets TO 'wallet_indexer'@'%';
-GRANT SELECT ON wallet_test.nodes TO 'wallet_indexer'@'%';
-GRANT SELECT ON wallet_test.smart_contract TO 'wallet_indexer'@'%';
-GRANT SELECT ON wallet_test.blockchains TO 'wallet_indexer'@'%';
 GRANT SELECT, INSERT, UPDATE ON wallet_test.transactions TO 'wallet_indexer'@'%';
 GRANT SELECT, INSERT ON wallet_test.mp_notifications TO 'wallet_indexer'@'%';
 GRANT SELECT, INSERT ON wallet_test.mp_notifications_readers TO 'wallet_indexer'@'%';

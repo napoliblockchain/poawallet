@@ -3,7 +3,7 @@
 /* Saldo token e gas della rete selezionata (pagine Wallet e Invia). id total-balance aggiornato da wallet-sync.js (flusso /events). */
 /* @var $balance string|int saldo token in unità minime */
 /* @var $balance_gas string|float */
-/* @var $node app\models\Nodes */
+/* @var $node object rete e token da ChainConfig (SIP-032) */
 
 use yii\helpers\Html;
 use yii\helpers\Url;

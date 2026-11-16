@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/* Barra in alto: indietro (fuori dal wallet), marchio, stato sincronizzazione, notifiche, menu "Altro". */
+/* Barra in alto: indietro (fuori dal wallet), marchio, stato sincronizzazione, notifiche. Il menu "Altro" è nella barra di navigazione. */
 $wallet = Yii::$app->controller->id === 'wallet';
 ?>
 <header class="navbar wallet-topbar sticky-top d-print-none">
@@ -24,9 +24,6 @@ $wallet = Yii::$app->controller->id === 'wallet';
         <button type="button" class="btn btn-icon" data-search="open" aria-label="<?= Html::encode(Yii::t('app', 'Notifications')) ?>">
             <i class="fas fa-bell" aria-hidden="true"></i>
             <span class="notify-quantity" style="display:none;" id="quantity_circle"><span id="quantity_notify"></span></span>
-        </button>
-        <button type="button" class="btn btn-icon" data-bs-toggle="offcanvas" data-bs-target="#wallet-more" aria-controls="wallet-more" aria-label="<?= Html::encode(Yii::t('app', 'Menu')) ?>">
-            <i class="fas fa-bars" aria-hidden="true"></i>
         </button>
     </div>
 </header>

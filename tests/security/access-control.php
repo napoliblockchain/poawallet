@@ -40,7 +40,7 @@ const PUBLIC_ACTIONS = [
     'oauthtelegram/check-authorization',
 ];
 // controllers that manage global configuration or other users' data
-const WEBMASTER_CONTROLLERS = ['standard-blockchain-values', 'standard-smart-contract-values', 'logs', 'profiles'];
+const WEBMASTER_CONTROLLERS = ['logs', 'profiles'];
 
 $checks = 0;
 function check($condition, $label) {

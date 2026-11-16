@@ -33,6 +33,8 @@ type config struct {
 	interval                    time.Duration
 	batch, backfill, confirmTip uint64
 	heartbeat                   string
+	// token del wallet (SIP-032): stesso indirizzo, decimali e simbolo dell'app PHP
+	token *indexer.Contract
 	// push SSE: disattivato se manca la chiave condivisa con PHP
 	pushAddr string
 	pushKey  []byte
@@ -121,6 +123,19 @@ func loadConfig() (config, error) {
 	if c.confirmTip, err = number("INDEXER_CONFIRMATIONS", 0, 0, 1000); err != nil {
 		return c, err
 	}
+	address := strings.ToLower(env("TTS_TOKEN_ADDRESS"))
+	if !regexp.MustCompile(`^0x[0-9a-f]{40}$`).MatchString(address) {
+		return c, errors.New("invalid configuration: TTS_TOKEN_ADDRESS")
+	}
+	decimals, err := number("TTS_TOKEN_DECIMALS", 2, 0, 36)
+	if err != nil {
+		return c, err
+	}
+	symbol := env("TTS_TOKEN_SYMBOL")
+	if symbol == "" {
+		symbol = "TTS"
+	}
+	c.token = &indexer.Contract{Address: address, Decimals: int(decimals), Symbol: symbol}
 	c.heartbeat = env("INDEXER_HEARTBEAT_FILE")
 	if c.heartbeat == "" {
 		c.heartbeat = "/tmp/wallet-realtime-heartbeat.json"
@@ -197,7 +212,7 @@ func main() {
 	}
 	defer client.Close()
 
-	ix := &indexer.Indexer{DB: db, Chain: client, ChainID: cfg.chainID, BatchBlocks: cfg.batch, BackfillBlocks: cfg.backfill, Confirmations: cfg.confirmTip}
+	ix := &indexer.Indexer{DB: db, Chain: client, ChainID: cfg.chainID, BatchBlocks: cfg.batch, BackfillBlocks: cfg.backfill, Confirmations: cfg.confirmTip, Token: cfg.token}
 	// limiti: 5 schede per utente, 2000 connessioni in tutto
 	hub := push.NewHub(5, 2000)
 	ix.OnChange = func(change indexer.Change) {

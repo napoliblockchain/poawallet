@@ -8,9 +8,6 @@ use yii\web\Controller;
 
 use app\models\WizardWalletForm;
 use app\models\MPWallets;
-use app\models\Nodes;
-
-use app\components\Networks;
 
 class WizardController extends Controller
 {
@@ -64,33 +61,23 @@ class WizardController extends Controller
 		$this->layout = 'wizard';
 		$formModel = new WizardWalletForm; //form di input dei dati
 
-		$defaultNetworkExist = false;
 		if ($formModel->load(Yii::$app->request->post()) && $formModel->validate()) {
 			// se sono giunto qui, l'indirizzo dell'utente non doveva essere in tabella
 			// oppure non corrisponde a quello salvato in indexedDB
+			// rete e token dalle variabili d'ambiente (SIP-032): nessuna riga di rete per utente
 			$boltWallet = MPWallets::find()->where( [ 'id_user' => Yii::$app->user->id ] )->one();
-			$node = Nodes::find()->byUserId(Yii::$app->user->id)->one();
-
 			if(null === $boltWallet) {
 				$boltWallet = new MPWallets;
 				$boltWallet->id_user = Yii::$app->user->id;
-				if (null === $node){
-					$defaultNetworkExist = true;
-					$node = Networks::createDefaults();
-				}
 				$boltWallet->blocknumber = $this->getLatestBlockNumber();
 			}
 			$boltWallet->wallet_address = Yii::$app->request->post('WizardWalletForm')['address'];
 
 			if ($boltWallet->save()){
-				if (null === $node && $defaultNetworkExist === false){
-					$node = Networks::createDefaults();
-				}
 				return $this->redirect(['/wallet/index']);
-			} else {
-				var_dump( $boltWallet->getErrors());
-				exit;
 			}
+			Yii::error('New wallet address not saved.', __METHOD__);
+			Yii::$app->session->setFlash('error', Yii::t('app', 'Wallet not saved: please retry.'));
     	}
 
 		return $this->render('index', [
