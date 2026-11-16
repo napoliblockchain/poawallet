@@ -166,3 +166,11 @@
 .sweet-check .outline span { position: absolute; top: .2rem; left: .2rem; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform .2s; }
 .sweet-check.checked { background: var(--wallet-brand); }
 .sweet-check.checked .outline span { transform: translateX(1.25rem); }
+
+/* Le 12 parole del seed (master seed col PIN e creazione del wallet nel wizard) */
+/* numero dentro il riquadro della parola: con i marcatori dell'elenco, nella griglia il numero della seconda colonna finiva sulla prima */
+.wallet-seed-words { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem 1rem; width: 100%; max-width: 24rem; margin: 0; padding: 0; list-style: none; counter-reset: seed; font-family: var(--tblr-font-monospace, monospace); font-size: 1.1rem; user-select: none; }
+.wallet-seed-words li { display: flex; gap: .5rem; padding: .35rem .5rem; border-radius: .5rem; background: #eef1f5; counter-increment: seed; overflow-wrap: anywhere; }
+.wallet-seed-words li::before { content: counter(seed) "."; min-width: 1.8em; text-align: right; color: var(--tblr-secondary, #667382); }
+@media (min-width: 576px) { .wallet-seed-words { grid-template-columns: repeat(3, 1fr); max-width: 32rem; } }
+.wallet-seed-check .form-control { font-family: var(--tblr-font-monospace, monospace); }

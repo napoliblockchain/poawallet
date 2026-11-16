@@ -528,4 +528,14 @@ bisogna effettuare il login da ciascuno, effettuare l\'abilitazione ed assicurar
     'Too many wrong attempts: the seed is locked for 24 hours.' => 'Troppi tentativi errati: il seed è bloccato per 24 ore.',
     'Enter your PIN: after 3 wrong attempts the seed is locked for 24 hours.' => 'Inserisci il PIN: dopo 3 tentativi errati il seed resta bloccato per 24 ore.',
     'Write these 12 words on paper, in this order, and keep them in a safe place.' => 'Scrivi queste 12 parole su carta, in questo ordine, e conservale in un posto sicuro.',
+    // creazione del wallet: verifica delle parole del seed
+    'Your 12 words' => 'Le tue 12 parole',
+    'Write these 12 words on paper, in this order, and keep them in a safe place: they are the only way to recover the wallet.' => 'Scrivi queste 12 parole su carta, in questo ordine, e conservale in un posto sicuro: sono l\'unico modo per recuperare il wallet.',
+    'I wrote them down' => 'Le ho scritte',
+    'Check your words' => 'Verifica le parole',
+    'Type the requested words to confirm you wrote them down.' => 'Scrivi le parole richieste per confermare di averle annotate.',
+    'One or more words are wrong: check your paper.' => 'Una o più parole sono sbagliate: controlla il foglio.',
+    'Show the words again' => 'Mostra di nuovo le parole',
+    'Create the wallet' => 'Crea il wallet',
+    'Word no. {n}' => 'Parola n. {n}',
 ];

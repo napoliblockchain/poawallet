@@ -24,8 +24,3 @@
 .wallet-pin-actions { display: flex; gap: .75rem; width: 100%; max-width: 22rem; }
 .wallet-pin-actions .btn { flex: 1 1 0; }
 /* Master seed: 12 parole numerate */
-/* numero dentro il riquadro della parola: con i marcatori dell'elenco, nella griglia il numero della seconda colonna finiva sulla prima */
-.wallet-seed-words { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem 1rem; width: 100%; max-width: 24rem; margin: 0; padding: 0; list-style: none; counter-reset: seed; font-family: var(--tblr-font-monospace, monospace); font-size: 1.1rem; user-select: none; }
-.wallet-seed-words li { display: flex; gap: .5rem; padding: .35rem .5rem; border-radius: .5rem; background: #eef1f5; counter-increment: seed; overflow-wrap: anywhere; }
-.wallet-seed-words li::before { content: counter(seed) "."; min-width: 1.8em; text-align: right; color: var(--tblr-secondary, #667382); }
-@media (min-width: 576px) { .wallet-seed-words { grid-template-columns: repeat(3, 1fr); max-width: 32rem; } }

@@ -4,6 +4,7 @@ use yii\helpers\Html;
 
 $name = trim((string) (Yii::$app->user->identity->first_name ?? ''));
 ?>
+<div class="text-center mb-3 text-primary"><i class="fas fa-wallet fa-2x" aria-hidden="true"></i></div>
 <h2 class="card-title"><?= Html::encode(Yii::t('app', 'Hi') . ($name !== '' ? ' ' . $name : '') . ',') ?></h2>
 <p class="lead"><?= Html::encode(Yii::t('app', 'soon you will activate your new wallet.')) ?></p>
 <p class="text-secondary"><?= Html::encode(Yii::t('app', 'Your electronic wallet will be made secure thanks to a mathematical process that will make the content unreadable.')) ?></p>
