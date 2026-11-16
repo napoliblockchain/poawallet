@@ -363,7 +363,7 @@ class WebApp extends Component
             . '<span class="wallet-tx-body"><span class="d-block text-truncate" title="' . Html::encode($counterpart) . '">'
             . Html::encode($label . (strlen((string) $counterpart) > 24 ? substr($counterpart, 0, 12) . '…' . substr($counterpart, -10) : $counterpart)) . '</span>'
             . '<span class="d-block small text-secondary">' . $meta . '</span>' . $message . '</span>'
-            . '<span class="wallet-tx-amount">' . ($outgoing ? '&minus; ' : '+ ') . Html::encode($amount) . ' <small>' . Html::encode($data->smartContract->symbol) . '</small></span>',
+            . '<span class="wallet-tx-amount">' . ($outgoing ? '&minus; ' : '+ ') . Html::encode($amount) . ' <small>' . Html::encode(ChainConfig::tokenSymbol()) . '</small></span>',
             ['/transactions/view', 'id' => self::encrypt($data->id)],
             ['class' => 'wallet-tx ' . ($outgoing ? 'wallet-tx-out' : 'wallet-tx-in') . ($newTransaction ? ' bg-newtransaction' : '')]
         );

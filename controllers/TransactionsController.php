@@ -6,13 +6,14 @@ use Yii;
 use app\models\Transactions;
 use app\models\search\TransactionsSearch;
 use app\models\MPWallets;
-use app\models\Nodes;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 
 use app\components\WebApp;
+use app\components\Settings;
+use app\components\ChainConfig;
 use yii\filters\AccessControl;
 
 /**
@@ -52,11 +53,9 @@ class TransactionsController extends Controller
     public function actionIndex()
     {
         $fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
-        $node = Nodes::find()
- 	     		->andWhere(['id_user'=>Yii::$app->user->id])
- 	    		->one();
+        $node = Settings::poa();
 
-		if (NULL === $fromAddress || NULL === $node){
+		if (NULL === $fromAddress){
 			$session = Yii::$app->session;
 			$string = Yii::$app->security->generateRandomString(32);
 			$session->set('token-wizard', $string );
@@ -87,14 +86,11 @@ class TransactionsController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         $model = $this->findModel((int) $id);
         $fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
-        $node = Nodes::find()->andWhere(['id_user' => Yii::$app->user->id])->one();
         $balance = null;
-        if ($node !== null && $node->smartContract !== null) {
-            try {
-                $balance = WebApp::tokenAmount(Yii::$app->Erc20->tokenBalance($fromAddress), (int) $node->smartContract->decimals);
-            } catch (\Throwable $error) {
-                Yii::warning('Token balance not available.', __METHOD__);
-            }
+        try {
+            $balance = WebApp::tokenAmount(Yii::$app->Erc20->tokenBalance($fromAddress), ChainConfig::tokenDecimals());
+        } catch (\Throwable $error) {
+            Yii::warning('Token balance not available.', __METHOD__);
         }
         return ['id' => (int) $model->id, 'row' => WebApp::showTransactionRow($model, $fromAddress, true), 'balance' => $balance];
     }
@@ -123,9 +119,7 @@ class TransactionsController extends Controller
         $receipt = null;
         $success = false;
 
-        $node = Nodes::find()
- 	     		->andWhere(['id_user'=>Yii::$app->user->id])
- 	    		->one();
+        $node = Settings::poa();
 
 		$ERC20 = new Yii::$app->Erc20(Yii::$app->user->id);
 

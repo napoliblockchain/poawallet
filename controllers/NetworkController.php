@@ -2,11 +2,9 @@
 
 namespace app\controllers;
 
-use Yii;
+use app\components\Settings;
 use yii\filters\AccessControl;
 use yii\web\Controller;
-
-use app\models\Nodes;
 
 class NetworkController extends Controller
 {
@@ -60,7 +58,7 @@ class NetworkController extends Controller
 	public function actionIndex()
  	{
  		return $this->render('index', [
-			'node' => Nodes::find()->where(['id_user'=>Yii::$app->user->id])->one(),
+			'node' => Settings::poa(),
 		]);
  	}
 

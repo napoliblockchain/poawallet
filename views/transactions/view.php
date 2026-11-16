@@ -9,7 +9,8 @@ use yii\helpers\Html;
 $this->title = Yii::t('app', 'Transaction details');
 include('view_js.php');
 
-$explorer = rtrim((string) $model->smartContract->blockchain->url_block_explorer, '/');
+// explorer della chain configurata (SIP-032), vuoto in sviluppo
+$explorer = rtrim((string) app\components\Settings::poa()->blockchain->url_block_explorer, '/');
 // link all'explorer solo se l'indirizzo configurato è http(s)
 $explorerLink = static function (string $text, string $path) use ($explorer): string {
     if ($text === '' || !preg_match('~^https?://~i', $explorer)) return Html::encode($text);
@@ -28,7 +29,7 @@ $status = $pending ? Yii::t('app', 'Pending...') : $model->status;
     </div>
     <div class="card-body">
         <div class="text-center mb-4">
-            <div class="display-6 fw-bold"><?= Html::encode(Yii::$app->formatter->asDecimal($model->token_price)) ?> <small class="fs-4 text-secondary"><?= Html::encode($model->smartContract->symbol) ?></small></div>
+            <div class="display-6 fw-bold"><?= Html::encode(Yii::$app->formatter->asDecimal($model->token_price)) ?> <small class="fs-4 text-secondary"><?= Html::encode(app\components\ChainConfig::tokenSymbol()) ?></small></div>
             <div class="text-secondary"><?= Html::encode(Yii::$app->formatter->asDatetime((int) $model->invoice_timestamp, 'php:d/m/Y H:i:s')) ?></div>
         </div>
         <dl class="row mb-0">

@@ -12,7 +12,6 @@ use app\models\Transactions;
 use app\components\WalletKeyCipher;
 use app\models\MPWallets;
 use app\models\SendForm;
-use app\models\Nodes;
 
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Json;
@@ -90,9 +89,7 @@ class SendController extends Controller
         	return $this->redirect(['/wallet/index']);
     	}
 
-		$node = Nodes::find()
- 	     		->andWhere(['id_user'=>Yii::$app->user->id])
- 	    		->one();
+		$node = Settings::poa();
 
  		return $this->render('index', [
  			'fromAddress' => $fromAddress,

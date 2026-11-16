@@ -11,10 +11,10 @@ use yii\filters\VerbFilter;
 use app\models\search\TransactionsSearch;
 use app\models\MPWallets;
 use app\models\Users;
-use app\models\Nodes;
 use app\models\Logs;
 
 use app\components\WebApp;
+use app\components\Settings;
 
 class WalletController extends Controller
 {
@@ -100,11 +100,9 @@ class WalletController extends Controller
 	public function actionIndex()
 	{
 		$fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
-		$node = Nodes::find()
- 	     		->andWhere(['id_user'=>Yii::$app->user->id])
- 	    		->one();
+		$node = Settings::poa();
 
-		if (NULL === $fromAddress || NULL === $node){
+		if (NULL === $fromAddress){
 			$session = Yii::$app->session;
 			$string = Yii::$app->security->generateRandomString(32);
 			$session->set('token-wizard', $string );

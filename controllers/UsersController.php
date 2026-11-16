@@ -68,12 +68,10 @@ class UsersController extends Controller
         $node = Settings::poa(Yii::$app->user->id);
 
         $tokens_from = Transactions::find()
-            ->andWhere(['id_smart_contract'=>$node->smartContract->id])
             ->andWhere(['from_address'=>$wallet->wallet_address])
             ->andWhere(['status'=>'complete']);
 
         $tokens_to = Transactions::find()
-            ->andWhere(['id_smart_contract'=>$node->smartContract->id])
             ->andWhere(['to_address'=>$wallet->wallet_address])
             ->andWhere(['status'=>'complete']);
 
@@ -91,7 +89,6 @@ class UsersController extends Controller
             ->orwhere(['=','from_address', $wallet->wallet_address])
             ->orwhere(['=','to_address', $wallet->wallet_address])
             ->andWhere(['status'=>'complete'])
-            ->andWhere(['id_smart_contract'=>$node->smartContract->id])
             ->select('token_price, from_address, to_address')
             ->all();
 

@@ -7,16 +7,9 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
-
-use yii\base\Model;
-use yii\data\ActiveDataProvider;
-use yii\db\ActiveRecord;
 
 use app\models\Owner;
-use app\models\Blockchains;
 use app\models\Host;
-use app\models\Nodes;
 
 class Settings extends Component
 {
@@ -25,18 +18,13 @@ class Settings extends Component
         return Owner::findOne(1);
     }
 
-
     // questa funziona ora assume come valore lo user id 
+    /**
+     * Rete e token del wallet (SIP-032): uguali per tutti gli utenti, dalle variabili d'ambiente (ChainConfig).
+     * Il parametro resta per compatibilità con i chiamanti.
+     */
     public static function poa($user_id = 0){
-        if ($user_id != 0) {
-            $node = Nodes::find()->where(['id_user'=> $user_id])->one();
-        } else {
-            $node = Nodes::find()->where(['id_user'=> Yii::$app->user->id])->one();
-        }
-
-        // echo '<pre>' . print_r($node, true) . '</pre>';
-		// exit;
-        return $node;
+        return ChainConfig::get();
     }
 
     /**

@@ -58,6 +58,12 @@ VAPID_PRIVATE_KEY=fixture-only
 VAPID_SUBJECT=mailto:admin@example.invalid
 CHAIN_DATA_DIR=/chain
 CHAIN_RPC_URL=http://besu:8545
+CHAIN_ID=2118
+CHAIN_NAME=Besu QBFT (test)
+CHAIN_SYMBOL=ETH
+CHAIN_ZERO_GAS=1
+TTS_TOKEN_SYMBOL=TTS
+TTS_TOKEN_DECIMALS=2
 ENV
 cat > "$work/compose.yml" <<YAML
 services:
@@ -128,6 +134,9 @@ YAML
 compose run --rm chain-init >/dev/null
 compose up -d --wait --wait-timeout 180 mysql besu
 compose run --rm chain-deploy >/dev/null
+# SIP-032: indirizzo del token appena deployato, nell'ambiente del wallet
+token=$(compose run --rm --no-deps -T --entrypoint cat chain-deploy /data/tts.json | sed -n 's/.*"address": *"\(0x[0-9a-fA-F]\{40\}\)".*/\1/p')
+case "$token" in 0x*) echo "TTS_TOKEN_ADDRESS=$token" >> "$work/wallet.env" ;; *) echo 'FAIL: token address not readable'; exit 1 ;; esac
 compose run --rm --no-deps wallet php yii migrate --interactive=0 >/dev/null
 compose run --rm --no-deps wallet php tests/chain/erc20-integration.php
 compose run --rm --no-deps wallet php tests/ui/layout.php
