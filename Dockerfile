@@ -1,34 +1,84 @@
-# Prepare environment
-FROM php:7.2-apache
-RUN a2enmod rewrite
-RUN docker-php-ext-install pdo_mysql
-RUN docker-php-ext-install bcmath
-RUN apt-get update -y && apt-get install -y libpng-dev libgmp-dev
-RUN docker-php-ext-install gd
-RUN docker-php-ext-install gmp
+# Target:
+#   docker build --target prod -t napay/poawallet:<versione> .   (default se --target omesso)
+#   docker build --target dev  -t napay/poawallet:dev .
+# Configurazione e segreti solo a runtime da variabili d'ambiente (.env, vedi .env.example).
 
-# copy yii2 files
-COPY assets /var/www/assets
-COPY commands /var/www/commands
-COPY components /var/www/components
-COPY config /var/www/config
-COPY controllers /var/www/controllers
-COPY daemons /var/www/daemons
-COPY mail /var/www/mail
-COPY logs /var/www/logs
-COPY messages /var/www/messages
-COPY migrations /var/www/migrations
-COPY models /var/www/models
-COPY runtime /var/www/runtime
-COPY views /var/www/views
-COPY widgets /var/www/widgets
-COPY vendor /var/www/vendor
+FROM php:8.3.36-apache AS base
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libicu-dev \
+    libpng-dev \
+    libgmp-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        intl pdo_mysql gd zip bcmath gmp sockets opcache \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-#this is the trick
-COPY web /var/www/html
-COPY requirements.php /var/www/html
-COPY yii /var/www
+RUN { \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=4000'; \
+    echo 'opcache.revalidate_freq=2'; \
+    echo 'opcache.enable_cli=1'; \
+    } > /usr/local/etc/php/conf.d/opcache.ini \
+    && a2enmod rewrite
 
-RUN mv /var/www/config/db-docker.php /var/www/config/db.php
+COPY config/apache.conf /etc/apache2/sites-available/000-default.conf
+
+WORKDIR /var/www
+
+# --- dipendenze composer (solo build, composer non finisce nell'immagine finale) ---
+FROM base AS vendor
+
+RUN apt-get update && apt-get install -y --no-install-recommends git unzip \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=composer:2.10.3 /usr/bin/composer /usr/bin/composer
+
+COPY composer.json composer.lock ./
+# --ignore-platform-req=php: bacon/bacon-qr-code (via 2amigos/qrcode-library) dichiara php ^7 ma gira su 8.3;
+# le estensioni PHP richieste restano verificate
+RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist \
+    --optimize-autoloader --ignore-platform-req=php
+
+FROM vendor AS vendor-dev
+RUN composer install --no-scripts --no-interaction --prefer-dist --ignore-platform-req=php
+
+# --- sorgenti applicazione ---
+FROM base AS app
+
+COPY assets      assets
+COPY commands    commands
+COPY components  components
+COPY config      config
+COPY controllers controllers
+COPY mail        mail
+COPY logs        logs
+COPY messages    messages
+COPY migrations  migrations
+COPY models      models
+COPY runtime     runtime
+COPY views       views
+COPY widgets     widgets
+COPY web         html
+COPY yii         yii
+
+# --- sviluppo: debug/gii, errori a video ---
+FROM app AS dev
+
+RUN cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+COPY --from=vendor-dev /var/www/vendor vendor
+COPY requirements.php html/requirements.php
+ENV YII_ENV=dev YII_DEBUG=1
 RUN chown -R www-data:www-data /var/www
+
+# --- produzione (ultimo stage = default) ---
+FROM app AS prod
+
+RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY --from=vendor /var/www/vendor vendor
+ENV YII_ENV=prod YII_DEBUG=0
+# codice di proprieta root; scrivibili da Apache solo runtime, asset pubblicati e log
+RUN chown -R www-data:www-data /var/www/runtime /var/www/html/assets /var/www/logs

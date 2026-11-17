@@ -5,7 +5,7 @@ $db = require __DIR__ . '/db.php';
 
 $config = [
     'id' => 'Poa Wallet',
-    'name' => 'Poa Wallet',
+    'name' => 'Napay Wallet',
     'language' => 'it-IT', //
     'bootstrap' => ['log'],
     'basePath' => dirname(__DIR__),
@@ -34,6 +34,9 @@ $config = [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
+        'errorHandler' => [
+            'class' => app\components\errors\ConsoleErrorHandler::class,
+        ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
@@ -61,6 +64,11 @@ if (YII_ENV_DEV) {
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
     ];
+}
+
+$redis = require __DIR__ . '/redis.php';
+if ($redis !== null) {
+    $config['components']['redis'] = $redis;
 }
 
 return $config;

@@ -43,50 +43,24 @@ $this->registerJs(
     'deleting'
 );
 ?>
-<!-- <div class="form-divider"></div> -->
-<div class="dash-balance ">
-    <div class="dash-content relative">
-		<h3 class="w-text"><?= Yii::t('app','Notifications list');?></h3>
-	</div>
-    <p class="float-right">
-        <?php
-        if ($dataProvider->totalCount >0) { ?>
-            <?= Html::button(Yii::t('app', 'Delete'), [
-                'class' => 'btn btn-danger btn-delete',
-            ]) ?>
-        <?php } ?>
-
-    </p>
-
-    <section class="mb-2">
-
-
-        <?= GridView::widget([
-            'dataProvider' => $dataProvider,
-            'id' => 'notifications-form',
-            // 'filterModel' => $searchModel,
-            // 'showHeader'=> false,
-            'tableOptions' => ['class' => 'table-96 table table-sm mb-3 ml-1 mr-1'],
-            'columns' => [
-                [
-                    'class' => 'yii\grid\CheckboxColumn',
-                    'name' => 'id',
-                    // 'header' => 'Select all',
-                ],
-                [
-                   'attribute'=>'',
-                   'format' => 'raw',
-                   'class' => 'yii\grid\DataColumn', // can be omitted, as it is the default
-                   'value' => function ($data) {
-                      return app\components\WebApp::showMessagesRow($data);
-                   },
-                ],
-            ],
-        ]); ?>
-
-        <div class="form-divider"></div>
-        <div class="form-divider"></div>
-    </section>
-
-
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"><?= Html::encode(Yii::t('app', 'Notifications list')) ?></h2>
+        <?php if ($dataProvider->totalCount > 0): ?>
+            <div class="card-actions"><?= Html::button('<i class="far fa-trash-alt me-1" aria-hidden="true"></i>' . Html::encode(Yii::t('app', 'Delete')), ['class' => 'btn btn-sm btn-outline-danger btn-delete']) ?></div>
+        <?php endif ?>
+    </div>
+    <?= GridView::widget([
+        'dataProvider' => $dataProvider,
+        'id' => 'notifications-form',
+        'showHeader' => false,
+        'layout' => "{items}\n<div class=\"card-footer d-flex justify-content-center\">{pager}</div>",
+        'emptyText' => Yii::t('app', 'No notifications.'),
+        'emptyTextOptions' => ['class' => 'text-secondary text-center py-4'],
+        'tableOptions' => ['class' => 'table-96 table wallet-tx-table table-vcenter mb-0'],
+        'columns' => [
+            ['class' => 'yii\grid\CheckboxColumn', 'name' => 'id', 'contentOptions' => ['class' => 'ps-3 w-1'], 'checkboxOptions' => ['class' => 'form-check-input']],
+            ['format' => 'raw', 'value' => static fn($data) => app\components\WebApp::showMessagesRow($data)],
+        ],
+    ]) ?>
 </div>

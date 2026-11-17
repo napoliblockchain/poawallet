@@ -34,3 +34,9 @@ tests/_support/_generated
 
 # encryption file
 encrypt.json
+
+# ws-notify node modules
+ws-notify/node_modules/
+
+# configurazione ambiente (segreti)
+/.env

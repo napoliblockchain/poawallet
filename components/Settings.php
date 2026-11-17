@@ -7,17 +7,9 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
-
-use yii\base\Model;
-use yii\data\ActiveDataProvider;
-use yii\db\ActiveRecord;
 
 use app\models\Owner;
-use app\models\Blockchains;
-use app\models\Vapid;
 use app\models\Host;
-use app\models\Nodes;
 
 class Settings extends Component
 {
@@ -26,29 +18,25 @@ class Settings extends Component
         return Owner::findOne(1);
     }
 
-
     // questa funziona ora assume come valore lo user id 
+    /**
+     * Rete e token del wallet (SIP-032): uguali per tutti gli utenti, dalle variabili d'ambiente (ChainConfig).
+     * Il parametro resta per compatibilità con i chiamanti.
+     */
     public static function poa($user_id = 0){
-        // postman FIX
-        if (Yii::$app->user->id == null) {
-            $user_id = 1;
-        } 
-		// echo '<pre>' . print_r($user_id, true) . '</pre>';
-		// exit;
-
-        if ($user_id != 0) {
-            $node = Nodes::find()->where(['id_user'=> $user_id])->one();
-        } else {
-            $node = Nodes::find()->where(['id_user'=> Yii::$app->user->id])->one();
-        }
-
-        // echo '<pre>' . print_r($node, true) . '</pre>';
-		// exit;
-        return $node;
+        return ChainConfig::get();
     }
 
+    /**
+     * chiavi VAPID per le notifiche push, da variabili d'ambiente
+     * @return object|null public_key / private_key / subject, null se non configurate (push disattivate)
+     */
     public static function vapid(){
-        return Vapid::findOne(1);
+        $vapid = Yii::$app->params['vapid'] ?? [];
+        if (empty($vapid['public_key']) || empty($vapid['private_key'])) {
+            return null;
+        }
+        return (object) $vapid;
     }
 
     public static function host(){

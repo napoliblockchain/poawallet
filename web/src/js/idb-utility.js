@@ -221,7 +221,7 @@ function checkPendingTransactions(){
 			postData.append('id', dt.id);
 			postData.append('pending', true);
 
-			fetch('index.php?r=send/validate-transaction', {
+			fetch('/send/validate-transaction', {
 				method: 'POST',
 				body: postData,
 			})

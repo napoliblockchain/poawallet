@@ -7,7 +7,7 @@ $options = [
     // 'invalidSeedMessage' => Yii::t('app','Invalid seed!'),
     // 'invalidSeed12Word' => Yii::t('app','Seed hasn\'t 12 words! Words inserted are: '),
     // 'validSeedMessage' => Yii::t('app','Seed is correct!'),
-    'spinner' => '<div class="button-spinner spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
+    'spinner' => '<div class="button-spinner spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
     'baseUrl' => Yii::$app->request->baseUrl,
     'language' => Yii::$app->language,
     'cryptURL' => Url::to(['/wallet/crypt']),
@@ -31,31 +31,94 @@ $(function () {
     var wizardForm = document.querySelector('#wizard-form');
     var submitButton = document.querySelector('.seed-submit');
 
-    var logoutButton = document.querySelector('.site-logout');
-
-    logoutButton.addEventListener('click', function(event){
-        event.preventDefault();
-        event.stopPropagation();
-
-        console.log('logout');
-        $("#form-logout").submit();
-
-
-    });
+    // nuove chiavi: mostra le 12 parole e ne fa riscrivere 3 a caso; il wallet si crea solo dopo la verifica
+    var panels = {
+        choice: document.querySelector('[data-seed-choice]'),
+        backup: document.querySelector('[data-seed-backup]'),
+        check: document.querySelector('[data-seed-check]'),
+    };
+    var asked = [];
+    function showPanel(name) {
+        Object.keys(panels).forEach(function (key) { panels[key].hidden = key !== name; });
+    }
+    function pickWords(count, total) {
+        var picked = [];
+        var random = new Uint32Array(1);
+        while (picked.length < count) {
+            window.crypto.getRandomValues(random);
+            var index = random[0] % total;
+            if (picked.indexOf(index) === -1) picked.push(index);
+        }
+        return picked.sort(function (a, b) { return a - b; });
+    }
 
     submitButton.addEventListener('click', function(event){
         event.preventDefault();
         event.stopPropagation();
+        if (submitButton.disabled) return;
+        submitButton.disabled = true;
 
-        $('#js-newseed-btn-text').html(yiiOptions.spinner);
-
-        newWallet().then( function(seed) {
-            // password per criptare il seed
-            var password = generateEntropy(64);
-
-            console.log('[Restore]: seed valido', seed);
-            initializeVault(password,seed);
+        newWallet().then(function (generated) {
+            var list = document.querySelector('[data-seed-words]');
+            list.textContent = '';
+            generated.split(' ').forEach(function (word) {
+                var item = document.createElement('li');
+                item.textContent = word;
+                list.appendChild(item);
+            });
+            showPanel('backup');
         });
+    });
+
+    document.querySelector('[data-seed-written]').addEventListener('click', function () {
+        var words = seed.split(' ');
+        asked = pickWords(3, words.length);
+        var fields = document.querySelector('[data-seed-check-fields]');
+        var label = document.querySelector('[data-seed-field-label]').innerHTML;
+        fields.textContent = '';
+        asked.forEach(function (index) {
+            var id = 'seed-check-' + index;
+            var group = document.createElement('div');
+            group.className = 'mb-3';
+            var caption = document.createElement('label');
+            caption.className = 'form-label';
+            caption.htmlFor = id;
+            caption.textContent = $('<div>').html(label).text().replace('__N__', String(index + 1));
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.id = id;
+            input.className = 'form-control no-copypaste';
+            input.autocomplete = 'off';
+            input.spellcheck = false;
+            input.setAttribute('autocapitalize', 'none');
+            input.dataset.seedIndex = String(index);
+            group.appendChild(caption);
+            group.appendChild(input);
+            fields.appendChild(group);
+        });
+        document.querySelector('[data-seed-check-error]').hidden = true;
+        showPanel('check');
+        fields.querySelector('input').focus();
+    });
+
+    document.querySelector('[data-seed-show]').addEventListener('click', function () { showPanel('backup'); });
+
+    document.querySelector('[data-seed-confirm]').addEventListener('click', function (event) {
+        var button = event.currentTarget;
+        var words = seed.split(' ');
+        var ok = Array.prototype.every.call(document.querySelectorAll('[data-seed-index]'), function (input) {
+            return input.value.trim().toLowerCase() === words[Number(input.dataset.seedIndex)];
+        });
+        if (!ok) {
+            document.querySelector('[data-seed-check-error]').hidden = false;
+            return;
+        }
+        if (button.disabled) return;
+        button.disabled = true;
+        button.innerHTML = yiiOptions.spinner;
+        // password per criptare il seed
+        var password = generateEntropy(64);
+        initializeVault(password, seed);
     });
 
 
@@ -116,16 +179,12 @@ $(function () {
         							prv_php 	: CryptoJS.AES.encrypt(JSON.stringify(prv_key), password, {format: CryptoJSAesJson}).toString(),
         							prv_pas		: pwd_crypted,
         						};
-                                console.log('[Restore]: seed: ', seed);
-                                console.log('[Restore]: prv_key: ', prv_key);
                                 console.log('[Restore]: address: ', address);
-        						console.log('[Restore]: address and key in post: ', walletPost);
 
                                 clearAllData('wallet')
                                 .then(function () {
                                     writeData('wallet', walletPost)
                                     .then(function() {
-                                        console.log('[Restore]: Saved wallet info in indexedDB', walletPost);
                                     })
                                     .then(function() {
                                         var seedPost = {

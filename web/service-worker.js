@@ -2,8 +2,9 @@
 importScripts('src/js/idb.js');
 importScripts('src/js/idb-utility.js');
 
-var CACHE_STATIC_NAME = 'poawallet-static-014';
-var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-014';
+// cambiare la versione a ogni modifica di file statici senza ?v= (es. web worker): svuota le cache vecchie
+var CACHE_STATIC_NAME = 'poawallet-static-024';
+var CACHE_DYNAMIC_NAME = 'poawallet-dynamic-024';
 
 var OFFLINE_URL = 'offline.html';
 
@@ -12,27 +13,14 @@ var STATIC_FILES = [
 	OFFLINE_URL,
 	'manifest.json',
 	'favicon.ico',
-	'css/global.style.css',
-	'css/img/content/coin5.png',
-	'css/img/content/dash-bg.png',
-	'css/img/content/icons/2.png',
-	'css/img/content/icons/5.png',
+	'brand/icon.svg',
+	'brand/icon-192.png',
 	'css/pincode.css',
-	'css/site.css',
-	'css/yiipager.css',
 
 	'js/global.script.js',
 	'js/clipboard-copy.js',
-	'js/ws-websocket.js',
-	'js/web-workers/eth-tx.js',
-
-	// search latest transactions
-	'js/ws-latest.js',
-	'js/web-workers/latestWorker.js',
-
-	// manage notifications
+	'js/wallet-sync.js',
 	'js/notifications-MainWorker.js',
-	'js/web-workers/notificationsWorker.js',
 
 	'js/pincode/pincode-global.js',
 	'js/pincode/pincode-settings.js',
@@ -94,12 +82,15 @@ self.addEventListener('message', function (event) {
 self.addEventListener('install', function (event) {
 	//console.log('[Service Worker] Installing Service worker...', event);
 	console.log('[Service Worker] Installing Service worker...');
+	// la nuova versione sostituisce subito la precedente (che può avere in cache file vecchi): activate svuota le cache
+	self.skipWaiting();
 	event.waitUntil(
 		//versioning della cache. Per aggiornare le versioni del software
 		caches.open(CACHE_STATIC_NAME)
 			.then(function(cache){
 				console.log('[Service Worker] Precaching app shell...');
-				cache.addAll(STATIC_FILES);
+				// dalla rete, mai dalla cache HTTP del browser (che può avere ancora i worker vecchi)
+				return cache.addAll(STATIC_FILES.map(function (url) { return new Request(url, {cache: 'reload'}); }));
 			})
 	)
 });
@@ -120,89 +111,35 @@ self.addEventListener('activate', function (event) {
 	return self.clients.claim();
 });
 
-function isInArray(string, array) {
-	for(var i = 0; i < array.length; i++) {
-		if (array[i] === string){
-			return true;
-		}
-	}
-	return false;
-}
+// Pagine e richieste dinamiche sempre dalla rete (URL puliti: niente più criterio sull'estensione .php).
+// In cache solo i file statici dello stesso sito: prima la cache, poi la rete; offline.html per le pagine senza rete.
+var STATIC_EXTENSIONS = ['css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'woff', 'woff2', 'ttf', 'mp3', 'json', 'webmanifest'];
 
-function getFileExtension(filename) {
-  return filename.split('.').pop();
-}
-
-
-
-// restituisco sempre l'originale e non carico da cache
 self.addEventListener('fetch', function (event) {
-	var parser = new URL(event.request.url);
+	var request = event.request;
+	var url = new URL(request.url);
+	if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-	if (event.request.mode === 'navigate' && navigator.onLine === false) {
-	   // Uh-oh, we navigated to a page while offline. Let's show our default page.
-	   event.respondWith(caches.match(OFFLINE_URL));
-	   return;
-
+	var accept = request.headers.get('accept') || '';
+	if (request.mode === 'navigate' || accept.includes('text/html')) {
+		event.respondWith(fetch(request).catch(function () { return caches.match(OFFLINE_URL); }));
+		return;
 	}
+	var extension = url.pathname.includes('.') ? url.pathname.split('.').pop().toLowerCase() : '';
+	if (STATIC_EXTENSIONS.indexOf(extension) === -1) return;
 
-	if (getFileExtension(parser.pathname) == 'php')
-	{
-		console.log('[SW Parser] web no-cache',parser.pathname);
-		if (getFileExtension(parser.search) == '?r=wallet/index'){
-			console.log('[SW Parser] web no-cache & wallet/index non fa nulla...',parser.search);
-			// event.respondWith(
-			// 	fetch(event.request)
-			// );
-		} else {
-			event.respondWith(
-				fetch(event.request)
-			);
-		}
-	} else if (isInArray(event.request.url, STATIC_FILES)) {
-		console.log('[SW Parser] static cache ',parser.pathname);
-		event.respondWith(
-			fetch(event.request).catch(function(){
-				return	caches.match(event.request);
-			})
-		);
-	} else {
-		console.log('[SW Parser] dynamic cache ',parser.pathname);
-		event.respondWith(
-			caches.match(event.request)
-				.then(function(response) {
-					if (response) {
-						// Inizio Fix per apache
-						if(response.redirected) {
-							return cleanResponse(response);
-						} else {
-							return response;
-						}
-						// END Fix per apache
-					} else {
-						return fetch(event.request)
-							.then(function(res) {
-								return caches.open(CACHE_DYNAMIC_NAME)
-									.then(function(cache) {
-										//trimCache(CACHE_DYNAMIC_NAME, 20);
-										cache.put(event.request.url, res.clone());
-										return res;
-									})
-							}).
-							catch(function(err) {
-								return caches.open(CACHE_STATIC_NAME)
-									.then(function(cache) {
-										if (event.request.headers.get('accept').includes('text/html')){
-											return cache.match(OFFLINE_URL);
-										}
-									})
-							});
-					}
-				})
-		);
-	}
-
-
+	event.respondWith(
+		caches.match(request).then(function (cached) {
+			if (cached) return cached.redirected ? cleanResponse(cached) : cached;
+			return fetch(request).then(function (response) {
+				if (response.ok && response.type === 'basic') {
+					var copy = response.clone();
+					caches.open(CACHE_DYNAMIC_NAME).then(function (cache) { cache.put(request, copy); });
+				}
+				return response;
+			});
+		})
+	);
 });
 
 

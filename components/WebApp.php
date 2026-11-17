@@ -3,18 +3,10 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
 
-use yii\base\Model;
-use yii\db\ActiveRecord;
-use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\helpers\Json;
-use yii\helpers\Url;
-use yii\httpclient\Client;
 
-use app\models\Nodes;
-use app\models\Blockchains;
 use app\models\Notifications;
 
 class WebApp extends Component
@@ -24,41 +16,6 @@ class WebApp extends Component
     //  * @return nodeurl
     //  */
     // public static function getPoaNode($blockchain_id = 1)
-    // {
-    //     $blockchain = Blockchains::findOne($blockchain_id);
-    //     // $nodes = $blockchain->nodes;
-    //     //
-    //     // $nodelist = ArrayHelper::map(
-    //     //     $nodes,
-    //     //     'id_node',
-    //     //     function ($item, $defaultValue) {
-    //     //         return $item->url . ':' . $item->port;
-    //     //     }
-    //     // );
-    //     //
-    //     // $isdown = true;
-    //     // shuffle($nodelist);
-    //     // do {
-    //     //     $node = array_shift($nodelist);
-    //     //
-    //     //     if (empty($node)){
-    //     //         return false;
-    //     //     }
-    //     //
-    //     //     if( self::checkUrl( $node ) ) {
-    //     //         $isdown = false;
-    //     //     }
-    //     // } while ($isdown);
-    //
-    //     // return $node;
-    //
-    //     if( self::checkUrl( $blockchain->url ) ) {
-    //         return false;
-    //     }
-    //     // echo $blockchain->url;
-    //     // exit;
-    //     return $blockchain->url;
-    // }
     /**
 	 * PHP/cURL function to check a web site status. If HTTP status is not 200 or 302, or
 	 * the requests takes longer than 1 seconds, the website is unreachable.
@@ -92,20 +49,7 @@ class WebApp extends Component
 	}
 
     // public static function checkUrl($url) {
-    //     $client = new Client();
-    //
-    //     $request = $client->createRequest()
-    //         ->setMethod('GET')
-    //         ->setUrl($url)
-    //         ->setOptions([
-    //             'timeout' => 1, // set timeout to 1 seconds for the case server is not responding
-    //         ])
-    //         ->send();
-    //
-    //     return $request->getisOk();
-    // }
-
-	private function si_classifier($val){
+	private static function si_classifier($val){
 		$suffixes = [
 			24 => [
 					'long_suffix' => 'yotta',
@@ -198,9 +142,8 @@ class WebApp extends Component
 		return $suffixes[$exponent] ?? null;
 	}
 
-
 	// Best shortens a number and attaches K, M, B, etc. accordingly
-	public function si_formatter($number, $style = 'short'){
+	public static function si_formatter($number, $style = 'short'){
 		$classifier = self::si_classifier($number);
 		if ($classifier === null){
 			# Don't know how to classify this value
@@ -218,9 +161,6 @@ class WebApp extends Component
 
 	// Shortens a number and attaches K, M, B, etc. accordingly
     // public function number_shorten($number, $precision = 3, $divisors = null) {
-    //     // Setup default $divisors if not provided
-    //     if (!isset($divisors)) {
-    //         $divisors = array(
 	// 			pow(1000, -4) => 'p', // 0.000000000001 pico
 	// 			pow(1000, -3) => 'n', // 0.000000001 nano
 	// 			pow(1000, -2) => 'µ', // 0.000001 micro
@@ -234,21 +174,6 @@ class WebApp extends Component
     //             pow(1000, 6) => 'E',// Yii::t('app','Quintillion'), // Exa - Quintillion
     //             gmp_strval('1000000000000000000000') => 'Z', //Yii::t('app','Sextillion'), // Sextillion
     //             gmp_strval('1000000000000000000000000') => 'Y', //Yii::t('app','Septillion'), // Septillion
-    //         );
-    //     }
-	//
-    //     // Loop through each $divisor and find the
-    //     // lowest amount that matches
-    //     foreach ($divisors as $divisor => $shorthand) {
-    //         if (abs($number) < ($divisor * 1000)) {
-    //             // We found a match!
-    //             break;
-    //         }
-    //     }
-    //     // We found our match, or there were no matches.
-    //     // Either way, use the last defined value for $divisor.
-    //     return round(number_format($number / $divisor, $precision),$precision) .' '. $shorthand;
-    // }
 
     /**
      * funzione che crypta un testo
@@ -257,124 +182,116 @@ class WebApp extends Component
      */
 
     public static function encrypt($data) {
-        return strtr(self::enc($data,  hash( 'sha256', self::secretFromFile('secret_key') )), '', '');
+        return strtr(self::enc($data,  hash( 'sha256', self::encryptionSecret('secret_key') )), '', '');
     }
 
     public static function decrypt($data) {
-        return strtr(self::dec($data,  hash( 'sha256', self::secretFromFile('secret_key') )), '', '');
+        return strtr(self::dec($data,  hash( 'sha256', self::encryptionSecret('secret_key') )), '', '');
+    }
+
+    /**
+     * cifra un valore legandolo all'utente: solo lo stesso utente potra decifrarlo
+     * @return string formato "v2." + testo cifrato
+     */
+    public static function encryptForUser($value, int $userId): string
+    {
+        return 'v2.' . self::encrypt(Json::encode(['u' => $userId, 'v' => (string) $value]));
+    }
+
+    /**
+     * decifra un valore solo se appartiene all'utente indicato
+     * Formato precedente (non legato all'utente) accettato solo se params['crypto.acceptLegacy'] e true,
+     * per migrare i dati gia salvati nei browser.
+     * @return array|null ['value' => string, 'legacy' => bool], null se non valido o di un altro utente
+     */
+    public static function decryptForUser($data, int $userId): ?array
+    {
+        if (!is_string($data) || $data === '') {
+            return null;
+        }
+        if (strncmp($data, 'v2.', 3) === 0) {
+            $plain = self::decrypt(substr($data, 3));
+            $payload = is_string($plain) ? json_decode($plain, true) : null;
+            if (!is_array($payload) || !isset($payload['u'], $payload['v']) || (int) $payload['u'] !== $userId) {
+                return null;
+            }
+            return ['value' => (string) $payload['v'], 'legacy' => false];
+        }
+        if (empty(Yii::$app->params['crypto.acceptLegacy'])) {
+            return null;
+        }
+        $plain = self::decrypt($data);
+        if (!is_string($plain) || $plain === '') {
+            return null;
+        }
+        return ['value' => $plain, 'legacy' => true];
     }
 
     /**
      * Metodi privati della classe
      */
     private static function enc($data, $key) {
-        return base64_encode( openssl_encrypt( $data, self::secretFromFile('encrypt_method'), $key, 0, substr( hash( 'sha256', self::secretFromFile('secret_iv') ), 0, 16 ) ) );
+        return base64_encode( openssl_encrypt( $data, self::encryptionSecret('encrypt_method'), $key, 0, substr( hash( 'sha256', self::encryptionSecret('secret_iv') ), 0, 16 ) ) );
     }
 
     private static function dec($data, $key) {
-        return openssl_decrypt( base64_decode( $data ), self::secretFromFile('encrypt_method'), $key, 0, substr( hash( 'sha256', self::secretFromFile('secret_iv') ), 0, 16 ) );
+        return openssl_decrypt( base64_decode( $data ), self::encryptionSecret('encrypt_method'), $key, 0, substr( hash( 'sha256', self::encryptionSecret('secret_iv') ), 0, 16 ) );
     }
 
     /**
-     * questa funzione prova a caricare il secret_key e secret_iv dalla directory corrente in un file
+     * legge secret_key, secret_iv o encrypt_method dai params (variabili d'ambiente ENCRYPT_*)
      * @param $key la chiave da leggere
      * @return restituisce la chiave letta
      */
-    private static function secretFromFile($key)
+    private static function encryptionSecret($key)
     {
-        $file = Yii::$app->params['encryptionFile'];
+        $value = Yii::$app->params['encryption'][$key] ?? '';
 
-        if (file_exists($file) === false) {
-            echo "Unable to load config from: " . $file . PHP_EOL;
-            echo "Detected no SECRET KEY or SECRET IV, all signed requests will fail" . PHP_EOL;
-            die;
+        if ($value === '' || $value === null) {
+            throw new \RuntimeException('Missing encryption configuration: ' . $key);
         }
-        $contents = Json::decode(file_get_contents($file));
 
-        return isset($contents[$key]) ? $contents[$key] : "";
+        return $value;
     }
 
-    public static function showTransactionRow($data, $fromAddress,$newTransaction=false,$status=null){
-        $dateLN = date("d M `y",$data->invoice_timestamp);
-        $timeLN = date("H:i:s",$data->invoice_timestamp);
+    /** Saldo token da unità minime a decimale leggibile (es. 1234 con 2 decimali -> 12,34). */
+    public static function tokenAmount($units, int $decimals): string
+    {
+        return Yii::$app->formatter->asDecimal($units / (10 ** $decimals), null,
+            [\NumberFormatter::MIN_FRACTION_DIGITS => 0, \NumberFormatter::MAX_FRACTION_DIGITS => $decimals]);
+    }
 
-        if ($data->from_address == $fromAddress){
-        //   $price = '- '.self::si_formatter($data->token_price);
-        $price = '- '. Yii::$app->formatter->asDecimal(
-                $data->token_price
-            );
-          $color = 'red';
-          $addressToShow = $data->to_address;
-          $coinImg = 'fa-arrow-up text-danger';
-          $recipient = Yii::t('app','To: ');
-        } else {
-            //   $price = self::si_formatter($data->token_price);
-            $price = Yii::$app->formatter->asDecimal(
-                $data->token_price
-            );
-          $color = 'green';
-          $addressToShow = $data->from_address;
-          $coinImg = 'fa-arrow-down text-success';
-          $recipient = Yii::t('app','From: ');
+    /**
+     * Riga di una transazione (elenchi, pagina invio, aggiornamenti di wallet-sync.js).
+     * Indirizzi, simbolo, stato e messaggio arrivano da dati utente o dalla chain: sempre codificati.
+     */
+    public static function showTransactionRow($data, $fromAddress, $newTransaction = false, $status = null)
+    {
+        // indirizzi minuscoli o con checksum EIP-55 (righe dell'indicizzatore): confronto senza maiuscole
+        $outgoing = strcasecmp((string) $data->from_address, (string) $fromAddress) === 0;
+        $amount = Yii::$app->formatter->asDecimal($data->token_price);
+        if ($data->status == 'new' && $data->txhash != '') {
+            $data->status = 'pending';
+            $status = true;
         }
-        // $coinImg = ($data->type == 'token') ? 'coin5' : 'coin2';
-
-        $classStatus = ($data->status == 'complete') ? 'bg-success' : 'bg-secondary';
-        $newTxClass = ($newTransaction == true) ? 'bg-newtransaction' : '';
-
-		if ($data->status == 'new' && $data->txhash != ''){
-			$data->status = 'pending';
-			$status = true;
-		}
-
-        $line = '
-        <a href="index.php?r=transactions/view&id='. self::encrypt($data->id) . '" />
-        <div class="container-fluid m-0 p-0">
-              <div class="row d-flex justify-content-center">
-                  <div class="col-11 m-0 p-0">
-                      <div class="card shadow">
-                          <div class="transaction-card-horizontal '.$newTxClass.'">
-                              <div class="img-square-wrapper ">
-                                  <i class="pt-2 px-1 fas fa-2x '.$coinImg.'"></i>
-                              </div>
-                              <div class="transaction-card-body ml-1 mb-0">
-                                  <span class="card-title">
-                                    <small class="pt-1 d-inline-block text-truncate" style="max-width: 150px;">'.$recipient.$addressToShow.'</small>
-                                  </span>
-                                  <p class="card-text">
-                                  <small class="text-muted">'.$dateLN.' <span class="ml-10">'.$timeLN.'</span></small>
-                                  </p>
-                              </div>
-
-                              <div class="alert p-1 m-2">
-                                  <span class="mb-0 txt-'.$color.'">'.$price.'
-									  <small class="ml-1">
-									  	'.$data->smartContract->symbol.'
-									  </small>
-								  </span>
-								  ';
-		if ($status !== null){
-			$line .= '			</br>
-								<div class="d-flex justify-content-center">
-								<small class="text-light text-capitalize text-center pl-2 pr-2 '.$classStatus.'" id="transaction-status-'
-								.self::encrypt($data->id).'">'.$data->status.'</small>
-								</div>
-								';
-		}
-        $line .=             '</div>
-                      </div>';
-
-				          ($data->message != "")
-                          ?  $line .= '<small class="mx-2 alert alert-info d-inline-block text-truncate" style="max-width: 330px;">'.$data->message.'</small>'
-                          :  $line .= '';
-                          $line .= '
-                      </div>
-                  </div>
-              </div>
-          </div>
-          </a>
-          ';
-         return $line;
+        $counterpart = $outgoing ? $data->to_address : $data->from_address;
+        $label = $outgoing ? Yii::t('app', 'To: ') : Yii::t('app', 'From: ');
+        $meta = Html::encode(Yii::$app->formatter->asDatetime((int) $data->invoice_timestamp, 'php:d/m/Y H:i'));
+        if ($status !== null) {
+            $meta .= ' <span class="badge ' . ($data->status == 'complete' ? 'bg-success-lt' : 'bg-secondary-lt') . ' text-capitalize ms-1" id="transaction-status-'
+                . self::encrypt($data->id) . '">' . Html::encode($data->status) . '</span>';
+        }
+        $message = $data->message != '' ? '<div class="small text-secondary text-truncate"><i class="far fa-comment me-1" aria-hidden="true"></i>' . Html::encode($data->message) . '</div>' : '';
+        return Html::a(
+            '<span class="wallet-tx-icon"><i class="fas ' . ($outgoing ? 'fa-arrow-up' : 'fa-arrow-down') . '" aria-hidden="true"></i></span>'
+            // indirizzo accorciato come sul POS (inizio…fine), completo al passaggio del mouse
+            . '<span class="wallet-tx-body"><span class="d-block text-truncate" title="' . Html::encode($counterpart) . '">'
+            . Html::encode($label . (strlen((string) $counterpart) > 24 ? substr($counterpart, 0, 12) . '…' . substr($counterpart, -10) : $counterpart)) . '</span>'
+            . '<span class="d-block small text-secondary">' . $meta . '</span>' . $message . '</span>'
+            . '<span class="wallet-tx-amount">' . ($outgoing ? '&minus; ' : '+ ') . Html::encode($amount) . ' <small>' . Html::encode(ChainConfig::tokenSymbol()) . '</small></span>',
+            ['/transactions/view', 'id' => self::encrypt($data->id)],
+            ['class' => 'wallet-tx ' . ($outgoing ? 'wallet-tx-out' : 'wallet-tx-in') . ($newTransaction ? ' bg-newtransaction' : '')]
+        );
     }
 
     public static function Icon($type_notification,$type_transaction=null){
@@ -388,10 +305,6 @@ class WebApp extends Component
                     $zmdicon = 'fa fa-exclamation';
                     break;
 
-
-            // case 'fattura':
-            //     $zmdicon = 'zmdi zmdi-collection-pdf';
-            //     break;
             case 'invoice':
                 $zmdicon = 'fab fa-btc';
                 break;
@@ -404,34 +317,14 @@ class WebApp extends Component
                     $zmdicon = 'fab fa-ethereum';
                     break;
 
-            // case 'withdraw':
-            //     $zmdicon = 'zmdi zmdi-balance';
-            //     break;
-
-            // case 'deposit':
-            //     $zmdicon = 'fa fa-eur';
-            //     break;
-
             case  'contact':
               $zmdicon = 'fa fa-users';
               break;
 
-
             case 'new':
             case 'complete':
-            // case 'paid':
-            // case 'confirmed':
-            // case 'invoice':
               $zmdicon = 'fa fa-star';
-                // $zmdicon = 'fab fa-btc';
                 break;
-
-
-            // case 'expired':
-            // case 'invalid':
-            // case 'failed':
-            //     $zmdicon = 'fa fa-exclamation';
-            //     break;
 
             default:
                 $zmdicon = 'fa fa-info';
@@ -497,56 +390,22 @@ class WebApp extends Component
 		return ($sent == 'sent' ? '<h5 class="text-warning">-' : '<h5 class="text-success">+') . $price . '</h5>';
 	}
 
-    public static function showMessagesRow($item){
+    /** Riga di una notifica (elenco messaggi): testo e link codificati; vecchi link index.php?r= resi assoluti. */
+    public static function showMessagesRow($item)
+    {
         $data = Notifications::findOne($item->id_notification);
-        // return print_r($data,true);
-
-        $dateLN = date("d M `y",$data->timestamp);
-        $timeLN = date("H:i:s",$data->timestamp);
-
-        $notifi__icon = self::Icon(
-            (strpos($data->description,'token') !== false ? 'token' : $data->type )
+        if ($data === null) return '';
+        $icon = self::Icon(strpos((string) $data->description, 'token') !== false ? 'token' : $data->type);
+        $url = (string) $data->url;
+        if (str_starts_with($url, 'index.php')) $url = '/' . $url;
+        $badge = ['complete' => 'bg-success-lt', 'expired' => 'bg-warning-lt'][$data->status] ?? 'bg-secondary-lt';
+        return Html::a(
+            '<span class="wallet-tx-icon bg-primary-lt text-primary"><i class="' . Html::encode($icon) . '" aria-hidden="true"></i></span>'
+            . '<span class="wallet-tx-body"><span class="d-block text-break">' . Html::encode(Yii::t('app', (string) $data->description)) . '</span>'
+            . '<span class="d-block small text-secondary">' . Html::encode(Yii::$app->formatter->asDatetime((int) $data->timestamp, 'php:d/m/Y H:i'))
+            . ($data->status ? ' <span class="badge ' . $badge . ' text-capitalize ms-1">' . Html::encode($data->status) . '</span>' : '') . '</span></span>',
+            preg_match('~^(/|https?://)~i', $url) ? $url : '#',
+            ['class' => 'wallet-tx']
         );
-
-        switch ($data->status){
-            case 'complete':
-                $classStatus = 'bg-success';
-                break;
-            case 'expired':
-                $classStatus = 'bg-warning';
-                break;
-
-            default:
-                $classStatus = 'bg-secondary';
-        }
-
-        // $classStatus = ($data->status == 'complete') ? 'bg-success' : ($data->status == 'expired') ? 'bg-warning' : 'bg-secondary';
-
-        $line = '
-        <a href="'.$data->url.'" />
-        <div class="container-fluid m-0 p-0">
-              <div class="row ml-0">
-                  <div class="col-11 m-0 p-0">
-                      <div class="card shadow">
-                          <div class=" d-flex d-flex-grow">
-
-                              <div class="transaction-card-body ml-1">
-                                  <h6 class="card-title pt-2 text-break">'.$data->description.'</h6>
-
-                              </div>
-
-
-                          </div>
-						  <p class="text-right card-text">
-						  	<small class="mr-2 text-muted">'.$dateLN.' <span class="ml-10">'.$timeLN.'</span></small>
-						  </p>
-
-                      </div>
-                  </div>
-              </div>
-          </div>
-          </a>
-          ';
-         return $line;
     }
 }

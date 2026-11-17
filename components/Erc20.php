@@ -3,21 +3,15 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
 
-use yii\web\Response;
 use yii\web\HttpException;
 use yii\helpers\Json;
 
-use app\models\MPWallets;
-use app\models\ContractType;
 
 use Web3\Web3;
 use Web3\Contract;
 use Web3\Providers\HttpProvider;
-use Web3\RequestManagers\HttpRequestManager;
-use Web3p\EthereumTx\Transaction;
-use Nullix\CryptoJsAes\CryptoJsAes;
+use kornrunner\Ethereum\Transaction;
 
 use app\components\Settings;
 // use app\components\WebApp;
@@ -108,6 +102,23 @@ class Erc20 extends Component
     }
 
 
+    /**
+     * Riferimento di una richiesta di pagamento Napay (QR con messaggio `napay:` + 32 esadecimali), accodato ai dati
+     * di `transfer`: il contratto lo ignora, Napay lo legge dalla transazione per abbinare il pagamento.
+     * @return string|null i 32 esadecimali, null se il messaggio non e un riferimento Napay
+     */
+    public static function napayReference($memo): ?string
+    {
+        return is_string($memo) && preg_match('/^napay:([0-9a-f]{32})$/D', $memo, $match) === 1 ? $match[1] : null;
+    }
+
+    private static function paymentReference($reference): string
+    {
+        if ($reference === null) return '';
+        if (!is_string($reference) || preg_match('/^[0-9a-f]{32}$/D', $reference) !== 1) throw new \InvalidArgumentException('invalid_payment_reference');
+        return $reference;
+    }
+
     // sign and send a raw token transaction
     public function sendToken($item)
     {
@@ -116,7 +127,7 @@ class Erc20 extends Component
         $settings = Settings::poa($this->user_id);
 
         //$web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
         // trasforma amount in valore wei
         $contractAmount = $this->toAmountForContract($tx->amount, $settings->smartContract->decimals);
@@ -134,18 +145,15 @@ class Erc20 extends Component
             'amount' => self::Encode("uint", $contractAmount), //$amount l'ammontare della transazione (da moltiplicare per 10^2)
         ];
 
-        $transaction = new Transaction([
-            'nonce' => '0x'.dechex($tx->nonce), //è un object BigInteger
-            'from' => $tx->from, //indirizzo commerciante
+        // gas: se supera 0x200b20 va in errore gas exceed limit
+        $signed_transaction = self::signTransaction([
+            'nonce' => $tx->nonce,
             'to' => $tx->contractAddress, //indirizzo contratto
-            'gas' => $tx->gas, // $gas se supera l'importo 0x200b20 va in eerrore gas exceed limit !!!!!!
-            'gasPrice' => $tx->gasPrice, // gasPrice giusto?
+            'gas' => $tx->gas,
+            'gasPrice' => $tx->gasPrice,
             'value' => $tx->value,
-            'chainId' => $tx->chainId,
-            'data' =>  $data_tx['selector'] . $data_tx['address'] . $data_tx['amount'],
-        ]);
-        $transaction->offsetSet('chainId', $tx->chainId);
-        $signed_transaction = $transaction->sign($tx->decryptedSign); // la chiave derivata da json js AES to PHP
+            'data' => $data_tx['selector'] . $data_tx['address'] . $data_tx['amount'] . self::paymentReference($tx->reference ?? null),
+        ], $tx->decryptedSign, (int) $tx->chainId); // la chiave derivata da json js AES to PHP
 
     	$response = null;
         $web3->eth->sendRawTransaction(sprintf('0x%s', $signed_transaction), function ($err, $tx) use (&$response){
@@ -172,7 +180,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
     	$response = null;
 		$web3->eth->getTransactionCount($address, function ($err, $nonce) use (&$response) {
@@ -198,7 +206,7 @@ class Erc20 extends Component
         // exit;
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
         // echo '<pre>'.print_r($settings,true).'</pre>';
         // exit;
@@ -254,7 +262,7 @@ class Erc20 extends Component
     public function gasBalance($address)
     {
         $settings = Settings::poa();
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
         //recupero il balance
         $balance = 0;
@@ -289,7 +297,7 @@ class Erc20 extends Component
         // exit;
 
         // $web3 = new Web3($url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($url)));
+        $web3 = new Web3(new HttpProvider($url));
 
 
         // echo 'set web3!';
@@ -316,7 +324,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
 		$contract = new Contract($web3->provider, $settings->smartContract->contractType->smart_contract_abi);
 
@@ -334,7 +342,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
 
 		$response = null;
         $web3->eth->getBlockByHash($hash, true, function ($err, $block) use (&$response){
@@ -352,7 +360,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa($this->user_id);
         // $web3 = new Web3($settings->blockchain->url);
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
         $erc20abi = $settings->smartContract->contractType;
 
         // // trasforma un numero decimale in valore wei
@@ -385,28 +393,35 @@ class Erc20 extends Component
     }
 
 
-    /*
-	 * funzione che riceve il valore della transazione nello smart contract
-	 * in formato: hex (0x000000000000000000000000000000000000000000000000000000000000012c)
-	 * e la trasforma in un numero intero, più i decimali del token
-	 */
-	public function wei2eth($wei,$decimals)
-	{
-		$value = substr_replace('0x','0',$wei);
-		$array = str_split($wei);
-		$number = '';
-		$flag = false;
-		foreach($array as $digit){
-			if ($digit != '0' && $flag == false){
-				$number .= $digit;
-				$flag = true;
-			}
-			if ($flag == true)
-				$number .= $digit;
+    /** Topic dell'evento ERC-20 Transfer(address,address,uint256). */
+    public const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
-		}
-		return hexdec($number) / pow(10, $decimals);
-	}
+    /**
+     * Valore uint256 esadecimale (campo data di un log Transfer, es. 0x...04d2) in token con $decimals decimali.
+     * Conversione esatta (GMP), nessun float intermedio sugli interi grandi.
+     */
+    public static function wei2eth($wei, $decimals): float
+    {
+        if (!is_string($wei) || preg_match('/^0x[0-9a-fA-F]{1,64}$/D', $wei) !== 1 || !is_int($decimals) || $decimals < 0 || $decimals > 18) {
+            throw new \InvalidArgumentException('invalid_token_amount');
+        }
+        $units = gmp_strval(gmp_init(substr($wei, 2), 16));
+        if ($decimals === 0) return (float) $units;
+        $units = str_pad($units, $decimals + 1, '0', STR_PAD_LEFT);
+        return (float) (substr($units, 0, -$decimals) . '.' . substr($units, -$decimals));
+    }
+
+    /** Importo del Transfer del token nella ricevuta (log del contratto indicato con topic Transfer), null se assente. */
+    public static function transferAmount(object $receipt, string $tokenAddress, int $decimals): ?float
+    {
+        foreach ((array) ($receipt->logs ?? []) as $log) {
+            if (!is_object($log) || strcasecmp((string) ($log->address ?? ''), $tokenAddress) !== 0) continue;
+            $topics = (array) ($log->topics ?? []);
+            if (strtolower((string) ($topics[0] ?? '')) !== self::TRANSFER_TOPIC) continue;
+            return self::wei2eth((string) ($log->data ?? ''), $decimals);
+        }
+        return null;
+    }
 
     /* funzione per codificare il valore $value del tipo $type in hex */
 	private function Encode(string $type, $value): string {
@@ -446,7 +461,7 @@ class Erc20 extends Component
     {
         $settings = Settings::poa();
         
-        $web3 = new Web3(new HttpProvider(new HttpRequestManager($settings->blockchain->url)));
+        $web3 = new Web3(new HttpProvider($settings->blockchain->url));
         $response = null;
         
         // echo '<pre>'.print_r(self::gasBalance($address),true).'</pre>';
@@ -476,6 +491,11 @@ class Erc20 extends Component
                 return $balance;
             }
 
+            // faucet disabled when the sealer is not configured in the environment
+            if (empty($sealer_account) || empty($prv_key)) {
+                return $balance;
+            }
+
             // preparing items
             $fromAccount = $sealer_account; // sealer
             // $amount = 1;
@@ -490,19 +510,14 @@ class Erc20 extends Component
             // echo '<pre>' . print_r($fromAccount, true) . '</pre>';
             // echo '<pre>'.print_r('0x' . dechex($nonce),true).'</pre>';exit;
 
-            $transaction = new Transaction([
-                'nonce' => '0x'.dechex($nonce), //è un object BigInteger
-                'from' => $fromAccount, //indirizzo sealer Blockchain
+            $signed_transaction = self::signTransaction([
+                'nonce' => $nonce,
                 'to' => $toAccount, //indirizzo commerciante
                 'gas' => '0x200b20', // gas necessario per la transazione
-                'gasPrice' => '1000', // gasPrice giusto?
-                'value' => '0xDE0B6B3A7640000', //. $amount * pow(10, 18), equivale a 1 pow(10,18): 1000000000000000000
-                'chainId' => $settings->blockchain->chain_id,
-                'data' =>  '0x0', // non ci sono dati per contratto
-            ]);
-            $transaction->offsetSet('chainId', $settings->blockchain->chain_id);
-            // $transaction->offsetSet('nonce', '0x' . dechex($nonce));
-            $signed_transaction = $transaction->sign($prv_key); //
+                'gasPrice' => '1000', // wei
+                'value' => '0xDE0B6B3A7640000', // 1 ETH = 10^18 wei
+                'data' => '', // nessun dato per contratto
+            ], $prv_key, (int) $settings->blockchain->chain_id);
 
             // echo '<pre>' . print_r($transaction, true) . '</pre>';exit;
 
@@ -523,5 +538,37 @@ class Erc20 extends Component
 
         return self::gasBalance($address);
 
+    }
+
+    /**
+     * firma una transazione legacy EIP-155 (kornrunner/ethereum-offline-raw-tx)
+     * Valori interi: int, stringa decimale o esadecimale con 0x; gasPrice in wei.
+     * @return string transazione firmata in esadecimale senza 0x
+     */
+    private static function signTransaction(array $tx, string $privateKey, int $chainId): string
+    {
+        $transaction = new Transaction(
+            self::minimalHex($tx['nonce']),
+            self::minimalHex($tx['gasPrice']),
+            self::minimalHex($tx['gas']),
+            preg_replace('/^0x/i', '', (string) $tx['to']),
+            self::minimalHex($tx['value']),
+            preg_replace('/^0x/i', '', (string) $tx['data'])
+        );
+
+        return $transaction->getRaw(preg_replace('/^0x/i', '', trim($privateKey)), $chainId);
+    }
+
+    /**
+     * intero (int, decimale o 0x-esadecimale) in esadecimale minimo senza 0x; zero = stringa vuota
+     */
+    private static function minimalHex($value): string
+    {
+        $value = trim((string) $value);
+        $number = preg_match('/^0x/i', $value) ? gmp_init(substr($value, 2) === '' ? '0' : substr($value, 2), 16) : gmp_init($value === '' ? '0' : $value, 10);
+        if (gmp_sign($number) < 0) {
+            throw new \InvalidArgumentException('Negative transaction value');
+        }
+        return gmp_cmp($number, 0) === 0 ? '' : gmp_strval($number, 16);
     }
 }

@@ -1,42 +1,24 @@
 <?php
-use yii\helpers\Url;
-use Da\QrCode\QrCode;
-// use app\assets\NFCWriteAsset;
+
 use app\assets\ClipboardCopyAsset;
+use Com\Tecnick\Barcode\Barcode;
+use yii\helpers\Html;
 
-$this->title = Yii::$app->id;
+/* @var $this yii\web\View */
+/* @var $fromAddress string */
 
-$qrCode = (new QrCode($fromAddress))
-    ->setSize(600)
-    ->setMargin(5)
-    // ->useForegroundColor(51, 153, 255);
-    ->useForegroundColor(11, 21, 31);
-
-
-// NFCWriteAsset::register($this);
+$this->title = Yii::t('app', 'Receive');
+// QR in SVG (tc-lib-barcode, come il POS): niente immagini né GD; descrizione testuale tolta, l'indirizzo è già mostrato
+$qrSvg = preg_replace('~<desc>.*?</desc>~s', '', (new Barcode())->getBarcodeObj('QRCODE,M', $fromAddress, -6, -6, '#0b151f', [-2, -2, -2, -2])->getInlineSvgCode());
 ClipboardCopyAsset::register($this);
 ?>
-
-    <div class="dash-balance">
-
-        <div class="card text-center ">
-            <?php echo '<img style="max-width:300px;" class="rounded mx-auto mt-4 d-block" src="' . $qrCode->writeDataUri() . '">'; ?>
-            <div class="card-header">
-                <?= Yii::t('app','Click on address to copy in the clipboard') ?>
-            </div>
-          <div class="card-body nfc-write-body" style="display: none;">
-            <h5 class="card-title"><?= Yii::t('app','NFC Secure Transactions') ?></h5>
-            <button id="nfc-write-btn" class="btn btn-secondary mt-2 btn-lg btn-block">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H4V4h16v16zM18 6h-5c-1.1 0-2 .9-2 2v2.28c-.6.35-1 .98-1 1.72 0 1.1.9 2 2 2s2-.9 2-2c0-.74-.4-1.38-1-1.72V8h3v8H8V8h2V6H6v12h12V6z"/>
-                </svg><span id='nfc-write-text'><?php echo Yii::t('app','NFC receive');?></span>
-            </button>
-          </div>
-          <div class="card-footer text-muted text-break copyonClickAddress">
-            <?php echo $fromAddress; ?>
-            <input type="hidden" readonly="readonly" id="inputcopyWalletAddress" value="<?php echo $fromAddress; ?>" />
-
-          </div>
-        </div>
-
+<div class="card text-center">
+    <div class="card-body">
+        <h2 class="card-title mb-1"><?= Html::encode(Yii::t('app', 'Receive')) ?></h2>
+        <p class="text-secondary mb-3"><?= Html::encode(Yii::t('app', 'Show this code to whoever has to pay you, or share the address.')) ?></p>
+        <div class="wallet-qr shadow-sm mb-3 mx-auto" role="img" aria-label="<?= Html::encode(Yii::t('app', 'QR code of the wallet address')) ?>"><?= $qrSvg ?></div>
+        <p class="wallet-address mb-3"><?= Html::encode($fromAddress) ?></p>
+        <input type="hidden" readonly="readonly" id="inputcopyWalletAddress" value="<?= Html::encode($fromAddress) ?>">
+        <button type="button" class="btn btn-primary copyonClickAddress"><i class="far fa-copy me-2" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Copy address')) ?></button>
     </div>
+</div>

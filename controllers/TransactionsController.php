@@ -6,13 +6,16 @@ use Yii;
 use app\models\Transactions;
 use app\models\search\TransactionsSearch;
 use app\models\MPWallets;
-use app\models\Nodes;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\BadRequestHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 
 use app\components\WebApp;
+use app\components\ChainConfig;
+use app\components\Erc20;
+use yii\filters\AccessControl;
 
 /**
  * TransactionsController implements the CRUD actions for Transactions model.
@@ -25,6 +28,16 @@ class TransactionsController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::class,
+                // all actions require login (fail secure)
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -34,8 +47,6 @@ class TransactionsController extends Controller
         ];
     }
 
-
-
     /**
      * Lists all Transactions models.
      * @return mixed
@@ -43,11 +54,8 @@ class TransactionsController extends Controller
     public function actionIndex()
     {
         $fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
-        $node = Nodes::find()
- 	     		->andWhere(['id_user'=>Yii::$app->user->id])
- 	    		->one();
 
-		if (NULL === $fromAddress || NULL === $node){
+		if (NULL === $fromAddress){
 			$session = Yii::$app->session;
 			$string = Yii::$app->security->generateRandomString(32);
 			$session->set('token-wizard', $string );
@@ -62,14 +70,29 @@ class TransactionsController extends Controller
 					->orwhere(['=','to_address', $fromAddress])
 					->orwhere(['=','from_address', $fromAddress]);
 
-        // $dataProvider->query->andwhere(['=','id_smart_contract', $node->id_smart_contract]);
-        // echo '<pre>'.print_r($dataProvider,true);exit;
-
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'fromAddress' => $fromAddress,
         ]);
+    }
+
+    /**
+     * Riga aggiornata di una transazione e saldo, per il flusso in tempo reale (wallet-sync.js, evento "tx").
+     * Solo transazioni dell'utente (findModel); saldo null se la chain non risponde.
+     */
+    public function actionRow($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = $this->findModel((int) $id);
+        $fromAddress = MPWallets::find()->userAddress(Yii::$app->user->id);
+        $balance = null;
+        try {
+            $balance = WebApp::tokenAmount(Yii::$app->Erc20->tokenBalance($fromAddress), ChainConfig::tokenDecimals());
+        } catch (\Throwable $error) {
+            Yii::warning('Token balance not available.', __METHOD__);
+        }
+        return ['id' => (int) $model->id, 'row' => WebApp::showTransactionRow($model, $fromAddress, true), 'balance' => $balance];
     }
 
     /**
@@ -93,56 +116,31 @@ class TransactionsController extends Controller
      */
     public function actionGetTransactionDetails($txhash)
     {
-        $receipt = null;
-        $success = false;
-
-        $node = Nodes::find()
- 	     		->andWhere(['id_user'=>Yii::$app->user->id])
- 	    		->one();
-
-		$ERC20 = new Yii::$app->Erc20(Yii::$app->user->id);
-
-        if ($txhash != '0x0'){
-
-            $receipt = $ERC20->getReceipt($txhash);
-            // echo "<pre>".print_r($receipt,true)."</pre>";
-            // exit;
-            if (null !== $receipt){
-                $success = true;
-                // update transactions
-                $transaction = Transactions::find()
-                ->findByHash($txhash);
-
-                $transactionValue = $ERC20->wei2eth(
-                    $receipt->logs[0]->data,
-                    $node->smartContract->decimals
-                );
-
-                // echo "<pre>".print_r($transactionValue,true)."</pre>";
-                // echo "<pre>".print_r($transaction,true)."</pre>";exit;
-
-                $transaction->blocknumber = $receipt->blockNumber;
-                $transaction->token_received = $transactionValue;
-                $transaction->status = 'complete';
-                if (!$transaction->save()){
-                    var_dump( $transaction->getErrors());
-                    die();
-                }
-            }
-
-
-        }
-        $return = [
-            'success' => $success,
-            'receipt' => $receipt,
-        ];
-
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return $return;
+        if (!is_string($txhash) || preg_match('/^0x[0-9a-fA-F]{64}$/D', $txhash) !== 1) {
+            throw new BadRequestHttpException(Yii::t('app', 'Invalid request.'));
+        }
+        // solo una transazione dell'utente (autore, mittente o destinatario): mai aggiornare quella di un altro
+        $transaction = null;
+        foreach (Transactions::find()->where(['txhash' => $txhash])->all() as $candidate) {
+            if ($candidate->belongsToUser((int) Yii::$app->user->id)) { $transaction = $candidate; break; }
+        }
+        if ($transaction === null) throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
+
+        $receipt = (new Erc20(Yii::$app->user->id))->getReceipt($txhash);
+        if (!is_object($receipt)) return ['success' => false, 'receipt' => null];
+        // importo solo dal Transfer del token TTS e solo se la transazione è riuscita
+        $amount = ($receipt->status ?? null) === '0x1'
+            ? Erc20::transferAmount($receipt, ChainConfig::get()->smartContract->smart_contract_address, ChainConfig::tokenDecimals())
+            : null;
+        if ($amount !== null && ($transaction->status !== 'complete' || (float) $transaction->token_received !== $amount)) {
+            $transaction->blocknumber = (string) $receipt->blockNumber;
+            $transaction->token_received = $amount;
+            $transaction->status = 'complete';
+            if (!$transaction->save()) Yii::error('Transaction receipt update not saved.', __METHOD__);
+        }
+        return ['success' => $amount !== null, 'receipt' => $receipt];
     }
-
-
-
 
     /**
      * Finds the Transactions model based on its primary key value.
@@ -153,10 +151,12 @@ class TransactionsController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = Transactions::findOne($id)) !== null) {
+        $model = Transactions::findOne($id);
+        if ($model !== null && $model->belongsToUser((int) Yii::$app->user->id)) {
             return $model;
         }
 
         throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
     }
+
 }

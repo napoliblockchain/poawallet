@@ -24,9 +24,9 @@ $options = [
     'recipientError' => Yii::t('app','Recipient address not entered.'),
     'htmlTransactionBody' => '<div class="alert alert-warning">
                                 <p class="generating">'.Yii::t('app','Generating transaction...').'</p>
-                                <div class="button-spinner spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>
+                                <div class="button-spinner spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
                                 </div>',
-    'spinner' => '<div class="button-spinner spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
+    'spinner' => '<div class="button-spinner spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
     'zerogas' => $blockchain->blockchain->zerogas,
     //'textClose' => Yii::t('app','Close'),
     // ...
@@ -48,48 +48,48 @@ $wallet_send = <<<JS
         return 0;
     }
 
+    /*
+     * Richiesta di pagamento "indirizzo&amount=X&message=Y" (QR del POS, o testo incollato nel destinatario):
+     * compila destinatario, importo e messaggio; importo e messaggio della richiesta non si modificano.
+     */
+    window.applyPaymentRequest = function (text) {
+        var match = /^\s*(0x[0-9a-fA-F]{40})(?:&(.*))?\s*$/.exec(String(text));
+        if (!match) return false;
+        var params = new URLSearchParams(match[2] || '');
+        $('#sendform-to').val(match[1]);
+        var amount = params.get('amount') || '';
+        var memo = params.get('message') || '';
+        $('#sendform-amount').val(amount).prop('readonly', amount !== '');
+        $('#sendform-memo').val(memo).prop('readonly', memo !== '');
+        return true;
+    };
+    $('#sendform-to').on('input', function () {
+        if (this.value.indexOf('&') !== -1) applyPaymentRequest(this.value);
+    });
+
     var sendForm = document.querySelector('#send-form');
     var stepButton = document.querySelector('#getCheckedButton1');
     var submitButton = document.querySelector('.pay-submit');
 
+    // controlli prima della conferma: messaggio sotto il form oppure finestra di conferma
     stepButton.addEventListener('click', function(event){
-        $('.amount-to-send').text($('#sendform-amount').val());
+        var amount = $('#sendform-amount').val();
+        var error = null;
+        $('.amount-to-send').text(amount);
         $('#error-summary').hide().text('');
 
-        if ($("#sendform-amount").val() <= 0 ){
-            $('#error-summary').show().text(yiiOptions.invalidAmountError);
-            event.stopPropagation();
-		}
+        if ($("#sendform-to").val() == '') error = yiiOptions.recipientError;
+        else if (!(Number(amount) > 0)) error = yiiOptions.invalidAmountError;
+        else if (countDecimals(amount) > yiiOptions.poaDecimals) error = yiiOptions.decimalError;
+        else if (Number(amount) > Number($("#sendform-balance").val())) error = yiiOptions.higherError;
+        else if (yiiOptions.zerogas != 1 && Number($("#sendform-balance_gas").val()) <= 0) error = yiiOptions.nogasError;
 
-        if (countDecimals($("#sendform-amount").val()) > yiiOptions.poaDecimals){
-			$('#error-summary').show().text(yiiOptions.decimalError);
-			event.stopPropagation();
-		}
-
-		if (eval($("#sendform-amount").val()) > eval($("#sendform-balance").val())){
-            $('#error-summary').show().text(yiiOptions.higherError);
-            event.stopPropagation();
-		}
-
-		if ($("#sendform-to").val() == ''){
-            $('#error-summary').show().text(yiiOptions.recipientError);
-            event.stopPropagation();
-		}
-
-        if (yiiOptions.zerogas != 1){
-            if ($("#sendform-balance_gas").val() <= 0  ){
-                $('#error-summary').show().text(yiiOptions.nogasError);
-                event.stopPropagation();
-            }
-
-            if (gasLimit() == false){
-                $('#error-summary').show().text(yiiOptions.enoughgasError);
-                event.stopPropagation();
-            }
-        } else {
-            var outcome = gasLimit();
+        if (error !== null) {
+            $('#error-summary').show().text(error);
+            return;
         }
-
+        gasLimit();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('sellOrder')).show();
 	});
 
 
@@ -110,11 +110,12 @@ $wallet_send = <<<JS
                 console.log('[gaslimit]: data from send/gaslimit controller',data);
                 if (data.success){
                     $('#amount-to-send-gas').text(data.gasLimit);
-                    $('.js-confirm-submit').removeClass('disabled')
-                } else {
-                    return false;
+                    $('.js-confirm-submit').removeClass('disabled');
+                } else if (yiiOptions.zerogas != 1) {
+                    $('#amount-to-send-gas').text('');
+                    $('#error-summary').show().text(yiiOptions.enoughgasError);
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('sellOrder')).hide();
                 }
-                return true;
             },
             error: function(j){
                 console.log(j);
@@ -156,7 +157,6 @@ $wallet_send = <<<JS
                     if (typeof data[0] !== 'undefined') {
 						sendPost.prv_key = data[0].prv_php;
 						sendPost.prv_pas = data[0].prv_pas;
-						console.log('[Send]: sendPost con chiave',sendPost);
 
                         $.ajax({
             				url	: yiiOptions.sendURL, // ERC20 send url,
@@ -170,6 +170,15 @@ $wallet_send = <<<JS
         					},
             				success:function(data){
             					console.log('[send]: data from generate-transaction controller',data);
+                                // password salvata nel formato precedente: sostituita con quella legata all'utente
+                                if (data.prv_pas_upgraded) {
+                                    readAllData('wallet').then(function(stored) {
+                                        if (typeof stored[0] !== 'undefined') {
+                                            stored[0].prv_pas = data.prv_pas_upgraded;
+                                            writeData('wallet', stored[0]);
+                                        }
+                                    });
+                                }
                                 $('.generating').parent().removeClass('alert alert-warning');
                                 $('.button-spinner').remove();
                                 $('.generating').html(data.row);
