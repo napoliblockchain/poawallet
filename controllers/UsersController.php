@@ -22,6 +22,37 @@ use yii\filters\AccessControl;
  */
 class UsersController extends Controller
 {
+    public function beforeAction($action)
+    {
+        if ($action->id === 'change-password') {
+            // Before CSRF/access filters: even rejected requests must never dump entered credentials.
+            Yii::$app->response->headers->set('Cache-Control', 'no-store');
+            foreach (Yii::$app->log->targets as $target) $target->logVars = [];
+            Yii::getLogger()->traceLevel = 0;
+            if (!Yii::$app->has('mutex')) Yii::$app->set('mutex', [
+                'class' => \yii\mutex\FileMutex::class, 'mutexPath' => '@runtime/password-change-locks', 'dirMode' => 0700, 'fileMode' => 0600,
+            ]);
+        }
+        return parent::beforeAction($action);
+    }
+
+    public function actionChangePassword()
+    {
+        $model = new \app\models\ChangePasswordForm();
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            if ($model->change()) {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('success', Yii::t('app', 'Password changed. Please sign in again.'));
+                return $this->redirect(['/site/login']);
+            }
+            if ($model->retryAfter > 0) {
+                Yii::$app->response->statusCode = 429;
+                Yii::$app->response->headers->set('Retry-After', (string) $model->retryAfter);
+            }
+        }
+        $model->current_password = $model->password = $model->repeat_password = '';
+        return $this->render('change-password', ['model' => $model]);
+    }
     /**
      * {@inheritdoc}
      */
@@ -42,6 +73,7 @@ class UsersController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
+                    'change-password' => ['GET', 'POST'],
                 ],
             ],
         ];

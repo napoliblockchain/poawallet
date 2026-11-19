@@ -24,6 +24,7 @@ if (UserRole::isWebmaster()) {
     $more[] = ['logs', ['/logs/index'], 'fas fa-clipboard-list', Yii::t('app', 'Logs')];
 }
 $more[] = ['users', ['/users/view', 'id' => WebApp::encrypt(Yii::$app->user->id)], 'fas fa-user-circle', Yii::t('app', 'Profile')];
+$more[] = ['users', ['/users/change-password'], 'fas fa-key', Yii::t('app', 'Change password')];
 $moreActive = (bool) array_filter($more, static fn(array $item) => $isActive($item[0]));
 ?>
 <nav class="wallet-tabbar d-print-none" aria-label="<?= Html::encode(Yii::t('app', 'Main menu')) ?>">
