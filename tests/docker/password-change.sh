@@ -8,6 +8,16 @@ umask 077
 work=$(mktemp -d)
 project="wallet-password-test-$(basename "$work" | tr '[:upper:].' '[:lower:]-')"
 compose() { docker compose -p "$project" -f "$work/compose.yml" "$@"; }
+# Sorgenti in una copia privata (vendor dell'immagine): /var/www/html deve esistere come punto di mount dentro /var/www in sola lettura,
+# senza creare cartelle nel repository.
+mkdir -m 755 "$work/src"
+tar -C "$root" --exclude=./vendor --exclude=./.git --exclude='*/node_modules' --exclude=./runtime -cf - . | tar -C "$work/src" -xpf -
+mkdir -p -m 755 "$work/src/html" "$work/src/runtime"
+# dipendenze dell'immagine sotto test (mai il vendor dell'host, che può essere vecchio)
+vendor_box=$(docker create "$image")
+docker cp -q "$vendor_box:/var/www/vendor" "$work/src/vendor"
+docker rm "$vendor_box" >/dev/null
+chmod 755 "$work/src/vendor"
 cleanup() { code=$?; trap - EXIT; compose down -v --timeout 10 >/dev/null 2>&1 || true; rm -rf "$work"; exit "$code"; }
 trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
@@ -65,7 +75,7 @@ services:
     env_file: [$work/test.env]
     read_only: true
     volumes:
-      - $root:/var/www:ro
+      - $work/src:/var/www:ro
       - $root/web:/var/www/html:ro
     tmpfs:
       - /var/www/runtime:uid=33,gid=33,mode=0700
