@@ -266,9 +266,9 @@ var erc20 = {
 			$('.js-final-amount').html(data[0].formatted_balance).show().addClass('animationBalanceIn');
 
 			console.log('['+type+' push options]', data[0].pushoptions);
-			console.log('['+type+' push options title]', data[0].pushoptions.title);
 
-			if (typeof data[0].pushoptions.title !== 'undefined'){
+			// il server manda pushoptions null quando non c'e' una notifica da mostrare
+			if (data[0].pushoptions && typeof data[0].pushoptions.title !== 'undefined'){
 				displayPushNotification(data[0].pushoptions);
 			}
 
