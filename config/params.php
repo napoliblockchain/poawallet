@@ -3,7 +3,8 @@ $env = require __DIR__ . '/env.php';
 
 return [
     'adminEmail' => $env('MAIL_ADMIN'),
-    'senderEmail' => $env('MAIL_USERNAME'),
+    // mittente verificato (MAIL_SUPPORT), mai il login SMTP: con un relay (es. Brevo) il login non è un indirizzo di posta
+    'senderEmail' => $env('MAIL_SUPPORT'),
     'senderName' => $env('MAIL_FROM_NAME'),
     'logoApplicazione' => '/css/images/logo.png',
     'website' => $env('APP_WEBSITE'),
