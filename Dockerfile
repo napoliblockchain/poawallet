@@ -60,6 +60,8 @@ COPY messages    messages
 COPY migrations  migrations
 COPY models      models
 COPY runtime     runtime
+# email salvate su file (SMTP non disponibile): volume napay_wallet_mail, inizializzato da questa cartella
+RUN install -d -m 0755 runtime/mail
 COPY views       views
 COPY widgets     widgets
 COPY web         html
