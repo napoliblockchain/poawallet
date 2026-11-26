@@ -1,64 +1,31 @@
 <?php
 
-use yii\helpers\Html;
 use yii\grid\GridView;
+use yii\helpers\Html;
 use yii\widgets\Pjax;
 
-// Yii::$classMap['webapp'] = Yii::getAlias('@packages').'/webapp.php';
-
 /* @var $this yii\web\View */
-/* @var $searchModel app\models\BoltTokensSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
+/* @var $fromAddress string */
 
 $this->title = Yii::t('app', 'Transactions');
-// $this->params['breadcrumbs'][] = $this->title;
 ?>
-<!-- <div class="form-divider"></div> -->
-<!-- <div class="dash-balance ref-card c10">
-    <div class="dash-content relative">
-		<h3 class="w-text"><?= Yii::t('app','Transaction list');?></h3>
-	</div> -->
-
-
-<div class="dash-balance ref-card c10">
-    <div class="ref-card c3 mb-3">
-		<div class="dash-content relative">
-			<h3 class="w-text"><?= Yii::t('app','Transaction list');?></h3>
-		</div>
-	</div>
-    <section class="card pr-2 mb-5">
-        <?php Pjax::begin(); ?>
-        <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-        <?= GridView::widget([
-            'dataProvider' => $dataProvider,
-            'filterModel' => $searchModel,
-            'showHeader'=> false,
-            'tableOptions' => ['class' => 'table-96 table table-sm mb-3 ml-1 mr-1'],
-            'columns' => [
-                [
-                   'attribute'=>'',
-                   'format' => 'raw',
-                   'class' => 'yii\grid\DataColumn', // can be omitted, as it is the default
-                   'value' => function ($data) use ($fromAddress) {
-                      return app\components\WebApp::showTransactionRow($data,$fromAddress);
-                   },
-                ],
-                // ['class' => 'yii\grid\SerialColumn'],
-                //
-                // 'id_token',
-                // 'id_user',
-                // 'type',
-                // 'status',
-                // 'token_price',
-                //
-                // ['class' => 'yii\grid\ActionColumn'],
-            ],
-        ]); ?>
-
-        <?php Pjax::end(); ?>
-        <div class="form-divider"></div>
-    </section>
-
-
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"><?= Html::encode(Yii::t('app', 'Transaction list')) ?></h2>
+    </div>
+    <?php Pjax::begin(); ?>
+    <?= GridView::widget([
+        'dataProvider' => $dataProvider,
+        'showHeader' => false,
+        'layout' => "{items}\n<div class=\"card-footer d-flex justify-content-center\">{pager}</div>",
+        'emptyText' => Yii::t('app', 'No transactions yet.'),
+        'emptyTextOptions' => ['class' => 'text-secondary text-center py-4'],
+        'tableOptions' => ['class' => 'table-96 table wallet-tx-table mb-0'],
+        'columns' => [[
+            'format' => 'raw',
+            'value' => static fn($data) => app\components\WebApp::showTransactionRow($data, $fromAddress),
+        ]],
+    ]) ?>
+    <?php Pjax::end(); ?>
 </div>

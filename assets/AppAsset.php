@@ -1,37 +1,27 @@
 <?php
-/**
- * @link http://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
- */
 
 namespace app\assets;
 
 use yii\web\AssetBundle;
 
 /**
- * Main application asset bundle.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
+ * Struttura dell'app wallet: Tabler (al posto di Bootstrap 5), icone locali, stile del wallet.
+ * global.script.js resta per i comportamenti delle viste (notifiche, data-loader, popup).
  */
 class AppAsset extends AssetBundle
 {
     public $basePath = '@webroot';
     public $baseUrl = '@web';
     public $css = [
-        'css/global.style.css',
-        'css/site.css',
-        'css/yiipager.css'
+        'bundles/wallet/wallet.css',
     ];
     public $js = [
         'js/global.script.js',
-        // 'js/pincode-global.js',
-        // 'js/pincode-settings.js',
-        // 'js/notifications.js'
     ];
     public $depends = [
         'yii\web\YiiAsset',
-        'yii\bootstrap4\BootstrapAsset',
+        'yii\bootstrap5\BootstrapAsset',
+        'yii\bootstrap5\BootstrapPluginAsset',
+        'app\assets\FontAwesomeAsset',
     ];
 }

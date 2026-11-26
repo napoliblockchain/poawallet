@@ -10,32 +10,70 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
-use yii\web\HttpException;
 
 use app\models\PushSubscriptions;
 
-use yii\helpers\Json;
-use yii\helpers\Url;
-
 use app\components\WebApp;
 use app\components\Settings;
-
+use yii\filters\AccessControl;
 
 /**
  * UsersController implements the CRUD actions for Users model.
  */
 class UsersController extends Controller
 {
+    public function beforeAction($action)
+    {
+        if ($action->id === 'change-password') {
+            // Before CSRF/access filters: even rejected requests must never dump entered credentials.
+            Yii::$app->response->headers->set('Cache-Control', 'no-store');
+            foreach (Yii::$app->log->targets as $target) $target->logVars = [];
+            Yii::getLogger()->traceLevel = 0;
+            if (!Yii::$app->has('mutex')) Yii::$app->set('mutex', [
+                'class' => \yii\mutex\FileMutex::class, 'mutexPath' => '@runtime/password-change-locks', 'dirMode' => 0700, 'fileMode' => 0600,
+            ]);
+        }
+        return parent::beforeAction($action);
+    }
+
+    public function actionChangePassword()
+    {
+        $model = new \app\models\ChangePasswordForm();
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            if ($model->change()) {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('success', Yii::t('app', 'Password changed. Please sign in again.'));
+                return $this->redirect(['/site/login']);
+            }
+            if ($model->retryAfter > 0) {
+                Yii::$app->response->statusCode = 429;
+                Yii::$app->response->headers->set('Retry-After', (string) $model->retryAfter);
+            }
+        }
+        $model->current_password = $model->password = $model->repeat_password = '';
+        return $this->render('change-password', ['model' => $model]);
+    }
     /**
      * {@inheritdoc}
      */
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::class,
+                // all actions require login (fail secure)
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
+                    'change-password' => ['GET', 'POST'],
                 ],
             ],
         ];
@@ -46,7 +84,6 @@ class UsersController extends Controller
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		return $data;
 	}
-
 
     /**
      * Displays a single BoltSocialusers model.
@@ -63,20 +100,19 @@ class UsersController extends Controller
         $node = Settings::poa(Yii::$app->user->id);
 
         $tokens_from = Transactions::find()
-            ->andWhere(['id_smart_contract'=>$node->smartContract->id])
             ->andWhere(['from_address'=>$wallet->wallet_address])
             ->andWhere(['status'=>'complete']);
 
         $tokens_to = Transactions::find()
-            ->andWhere(['id_smart_contract'=>$node->smartContract->id])
             ->andWhere(['to_address'=>$wallet->wallet_address])
             ->andWhere(['status'=>'complete']);
 
-        $sent['sum'] = round($tokens_from->sum('token_price'), $node->smartContract->decimals);
-        $sent['count'] = round($tokens_from->count(), $node->smartContract->decimals);
+        // nessuna transazione: SUM restituisce null
+        $sent['sum'] = round((float) $tokens_from->sum('token_price'), (int) $node->smartContract->decimals);
+        $sent['count'] = (int) $tokens_from->count();
 
-        $received['sum'] = round($tokens_to->sum('token_price'), $node->smartContract->decimals);
-        $received['count'] = round($tokens_to->count(), $node->smartContract->decimals);
+        $received['sum'] = round((float) $tokens_to->sum('token_price'), (int) $node->smartContract->decimals);
+        $received['count'] = (int) $tokens_to->count();
 
         $total_transactions = $sent['count'] + $received['count'];
 
@@ -85,11 +121,8 @@ class UsersController extends Controller
             ->orwhere(['=','from_address', $wallet->wallet_address])
             ->orwhere(['=','to_address', $wallet->wallet_address])
             ->andWhere(['status'=>'complete'])
-            ->andWhere(['id_smart_contract'=>$node->smartContract->id])
             ->select('token_price, from_address, to_address')
             ->all();
-
-        // echo '<pre>'.print_r($wallet->wallet_address,true);exit;
 
         $userAccountValues = [0.01];
         $increase = 0;
@@ -99,8 +132,6 @@ class UsersController extends Controller
             $actualPrice = 0;
             $symbol = '';
             foreach ($chart as $item){
-                // echo '<pre>'.print_r($item,true);exit;
-
                 if ($item->from_address == $wallet->wallet_address){
                     $actualPrice -= $item['token_price'];
                 } else {
@@ -111,12 +142,13 @@ class UsersController extends Controller
 
             }
 
-            // echo count($userAccountValues);
-            // exit;
             $last1 = $userAccountValues[count($userAccountValues)-1];
             $last2 = $userAccountValues[count($userAccountValues)-2];
 
-            if ($last1 > $last2){
+            if ($last1 == 0 || $last2 == 0) {
+                // saldo a zero: variazione percentuale non definita
+                $increase = 0;
+            } elseif ($last1 > $last2){
                 $increase = round($last1 / $last2 *100, 2);
                 $color = 'green';
                 $arrow = 'up';
@@ -127,8 +159,6 @@ class UsersController extends Controller
             }
         }
 
-
-
         $userAccountValueArray = [
             'accountValues' => $userAccountValues,
             'balance' => $received['sum'] - $sent['sum'],
@@ -136,9 +166,6 @@ class UsersController extends Controller
             'color' => $color,
             'arrow' => $arrow,
         ];
-
-
-        // echo '<pre>'.print_r($userAccountValueArray,true);exit;
 
         return $this->render('view', [
             'model' => $this->findModel(WebApp::decrypt($id)),
@@ -161,7 +188,6 @@ class UsersController extends Controller
 	public function actionSaveSubscription()
 	{
  		$raw = json_decode($_POST['subscription']);
-        // echo var_dump ($raw);
 		$browser = $_SERVER['HTTP_USER_AGENT'];
 
 		$vapid = PushSubscriptions::find()
@@ -195,8 +221,6 @@ class UsersController extends Controller
 		return $this->json($data);
 	}
 
-
-
     /**
      * Updates an existing BoltSocialusers model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -217,7 +241,6 @@ class UsersController extends Controller
         ]);
     }
 
-
     /**
      * Finds the BoltSocialusers model based on its user_id value.
      * If the model is not found, a 404 HTTP exception will be thrown.
@@ -227,6 +250,10 @@ class UsersController extends Controller
      */
     protected function findModel($id)
     {
+        // each user can only see and change their own profile
+        if ((int) $id !== (int) Yii::$app->user->id) {
+            throw new NotFoundHttpException(Yii::t('app', 'The requested page does not exist.'));
+        }
         $model = Users::find()->andWhere(['id'=>$id])->one();
         if ( $model !== null) {
             return $model;

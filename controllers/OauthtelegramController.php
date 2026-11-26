@@ -3,29 +3,26 @@ namespace app\controllers;
 
 use Yii;
 use yii\web\Controller;
-use yii\base\Model;
-use yii\db\ActiveRecord;
 use app\models\Users;
-use app\models\LoginForm;
 use app\models\Auth;
 use yii\helpers\Json;
 
 use jambtc\oauthtelegram;
-
-use app\components\Settings;
-
-
-// Yii::$classMap['settings'] = Yii::getAlias('@packages').'/settings.php';
-// Yii::$classMap['telegram'] = Yii::getAlias('@packages').'/OAuth/oauth-telegram/telegram.php';
 
 class OauthtelegramController extends Controller
 {
 	public $bot_token;
 	public $bot_username;
 
+	/** Accesso Telegram spento finché SOCIAL_LOGIN non è attivo. */
+	public function beforeAction($action)
+	{
+		if (!Yii::$app->params['socialLogin']) throw new \yii\web\NotFoundHttpException();
+		return parent::beforeAction($action);
+	}
+
 	public function actionCheckAuthorization()
 	{
-
 		$bot_username = Yii::$app->params['telegram.clientId']; // place username of your bot here
 		$bot_token = Yii::$app->params['telegram.clientSecret']; // place bot token of your bot here
 
@@ -36,20 +33,7 @@ class OauthtelegramController extends Controller
 		$auth_data['email'] = $auth_data['id'] .'@telegram.com';
 		$auth_data['oauth_provider'] = 'telegram';
 
-		// echo "<pre>".print_r($auth_data,true)."</pre>";
-		// exit;
-
-		// $model = $this->saveUserData($auth_data);
-		//
-		// $model=new Users;
-		// $model->username = $auth_data['email'];
-		// $model->password = $auth_data['id'];
-		// $model->oauth_provider = $auth_data['oauth_provider'];
-		// //
-
 		$user = $this->saveUserData($auth_data);
-
-		// echo '<pre>'.print_r($user,true);exit;
 
 		$auth = new Auth([
 			'user_id' => $user['model']->id,
@@ -73,7 +57,6 @@ class OauthtelegramController extends Controller
 
   }
 
-
 	private function saveUserData($auth_data)
 	{
 		$model = Users::find()
@@ -94,12 +77,12 @@ class OauthtelegramController extends Controller
 			$model->authKey = Yii::$app->security->generateRandomString();
 			$model->accessToken = Yii::$app->getSecurity()->generatePasswordHash($model->getAuthKey());
 			$model->email = $auth_data['email'];
-			$model->picture = (isset($auth_data['photo_url']) ? $auth_data['photo_url'] : 'css/images/anonymous.png');
+			$model->picture = (isset($auth_data['photo_url']) ? $auth_data['photo_url'] : '/css/images/anonymous.png');
 			$model->first_name = (isset($auth_data['first_name']) ? $auth_data['first_name'] : '');
 			$model->last_name = (isset($auth_data['last_name']) ? $auth_data['last_name'] : '');
 
 		}else{
-			$model->picture = (isset($auth_data['photo_url']) ? $auth_data['photo_url'] : 'css/images/anonymous.png');
+			$model->picture = (isset($auth_data['photo_url']) ? $auth_data['photo_url'] : '/css/images/anonymous.png');
 			$model->first_name = (isset($auth_data['first_name']) ? $auth_data['first_name'] : '');
 			$model->last_name = (isset($auth_data['last_name']) ? $auth_data['last_name'] : '');
 		}

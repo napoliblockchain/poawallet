@@ -3,7 +3,6 @@ namespace app\components;
 
 use Yii;
 use yii\base\Component;
-use yii\base\InvalidConfigException;
 use yii\helpers\Url;
 
 
@@ -14,7 +13,7 @@ class Logo extends Component
   * In questa funzione che stampa a video il footer, la variabile
   * $color deve essere inserita nel formato: #ffdd1a
   */
-  public function footer($color=NULL){
+  public static function footer($color=NULL){
       $versionfilename = Yii::$app->basePath."/../version.txt";
       if(file_exists($versionfilename)){
           $version = file_get_contents($versionfilename);
@@ -23,23 +22,10 @@ class Logo extends Component
           $version = "test";
           $time = time();
       }
-      $footer = '';
-      $footer .= '<div class="row">&nbsp;</div>';
-      $footer .= '<center>';
-      $footer .= '<div class="copyright">';
-      if (!($color))
-        $footer .= '<p>';
-      else
-        $footer .= '<p style="color:'.$color.';">';
-      $footer .= 'Made with ❤️ by ';
-      $footer .= '<a href="' . \Yii::$app->params['website'] . '" target="_blank">' . \Yii::$app->params['adminName'] . '</a>';
-      $footer .= '<br>';
-      $footer .= 'Release n. '.substr($version,0,7) .' ' .date('d/m/Y',$time);
-      $footer .= '</p>';
-      $footer .= '</div>';
-      $footer .= '</center>';
-      $footer .= '</div>';
-      $footer .= '<div class="row">&nbsp;</div>';
+      // una riga sobria: autore e versione (layout di accesso e procedura guidata)
+      $footer = 'Made with ❤️ by ' . \yii\helpers\Html::a(\yii\helpers\Html::encode(\Yii::$app->params['adminName']), \Yii::$app->params['website'], ['target' => '_blank', 'rel' => 'noopener'])
+          . '<br>Release n. ' . \yii\helpers\Html::encode(substr($version, 0, 7)) . ' ' . date('d/m/Y', $time);
+      if ($color) $footer = '<span style="color:' . \yii\helpers\Html::encode($color) . ';">' . $footer . '</span>';
 
       return $footer;
   }
@@ -48,7 +34,7 @@ class Logo extends Component
     $logo = '
     <a href="'. Url::to(['site/index']) .'">
         <div style="padding: 0px;" >
-            <img alt="logo" style="display: block; margin-left: auto;	margin-right: auto; max-width: 150px; " src="css/images/logo.png">
+            <img alt="logo" style="display: block; margin-left: auto;	margin-right: auto; max-width: 150px; " src="/css/images/logo.png">
         </div>
     </a>
      ';

@@ -3,84 +3,56 @@
 /* @var $this \yii\web\View */
 /* @var $content string */
 
-use app\widgets\Alert;
-
-use yii\helpers\Html;
-use yii\bootstrap4\Nav;
-use yii\bootstrap4\NavBar;
-use yii\widgets\Breadcrumbs;
-use app\assets\AppAsset;
 use app\assets\ServiceWorkerAsset;
-
+use app\assets\WalletAuthAsset;
 use app\components\Logo;
-use app\components\Settings;
+use yii\helpers\Html;
+use yii\helpers\Url;
 
-
-
-
-// Yii::$classMap['logo'] = Yii::getAlias('@packages').'/logo.php';
-// Yii::$classMap['settings'] = Yii::getAlias('@packages').'/settings.php';
-
-AppAsset::register($this);
+WalletAuthAsset::register($this);
 ServiceWorkerAsset::register($this);
-
-
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>">
+<html lang="<?= Html::encode(Yii::$app->language) ?>">
 <head>
-    <meta charset="<?= Yii::$app->charset ?>">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="<?= Html::encode(Yii::$app->charset) ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#241a00">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
-
-    <!-- Manifest Progressive Web App -->
-    <link rel="manifest" href="manifest.json">
-
-    <!-- Google font file. If you want you can change. -->
-  	<link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600,700,900" rel="stylesheet">
-
-    <!-- Fontawesome font file css -->
-  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
-
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/brand/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
     <?php $this->head() ?>
-
 </head>
-<body>
+<body class="wallet-auth auth auth--wallet">
 <?php $this->beginBody() ?>
-
-<div class="wrapper-inline">
-    <?php
-    // mi serve per far caricare bootstrap4
-    // NavBar::begin();
-    // NavBar::end();
-    ?>
-
-        <main class="margin mt-0 h-100">
-
-            <?= Alert::widget() ?>
+<div class="auth-card">
+    <aside class="auth-brand">
+        <canvas class="auth-chain" aria-hidden="true"></canvas>
+        <img class="auth-icon" src="/brand/icon-192.png" alt="">
+        <div class="auth-divider"></div>
+        <p class="auth-tag"><?= Html::encode(Yii::t('app', 'Your TTS wallet: the keys stay on your device')) ?></p>
+    </aside>
+    <main class="auth-main">
+        <div class="auth-form">
+            <a class="auth-wordmark" href="<?= Url::to(['site/index']) ?>" aria-label="<?= Html::encode(Yii::$app->name) ?>">na<span>pay</span><small>Wallet</small></a>
+            <?= $this->render('_flash') ?>
             <?= $content ?>
-        </main>
-        <?php //$this->endContent() ?>
-        <footer class="footer">
-            <div class="container">
-              <?= Logo::footer(); ?>
+        </div>
+        <div class="auth-supporters">
+            <p><?= Html::encode(Yii::t('app', 'Our supporters')) ?></p>
+            <div class="auth-logos">
+                <img class="auth-logo-nb" src="/bundles/auth/napoli-blockchain.png" alt="Napoli Blockchain">
+                <img class="auth-logo-uni" src="/bundles/auth/parthenope.jpg" alt="Università degli Studi di Napoli Parthenope">
             </div>
-        </footer>
-
-
-
-
-
-
+            <p class="auth-footer"><?= Logo::footer() ?></p>
+        </div>
+    </main>
 </div>
-
-<?php //echo $this->render('_oauth-modal'); ?>
-
 <?php $this->endBody() ?>
-
 </body>
 </html>
 <?php $this->endPage() ?>

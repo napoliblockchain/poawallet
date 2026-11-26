@@ -5,12 +5,8 @@ namespace app\models;
 use Yii;
 use yii\base\Model;
 use Web3\Web3;
-use yii\web\Controller;
-use yii\validators\Validator;
 
-// use app\components\WebApp;
 use app\components\Settings;
-
 
 /**
  * SendTokenForm is the model behind the send token form.
@@ -54,7 +50,6 @@ class SendForm extends Model
 		];
 	}
 
-
     /**
 	 * @param POST amount to check decimals in the smart contract
 	 */
@@ -75,13 +70,6 @@ class SendForm extends Model
 	 */
 	public function isValidAddress($attribute, $params)
     {
-    //     $WebApp = new WebApp;
-	// 	$poaNode = $WebApp->getPoaNode(1);
-	// 	if (!$poaNode)
-    //         $this->addError($attribute, 'All Nodes are down...');
-    //
-	// 	$web3 = new Web3($poaNode);
-
         $settings = Settings::poa();
         $web3 = new Web3($settings->blockchain->url);
 		$utils = $web3->utils;

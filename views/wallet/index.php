@@ -1,156 +1,44 @@
 <?php
 
+use yii\grid\GridView;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\grid\GridView;
-use app\components\WebApp;
 
 /* @var $this yii\web\View */
-/* @var $searchModel app\models\BoltTokensSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
+/* @var $fromAddress string */
+/* @var $balance string */
+/* @var $balance_gas string */
+/* @var $node object rete e token da ChainConfig (SIP-032) */
 
 $this->title = Yii::t('app', 'Wallet');
 
-$receiveUrl = Url::to(['receive/index']);
-$sendUrl = Url::to(['send/index','v'=>time()]);
-$userUrl = Url::to(['users/view','id'=>WebApp::encrypt(Yii::$app->user->identity->id)]);
-$tokensUrl = Url::to(['transactions/index']);
-
-include ('index_js.php');
+include('index_js.php');
 ?>
+<?= $this->render('_balance', ['balance' => $balance, 'balance_gas' => $balance_gas, 'node' => $node]) ?>
 
+<nav class="wallet-actions mb-4" aria-label="<?= Html::encode(Yii::t('app', 'Actions')) ?>">
+    <a class="wallet-action" href="<?= Url::to(['/send/index']) ?>"><i class="far fa-paper-plane" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Send')) ?></a>
+    <a class="wallet-action" href="<?= Url::to(['/receive/index']) ?>"><i class="fas fa-qrcode" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Receive')) ?></a>
+    <a class="wallet-action" href="<?= Url::to(['/transactions/index']) ?>"><i class="fas fa-list" aria-hidden="true"></i><?= Html::encode(Yii::t('app', 'Transactions')) ?></a>
+</nav>
 
-<div class="dash-balance">
-    <!-- <section class="wallets-list container">
-       <div class="wallet-address"> -->
-            <div class="d-flex align-items-center mt-10">
-              <div class="d-flex flex-grow">
-                  <div class="w-100">
-                      <div class="ref-card c8">
-                          <div class="card-header txt-white">
-                              <div class="d-flex justify-content-between">
-                                  <div>
-                                      <?= Yii::t('app','Balance on: ') ?></br>
-                                      <a class="txt-white" href="<?= Url::to(['settings/nodes/update']) ?>">
-                                          <?= $node->blockchain->denomination ?>
-                                      </a>
-                                  </div>
-                                  <div>
-                                      <a href="<?= $userUrl ?>" class="profile-av p-0">
-                                          <img src="<?= $userImage ?>">
-                                      </a>
-                                  </div>
-                              </div>
-                          </div>
-
-                          <div class="resources-card-wrapper"
-                                style="background-color: rgba(255, 255, 255, 0.2);
-                                        border-radius: 10px;
-                                ">
-                              <div class="resources-card bg-transparent txt-white">
-                                  <p class="d-flex">
-                                      <p class="d-flex justify-content-start">
-                                          Token <small class="ml-1"><i class="fa fa-star star-total-balance fa-sm"></i></small>
-                                      </p>
-                                      <div>
-                                          <span class="h5" id="total-balance">
-                                            <?php 
-                                            // WebApp::si_formatter($balance) 
-                                            echo Yii::$app->formatter->asDecimal(
-                                                ($balance / (10 ** $node->smartContract->decimals)), 
-                                                [
-                                                    NumberFormatter::MIN_FRACTION_DIGITS => 0,
-                                                    NumberFormatter::MAX_FRACTION_DIGITS => $node->smartContract->decimals,
-                                                ]
-                                            );
-                                            ?>
-                                           </span>
-                                          
-                                          <small><?= $node->smartContract->symbol ?></small>
-                                      </div>
-                                  </p>
-                              </div>
-                              <div class="resources-card bg-transparent txt-white">
-                                  <p class="d-flex">
-                                      <p class="d-flex justify-content-start">
-                                          Gas <small class="ml-1"><i class="fab fa-ethereum fa-sm"></i></small>
-                                      </p>
-                                      <div>
-                                          <span class="h5" id="total-balance_gas">
-                                            <?php
-                                            //WebApp::si_formatter($balance_gas) 
-                                            echo Yii::$app->formatter->asDecimal(
-                                                $balance_gas, 
-                                                8
-                                                
-                                            );
-                                             
-                                             ?>
-                                        </span>
-
-                                          <!-- <span id="total-balance_gas2"><?= $balance_gas ?></span> -->
-                                          <small><?= $node->blockchain->symbol ?></small>
-                                      </div>
-                                  </p>
-                              </div>
-                          </div>
-                      </div>
-                   </div>
-              </div>
-            </div>
-
-           <div class="services-bulk">
-             <div class="content-row">
-                <div class="serv-item">
-                   <a href="<?= $sendUrl ?>" class="serv-icon btn btn-light p-0">
-                       <i class="fa fa-paper-plane fa-lg text-primary"></i>
-                   </a>
-                   <span><?= Yii::t('app','Send');?> </span>
-                </div>
-                <div class="serv-item">
-                  <a href="<?= $receiveUrl ?>" class="serv-icon btn btn-light p-0">
-                       <i class="fas fa-download fa-lg text-primary"></i>
-                  </a>
-                   <span><?= Yii::t('app','Receive');?> </span>
-                </div>
-                <div class="serv-item">
-	                <a href="<?= $tokensUrl ?>" class="serv-icon btn btn-light p-0">
-                         <i class="fa fa-list fa-lg text-primary"></i>
-                    </a>
-	                <span><?= Yii::t('app','Transactions');?></span>
-	            </div>
-                <!-- <div class="serv-item">
-
-                </div> -->
-            </div>
-           </div>
-        <!-- </div>
-    </section> -->
-</div>
-
-<section class="trans-sec container mb-2">
-    <h4 class="title-main mt-0 text-light"><?= Yii::t('app','Recent Transactions');?></h4>
-
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><?= Html::encode(Yii::t('app', 'Recent Transactions')) ?></h3>
+        <div class="card-actions"><?= Html::a(Html::encode(Yii::t('app', 'See all')), ['/transactions/index'], ['class' => 'small']) ?></div>
+    </div>
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        // 'filterModel' => $searchModel,
-        'showHeader'=> false,
-        'tableOptions' => ['class' => 'table-98 table table-sm mb-3 mx-1'],
-        // 'layout' => "{summary}\n{items}\n{pager}",
-        'layout' => "{items}",
-        'columns' => [
-            // ['class' => 'yii\grid\SerialColumn'],
-            [
-               'attribute'=>'',
-               'format' => 'raw',
-               'class' => 'yii\grid\DataColumn', // can be omitted, as it is the default
-               'value' => function ($data) use ($fromAddress) {
-                  return app\components\WebApp::showTransactionRow($data,$fromAddress);
-
-               },
-            ],
-
-        ],
-    ]); ?>
-
-</section>
+        'showHeader' => false,
+        'layout' => '{items}',
+        'emptyText' => Yii::t('app', 'No transactions yet.'),
+        'emptyTextOptions' => ['class' => 'text-secondary text-center py-4'],
+        'tableOptions' => ['class' => 'table-98 table wallet-tx-table mb-0'],
+        'options' => ['class' => 'grid-view'],
+        'columns' => [[
+            'format' => 'raw',
+            'value' => static fn($data) => app\components\WebApp::showTransactionRow($data, $fromAddress),
+        ]],
+    ]) ?>
+</div>
