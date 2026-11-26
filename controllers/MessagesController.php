@@ -9,6 +9,7 @@ use app\models\NotificationsReaders;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\filters\AccessControl;
 
 /**
  * BoltTokensController implements the CRUD actions for BoltTokens model.
@@ -21,6 +22,16 @@ class MessagesController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::class,
+                // all actions require login (fail secure)
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -29,7 +40,6 @@ class MessagesController extends Controller
             ],
         ];
     }
-
 
     /**
      * Lists all BoltTokens models.
@@ -51,7 +61,6 @@ class MessagesController extends Controller
                 ]
             ],
         ]);
-
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
@@ -80,7 +89,6 @@ class MessagesController extends Controller
      */
     public function actionDelete()
     {
-        //echo '<pre>'.print_r($_POST,true);
         $json = json_decode($_POST['keys']);
 
         foreach ($json as $idx => $key)
@@ -88,10 +96,6 @@ class MessagesController extends Controller
 
         return $this->redirect(['index']);
     }
-
-
-
-
 
     /**
      * Finds the BoltTokens model based on its primary key value.
@@ -102,7 +106,7 @@ class MessagesController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = NotificationsReaders::findOne($id)) !== null) {
+        if (($model = NotificationsReaders::findOne(['id' => $id, 'id_user' => Yii::$app->user->id])) !== null) {
             return $model;
         }
 

@@ -22,12 +22,13 @@ use app\models\MPWallets;
  * @property string|null $email
  * @property string|null $last_name
  * @property string|null $first_name
+ * @property int $privilege_id
  *
+ * @property Profiles $profile
  * @property MpAuth[] $mpAuths
  * @property MpNotificationsReaders[] $mpNotificationsReaders
  * @property MpSubscriptions[] $mpSubscriptions
  * @property MpWallets[] $mpWallets
- * @property Nodes[] $nodes
  * @property Transactions[] $transactions
  */
 class Users extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
@@ -35,7 +36,6 @@ class Users extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     const STATUS_INSERTED = 0;
     const STATUS_ACTIVE = 1;
     const STATUS_BLOCKED = 2;
-
 
     /**
      * {@inheritdoc}
@@ -52,7 +52,7 @@ class Users extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return [
             [['username', 'password', 'activation_code', 'status_activation_code', 'oauth_provider', 'oauth_uid'], 'required'],
-            [['status_activation_code'], 'integer'],
+            [['status_activation_code', 'privilege_id'], 'integer'],
             [['username', 'password', 'authKey', 'accessToken', 'picture', 'email', 'last_name', 'first_name'], 'string', 'max' => 255],
             [['activation_code'], 'string', 'max' => 60],
             [['oauth_provider'], 'string', 'max' => 20],
@@ -123,16 +123,6 @@ class Users extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     }
 
     /**
-     * Gets query for [[Nodes]].
-     *
-     * @return \yii\db\ActiveQuery|\app\models\query\NodesQuery
-     */
-    public function getNodes()
-    {
-        return $this->hasMany(Nodes::className(), ['id_user' => 'id']);
-    }
-
-    /**
      * {@inheritdoc}
      * @return \app\models\query\UsersQuery the active query used by this AR class.
      */
@@ -148,7 +138,6 @@ class Users extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return $this->id;
     }
-
 
     /**
      * {@inheritdoc}
@@ -333,6 +322,11 @@ class Users extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function validateStatus()
     {
         return $this->status_activation_code;
+    }
+
+    public function getProfile(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(Profiles::class, ['id' => 'privilege_id']);
     }
 
 }

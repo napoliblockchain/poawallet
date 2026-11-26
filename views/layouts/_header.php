@@ -1,38 +1,29 @@
-<header class="no-background">
-	<?php if (Yii::$app->controller->id != 'wallet'): ?>
-	<!-- extra class no-background -->
-	<a class="go-back-link mr-2" href="javascript:history.back();">
-		<i class="fa fa-arrow-left"></i>
-	</a>
-	<?php endif ?>
-	<div class="search-button" data-search="open">
-		<span style="font-size: 1.5em;">
-			<i class="fas fa-bell"></i>
-			<span class="notify-quantity" style="display:none;" id="quantity_circle">
-				<div id="quantity_notify"></div>
-			</span>
-		</span>
-	</div>
-	<div class="search-button">
-	  <button class="pulse-button pulse-button-offline"></button>
-	</div>
-	<div class="page-title">
-		<small class="header-message"></small>
-	</div>
+<?php
 
-	<!-- <div class="page-title">
-		<div class="row">
+use yii\helpers\Html;
+use yii\helpers\Url;
 
-
-		</div>
-    </div> -->
-
-
-
-	<div class="navi-menu-button">
-		<em></em>
-		<em></em>
-		<em></em>
-	</div>
-
+/* Barra in alto: indietro (fuori dal wallet), marchio, stato sincronizzazione, notifiche. Il menu "Altro" è nella barra di navigazione. */
+$wallet = Yii::$app->controller->id === 'wallet';
+?>
+<header class="navbar wallet-topbar sticky-top d-print-none">
+    <div class="container-xl gap-2 flex-nowrap">
+        <?php if (!$wallet): ?>
+            <a class="btn btn-icon" href="javascript:history.back();" aria-label="<?= Html::encode(Yii::t('app', 'Back')) ?>"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+        <?php endif ?>
+        <a class="navbar-brand d-flex align-items-center me-auto" href="<?= Url::to(['/wallet/index']) ?>">
+            <img src="/brand/icon.svg" alt="" class="wallet-brand-icon"><span class="wallet-wordmark" aria-label="<?= Html::encode(Yii::$app->name) ?>"><span class="wallet-wordmark-name">na<span>pay</span></span><small>Wallet</small></span>
+        </a>
+        <small class="header-message d-none d-sm-inline text-truncate"></small>
+        <span class="d-inline-flex align-items-center px-2">
+            <span class="pulse-button pulse-button-pending" role="status" aria-label="<?= Html::encode(Yii::t('app', 'Synchronizing')) ?>"
+                data-label-ok="<?= Html::encode(Yii::t('app', 'Synchronized')) ?>" data-label-pending="<?= Html::encode(Yii::t('app', 'Synchronizing')) ?>"
+                data-label-error="<?= Html::encode(Yii::t('app', 'Server not reachable: retrying')) ?>"
+                data-label-lagging="<?= Html::encode(Yii::t('app', 'Blockchain reading delayed')) ?>"></span>
+        </span>
+        <button type="button" class="btn btn-icon" data-search="open" aria-label="<?= Html::encode(Yii::t('app', 'Notifications')) ?>">
+            <i class="fas fa-bell" aria-hidden="true"></i>
+            <span class="notify-quantity" style="display:none;" id="quantity_circle"><span id="quantity_notify"></span></span>
+        </button>
+    </div>
 </header>

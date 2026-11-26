@@ -1,37 +1,41 @@
 <?php
-$secrets = require __DIR__ . '/secrets.php';
-
-// in secret file you must put the correct info for the correct domain
-// 'oauth_telegram' => [
-//     'client_id' => [
-//         'localhost' => 'aaa'
-//         'exmpale.com' => 'xxxxx',
-//     ],
-//     'secret' => [
-//         'localhost' => 'bbbbbbb'
-//         'axample.com' => 'yyyyyyy',
-//     ]
-// ],
-
-if (isset($_SERVER['SERVER_NAME'])){
-    $telegramClientId = $secrets['oauth_telegram']['client_id'][$_SERVER['SERVER_NAME']] ?? null;
-    $telegramClientSecret = $secrets['oauth_telegram']['secret'][$_SERVER['SERVER_NAME']] ?? null;
-} else {
-    $telegramClientId = null;
-    $telegramClientSecret = null;
-}
-
-
+$env = require __DIR__ . '/env.php';
 
 return [
-    'adminEmail' => $secrets['mail_adminusername'],
-    'senderEmail' => $secrets['mail_username'],
-    'senderName' => $secrets['mail_name'],
+    'adminEmail' => $env('MAIL_ADMIN'),
+    // mittente verificato (MAIL_SUPPORT), mai il login SMTP: con un relay (es. Brevo) il login non è un indirizzo di posta
+    'senderEmail' => $env('MAIL_SUPPORT'),
+    'senderName' => $env('MAIL_FROM_NAME'),
     'logoApplicazione' => '/css/images/logo.png',
-    'website' => $secrets['website'],
-    'adminName' => $secrets['adminName'],
-    'supportEmail' => $secrets['mail_support'],
-    'encryptionFile' => dirname(__FILE__).'/encrypt.json',
+    'website' => $env('APP_WEBSITE'),
+    'adminName' => $env('APP_ADMIN_NAME'),
+    'supportEmail' => $env('MAIL_SUPPORT'),
+
+    /**
+     * AES key used by WebApp::encrypt/decrypt.
+     * Must stay the same values used to encrypt existing data.
+     */
+    'encryption' => [
+        'secret_key' => $env('ENCRYPT_SECRET_KEY'),
+        'secret_iv' => $env('ENCRYPT_SECRET_IV'),
+        'encrypt_method' => $env('ENCRYPT_METHOD', 'AES-256-CBC'),
+    ],
+
+    // accept values encrypted with the old format (not bound to the user) while browsers migrate them
+    'crypto.acceptLegacy' => filter_var($env('CRYPTO_ACCEPT_LEGACY', 'true'), FILTER_VALIDATE_BOOLEAN),
+
+    /**
+     * VAPID keys for web push (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY). Empty = push disabled.
+     * subject: contact for push services (mailto: or https URL).
+     */
+    'vapid' => [
+        'public_key' => $env('VAPID_PUBLIC_KEY', null),
+        'private_key' => $env('VAPID_PRIVATE_KEY', null),
+        'subject' => $env('VAPID_SUBJECT', 'mailto:' . $env('MAIL_SUPPORT')),
+    ],
+
+    // Redis channel listened by ws-notify (same value as NOTIFY_CHANNEL of the ws-notify service)
+    'notify.channel' => $env('NOTIFY_CHANNEL', 'poawallet:notify'),
 
     /**
      * Set the password reset token expiration time.
@@ -54,29 +58,28 @@ return [
 
 
     // Telegram login informations
-    'telegram.clientId' => $telegramClientId,
-    'telegram.clientSecret' => $telegramClientSecret,
+    // accessi social (Google, Facebook, GitHub, Telegram): spenti salvo SOCIAL_LOGIN=true
+    'socialLogin' => filter_var($env('SOCIAL_LOGIN', 'false'), FILTER_VALIDATE_BOOLEAN),
+    'telegram.clientId' => $env('TELEGRAM_CLIENT_ID', null),
+    'telegram.clientSecret' => $env('TELEGRAM_CLIENT_SECRET', null),
 
 
     // smart contract
-    'smartcontract_address' => $secrets['smartcontract_address'],
-    'default_blockchain' => $secrets['default_blockchain'],
-    'default_smartcontract' => $secrets['default_smartcontract'],
+    'smartcontract_address' => $env('SMARTCONTRACT_ADDRESS', null),
+    'default_blockchain' => $env('DEFAULT_BLOCKCHAIN', null),
+    'default_smartcontract' => $env('DEFAULT_SMARTCONTRACT', null),
 
     // sealer address for POA CZN
-    'sealer_account_2' => $secrets['sealer_account_2'],
-    'sealer_prvkey_2' => $secrets['sealer_prvkey_2'],
+    'sealer_account_2' => $env('SEALER_ACCOUNT_2', null),
+    'sealer_prvkey_2' => $env('SEALER_PRVKEY_2', null),
 
-    // sealer address for POA FID
-    'sealer_account_3' => $secrets['sealer_account_3'],
-    'sealer_prvkey_3' => $secrets['sealer_prvkey_3'],
+    // sealer address for POA FID (zerogas faucet, see Erc20)
+    'sealer_account_3' => $env('SEALER_ACCOUNT_3', null),
+    'sealer_prvkey_3' => $env('SEALER_PRVKEY_3', null),
 
 
-    // websocker url
-    // 'websocket_url' => $secrets['websocket_url'],
-
-    // infura client
-    // 'infura_client' => $secrets['infura_client'],
-    // 'sealers' => $secrets['sealers'],
-    // 'my_address' => $secrets['my_address'],
+    // websocket url
+    'WebSocketServerAddress' => $env('WEBSOCKET_URL', '/ws-notify'),
+    'WebSocketServerAddress-localhost' => $env('WEBSOCKET_URL_LOCALHOST', '/ws-notify'),
+    'websocket_url' => $env('WEBSOCKET_URL', null),
 ];

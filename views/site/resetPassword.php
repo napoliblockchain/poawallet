@@ -1,38 +1,22 @@
 <?php
 
 /* @var $this yii\web\View */
-/* @var $form yii\bootstrap4\ActiveForm */
-/* @var $model \frontend\models\ResetPasswordForm */
+/* @var $model app\models\ResetPasswordForm */
 
+use app\widgets\WalletForm;
 use yii\helpers\Html;
-use yii\bootstrap4\ActiveForm;
 
-$this->title = 'Reset password';
+$this->title = Yii::t('app', 'Reset password');
 ?>
-<div class="container h-100">
-    <div cl ass="row h-100 justify-content-center align-items-center">
-        <div class="site-login">
-            <div class="body-content dash-balance jumbotron pb-5">
-                <div class="text-center">
-                    <img src="css/images/logo.png" alt="" width="220">
-                </div>
-                <div class="form-divider"></div>
-                <h3 class="alert alert-info"><?= Yii::t('app','Reset password') ?></h3>
-                <p class="text-light"><?= Yii::t('app','Please choose your new password:') ?></p>
-                <div class="row">
-                    <div class="col-lg-5">
-                        <?php $form = ActiveForm::begin(['id' => 'reset-password-form']); ?>
-                        <?= $form->field($model, 'password')->passwordInput(['autofocus' => true]) ?>
-                        <div class="txt-left">
-                            <?= $form->errorSummary($model, ['id' => 'error-summary','class'=>'col-lg-12']) ?>
-                        </div>
-                        <div class="form-group">
-                            <?= Html::submitButton(Yii::t('app','Save'), ['class' => 'btn btn-primary']) ?>
-                        </div>
-                        <?php ActiveForm::end(); ?>
-                    </div>
-                </div>
-            </div>
+<div class="card card-md">
+    <div class="card-body">
+        <h2 class="card-title text-center mb-2"><?= Html::encode($this->title) ?></h2>
+        <p class="text-secondary text-center mb-4"><?= Html::encode(Yii::t('app', 'Please choose your new password:')) ?></p>
+        <?php $form = WalletForm::begin(['id' => 'reset-password-form']); ?>
+        <?= $form->field($model, 'password')->passwordInput(['autocomplete' => 'new-password', 'autofocus' => true]) ?>
+        <div class="form-footer">
+            <?= Html::submitButton(Html::encode(Yii::t('app', 'Save')), ['class' => 'btn btn-primary w-100']) ?>
         </div>
+        <?php WalletForm::end(); ?>
     </div>
 </div>

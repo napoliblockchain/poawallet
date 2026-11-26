@@ -111,7 +111,7 @@ class SignupForm extends Model
             $user->oauth_uid = Yii::$app->security->generateRandomString(16);
             $user->authKey = $secretkey;
             $user->accessToken = $randomkey;
-            $user->picture = 'css/images/anonymous.png';
+            $user->picture = '/css/images/anonymous.png';
             $user->last_name = isset($explodename[1]) ? $explodename[1] : '';
             $user->first_name = isset($explodename[0]) ? $explodename[0] : '';
 

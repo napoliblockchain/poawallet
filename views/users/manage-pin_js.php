@@ -23,10 +23,7 @@ $(function () {
         $('.pin-numpad').append(pin_numpad);
         $('.easy-numpad-frame').css("top","1px");
 
-        $('#pinNewModal').modal({
-			  backdrop: 'static',
-			  keyboard: false
-		 });
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('pinNewModal'), {backdrop: 'static', keyboard: false}).show();
 
     });
 
@@ -42,17 +39,14 @@ $(function () {
     var pinNewButton = document.querySelector('#pinNewButton');
     pinNewButton.addEventListener('click', function(){
         dropNumpad();
-        $('#pinNewModal').modal("hide");
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('pinNewModal')).hide();
         $('.pin-confirm-numpad').append(pin_confirm_numpad);
         $('.easy-numpad-frame').css("top","1px");
 
         $('#pinVerifyButton').prop('disabled', true);
         $('#pinVerifyButton').addClass('disabled');
 
-        $('#pinVerifyModal').modal({
-            backdrop: 'static',
-            keyboard: false
-        });
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('pinVerifyModal'), {backdrop: 'static', keyboard: false}).show();
     });
 
     // INTERCETTA IL PULSANTE indietro SULLA seconda SCHERMATA e reset pulsanti

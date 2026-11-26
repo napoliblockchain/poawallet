@@ -4,8 +4,6 @@ namespace app\controllers;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
-use yii\web\Response;
-use \yii\web\Cookie;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
@@ -15,6 +13,8 @@ use app\models\PasswordResetRequestForm;
 use app\models\ResetPasswordForm;
 use app\components\WebApp;
 use app\components\AuthHandler;
+use app\components\RealtimeTicket;
+use app\models\Logs;
 
 class SiteController extends Controller
 {
@@ -39,7 +39,6 @@ class SiteController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'logout' => ['post'],
-                    // 'activate' => ['post'],
                 ],
             ],
         ];
@@ -50,32 +49,28 @@ class SiteController extends Controller
      */
     public function actions()
     {
-        return [
+        $actions = [
             'error' => [
                 'class' => 'yii\web\ErrorAction',
+                // ospiti: pagina d'errore nel layout di accesso, senza menu del wallet
+                'layout' => Yii::$app->user->isGuest ? 'auth' : null,
             ],
             'captcha' => [
                 'class' => 'yii\captcha\CaptchaAction',
                 'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
             ],
-            'auth' => [
-                'class' => 'yii\authclient\AuthAction',
-                'successCallback' => [$this, 'onAuthSuccess'],
-            ]
         ];
+        // accessi social (Google, Facebook, GitHub) spenti finché SOCIAL_LOGIN non è attivo: solo email e password
+        if (Yii::$app->params['socialLogin'] ?? false) {
+            $actions['auth'] = ['class' => 'yii\authclient\AuthAction', 'successCallback' => [$this, 'onAuthSuccess']];
+        }
+        return $actions;
     }
 
     public function onAuthSuccess($client)
     {
         (new AuthHandler($client))->handle();
     }
-
-    public function beforeAction($action)
-	{
-    	$this->enableCsrfValidation = false;
-    	return parent::beforeAction($action);
-	}
-
 
     public function actionError(){
         $this->layout = 'auth';
@@ -98,7 +93,6 @@ class SiteController extends Controller
         return $this->render('index');
     }
 
-
     /**
      * Login action.
      *
@@ -112,12 +106,9 @@ class SiteController extends Controller
             return $this->goHome();
         }
 
-        // echo "<pre>".print_r($_POST,true)."</pre>";
-		// exit;
-
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            // return $this->goBack();
+            Logs::write('Login: ' . Yii::$app->user->identity->username);
             return $this->redirect(['wallet/index']);
         }
 
@@ -135,6 +126,7 @@ class SiteController extends Controller
     public function actionLogout()
     {
         Yii::$app->user->logout();
+        RealtimeTicket::clear();
         return $this->goHome();
     }
 
@@ -145,7 +137,6 @@ class SiteController extends Controller
             return $this->goHome();
         }
         $this->layout = 'auth';
-
 
         $model = new SignupForm();
         if ($model->load(Yii::$app->request->post()) && $model->signup()) {
@@ -183,7 +174,7 @@ class SiteController extends Controller
                 // verifica che non sia attivo e lo cancella
                 if ($user->status_activation_code == 0) {
                     $user->delete();
-                    Yii::$app->session->setFlash('registerError', Yii::t('app', '<strong>Error!</strong> The registration time has expired. You have to register again!'));
+                    Yii::$app->session->setFlash('registerError', Yii::t('app', 'Error! The registration time has expired. You have to register again!'));
                 }
             }
             // Now do the sign
@@ -191,22 +182,19 @@ class SiteController extends Controller
     
             // compare the two signatures
             if (strcmp($signature, $sign) == 0) {
-                // echo "<pre>".print_r('sono uguali',true)."</pre>";exit;
                 $user->activation_code = '000';
                 $user->accessToken = '000';
                 $user->status_activation_code = Users::STATUS_ACTIVE;
                 $user->save();
                 Yii::$app->session->setFlash('userActived', Yii::t('app', 'You have registered your account successfully.'));
-                // exit;
             } else {
                 $user->delete();
-                Yii::$app->session->setFlash('registerError', Yii::t('app', '<strong>Error!</strong> The registration time has expired. You have to register again!'));
+                Yii::$app->session->setFlash('registerError', Yii::t('app', 'Error! The registration time has expired. You have to register again!'));
             }
 
         } else {
-            Yii::$app->session->setFlash('registerError', Yii::t('app', '<strong>Error!</strong> Your account doesn\'t exist or you have already registered!'));
+            Yii::$app->session->setFlash('registerError', Yii::t('app', 'Error! Your account doesn\'t exist or you have already registered!'));
         }
-        // exit;
         return $this->render('activate', [
             'model' => $user,
         ]);
@@ -274,8 +262,6 @@ class SiteController extends Controller
      */
     protected function findModel($id)
     {
-        // echo "<pre>".print_r($id,true)."</pre>";
-		// exit;
         $model = Users::find()->andWhere(['id'=>$id])->one();
         if ( $model !== null) {
             return $model;
@@ -283,6 +269,5 @@ class SiteController extends Controller
 
         throw new NotFoundHttpException(Yii::t('app', 'The requested user does not exist.'));
     }
-
 
 }

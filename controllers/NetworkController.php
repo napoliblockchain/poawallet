@@ -2,18 +2,9 @@
 
 namespace app\controllers;
 
-use Yii;
+use app\components\Settings;
 use yii\filters\AccessControl;
 use yii\web\Controller;
-use yii\web\Response;
-use yii\web\HttpException;
-use yii\filters\VerbFilter;
-
-use yii\base\Model;
-
-use yii\helpers\Json;
-use yii\helpers\Url;
-use app\models\Nodes;
 
 class NetworkController extends Controller
 {
@@ -22,7 +13,6 @@ class NetworkController extends Controller
     	$this->enableCsrfValidation = false;
     	return parent::beforeAction($action);
 	}
-
 
 	/**
 	 * {@inheritdoc}
@@ -62,14 +52,13 @@ class NetworkController extends Controller
 		];
 	}
 
-
 	/**
 	 * Show new wallet page
 	 */
 	public function actionIndex()
  	{
  		return $this->render('index', [
-			'node' => Nodes::find()->where(['id_user'=>Yii::$app->user->id])->one(),
+			'node' => Settings::poa(),
 		]);
  	}
 

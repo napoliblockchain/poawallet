@@ -1,123 +1,54 @@
 <?php
-use yii\helpers\Url;
-// use yii\helpers\Html;
-use yii\bootstrap4\ActiveForm;
 
-use drsdre\wizardwidget;
+use app\widgets\WalletForm;
+use yii\helpers\Html;
+use yii\web\View;
 
-$this->title = Yii::$app->id;
+/* @var $this yii\web\View */
+/* @var $formModel app\models\WizardWalletForm */
 
-$form = ActiveForm::begin([
-	'id' => 'wizard-form',
-	// 'enableAjaxValidation' => true,
-	// 'enableClientValidation' => false,
-	'layout' => 'horizontal',
-	'fieldConfig' => [
-		'template' => "{label}\n<div class=\"col-lg-12\">{input}</div>\n{error}\n<div class=\"col-lg-8\">{error}</div>",
-		'labelOptions' => ['class' => 'col-lg-1 control-label'],
-	],
+$this->title = Yii::t('app', 'New wallet');
 
-]);
+$form = WalletForm::begin(['id' => 'wizard-form']);
+echo Html::activeHiddenInput($formModel, 'seed');
+echo Html::activeHiddenInput($formModel, 'address');
+WalletForm::end();
+
+include('_js.php');
+
+$steps = [1 => '_wizard-step1', 2 => '_wizard-step2', 3 => '_wizard-step3', 4 => '_wizard-step4'];
+// passi mostrati uno alla volta; avanti/indietro con i pulsanti next-step / prev-step
+$this->registerJs(<<<JS
+(function () {
+    var steps = document.querySelectorAll('[data-wizard-step]');
+    var dots = document.querySelectorAll('[data-wizard-dot]');
+    var current = 1;
+    function show(step) {
+        current = Math.min(Math.max(step, 1), steps.length);
+        steps.forEach(function (el) { el.hidden = Number(el.dataset.wizardStep) !== current; });
+        dots.forEach(function (el) {
+            var n = Number(el.dataset.wizardDot);
+            el.classList.toggle('active', n === current);
+            el.classList.toggle('done', n < current);
+        });
+    }
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('.next-step')) show(current + 1);
+        if (event.target.closest('.prev-step')) show(current - 1);
+    });
+    show(1);
+})();
+JS, View::POS_END, 'wallet_wizard_steps');
 ?>
-<?= $form->field($formModel, 'seed')->hiddenInput()->label(false) ?>
-<?= $form->field($formModel, 'address')->hiddenInput()->label(false) ?>
-
-
-<?php ActiveForm::end(); ?>
-<?php 
-include ('_js.php');
-
-$wizard_config = [
-	'id' => 'stepwizard',
-	'steps' => [
-		1 => [
-			'title' => 'Step 1',
-			'icon' => 'glyphicon glyphicon-transfer',
-			'content' => $this->render('_wizard-step1'),
-			'buttons' => [
-				'next' => [
-					'title' => 'no-title',
-					'options' => [
-						'class' => 'hidden',
-					],
-				 ],
-			 ],
-			 'skippable' => false,
-		],
-		2 => [
-			'title' => 'Step 2',
-			'icon' => 'glyphicon glyphicon-cloud-upload',
-			'content' => $this->render('_wizard-step2'),
-			'skippable' => false,
-            'buttons' => [
-				'next' => [
-					'title' => 'no-title',
-					'options' => [
-						'class' => 'hidden',
-					],
-				 ],
-                 'prev' => [
- 					'title' => 'no-title',
- 					'options' => [
- 						'class' => 'hidden',
- 					],
- 				 ],
-			 ],
-		],
-		3 => [
-			'title' => 'Step 3',
-			'icon' => 'glyphicon glyphicon-cloud-upload',
-			'content' => $this->render('_wizard-step3'),
-			'skippable' => false,
-            'buttons' => [
-				'next' => [
-					'title' => 'no-title',
-					'options' => [
-						'class' => 'hidden',
-					],
-				 ],
-                 'prev' => [
- 					'title' => 'no-title',
- 					'options' => [
- 						'class' => 'hidden',
- 					],
- 				 ],
-			 ],
-		],
-		4 => [
-			'title' => 'Step 4',
-			'icon' => 'glyphicon glyphicon-transfer',
-			'content' => $this->render('_wizard-step4'),
-            'skippable' => false,
-            'buttons' => [
-				'next' => [
-					'title' => 'no-title',
-					'options' => [
-						'class' => 'hidden',
-					],
-				 ],
-                 'prev' => [
- 					'title' => 'no-title',
- 					'options' => [
- 						'class' => 'hidden',
- 					],
- 				 ],
-			 ],
-		],
-
-
-    ],
-	// 'complete_content' => $this->render('_generate-step1',[
-	// 				// 'fromAddress' => $fromAddress,
-	// 				// 'sendTokenForm' => $sendTokenForm,
-	// 				'form' => $form,
-	// 			]), // Optional final screen
-	// 'start_step' => 1, // Optional, start with a specific step
-];
-?>
-
-<div class="wallet-generate">
-	<div class="body-content">
-        <?= \drsdre\wizardwidget\WizardWidget::widget($wizard_config); ?>
-	</div>
+<div class="card card-md">
+    <div class="card-body">
+        <ol class="wallet-steps mb-4" aria-label="<?= Html::encode(Yii::t('app', 'Steps')) ?>">
+            <?php foreach (array_keys($steps) as $n): ?>
+                <li data-wizard-dot="<?= $n ?>"><span><?= $n ?></span></li>
+            <?php endforeach ?>
+        </ol>
+        <?php foreach ($steps as $n => $view): ?>
+            <section data-wizard-step="<?= $n ?>"<?= $n === 1 ? '' : ' hidden' ?>><?= $this->render($view) ?></section>
+        <?php endforeach ?>
+    </div>
 </div>

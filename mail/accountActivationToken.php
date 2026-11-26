@@ -20,7 +20,7 @@ $URL = Yii::$app->urlManager->createAbsoluteUrl(['site/activate','id'=>WebApp::e
 				<tbody>
 					<tr>
 						<td style="padding:10px 10px 10px 0px;font-size: 14px" width="200" valign="center">
-						<img src="<?php echo 'https://'.$_SERVER['HTTP_HOST']; ?>/css/images/logo.png" style="padding: 20px; margin: 0px; height: auto; max-width:200px;" alt="<?= Yii::$app->name; ?>" data-original-title="" title="">
+						<img src="<?= \yii\helpers\Html::encode(rtrim((string) Yii::$app->params['website'], '/') . '/brand/logo-wordmark.png') ?>" width="168" height="48" style="padding: 20px; margin: 0px;" alt="<?= \yii\helpers\Html::encode(Yii::$app->name) ?>">
 						</td>
 					</tr>
 				</tbody>

@@ -1,0 +1,26 @@
+# segreti: arrivano solo da variabili d'ambiente a runtime
+.env
+.env.*
+!.env.example
+config/secrets.php
+config/encrypt.json
+config/db-docker.php
+
+# solo per test locali
+web/index-test.php
+
+# dipendenze: installate da composer nella build
+vendor
+
+# non necessari nell'immagine
+.git
+.github
+.vagrant
+vagrant
+tests
+scripts
+ws-notify
+runtime/*
+!runtime/.gitignore
+logs/*
+!logs/.gitignore

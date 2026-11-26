@@ -3,69 +3,46 @@
 /* @var $this \yii\web\View */
 /* @var $content string */
 
-use app\widgets\Alert;
-use yii\helpers\Html;
-use yii\bootstrap4\Nav;
-use yii\bootstrap4\NavBar;
-use yii\widgets\Breadcrumbs;
 use app\assets\AppAsset;
 use app\assets\LightWalletAsset;
 use app\assets\ServiceWorkerAsset;
-
 use app\components\Logo;
+use yii\helpers\Html;
 
 AppAsset::register($this);
 LightWalletAsset::register($this);
 ServiceWorkerAsset::register($this);
-
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>">
+<html lang="<?= Html::encode(Yii::$app->language) ?>">
 <head>
-    <meta charset="<?= Yii::$app->charset ?>">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="<?= Html::encode(Yii::$app->charset) ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
-
-    <!-- Manifest Progressive Web App -->
-    <link rel="manifest" href="manifest.json">
-
-    <!-- Google font file. If you want you can change. -->
-  	<link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600,700,900" rel="stylesheet">
-
-    <!-- Fontawesome font file css -->
-  	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
-
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/brand/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
     <?php $this->head() ?>
 </head>
-<body>
+<body class="wallet-app">
 <?php $this->beginBody() ?>
-
-<div class="wrap h-100 d-flex flex-column">
-
-  <main class="d-flex">
-
-    <div class="content-wrapper d-flex-login p-3 container">
-        <?= Alert::widget() ?>
+<header class="navbar wallet-topbar d-print-none">
+    <div class="container-xl">
+        <span class="navbar-brand d-flex align-items-center"><img src="/brand/icon.svg" alt="" class="wallet-brand-icon"><span class="wallet-wordmark" aria-label="<?= Html::encode(Yii::$app->name) ?>"><span class="wallet-wordmark-name">na<span>pay</span></span><small>Wallet</small></span></span>
+    </div>
+</header>
+<main class="page-wrapper">
+    <div class="container-tight py-4">
+        <?= $this->render('_flash') ?>
         <?= $content ?>
     </div>
-
-  </main>
-
-
-
-</div>
-
-<footer class="mt-5 footer">
-    <div class="container">
-      <?= Logo::footer(); ?>
-    </div>
-</footer>
-
+</main>
+<footer class="text-center text-secondary small py-4"><?= Logo::footer() ?></footer>
 <?php $this->endBody() ?>
-
 </body>
 </html>
 <?php $this->endPage() ?>

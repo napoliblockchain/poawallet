@@ -1,108 +1,36 @@
 <?php
 
 /* @var $this yii\web\View */
-/* @var $form yii\bootstrap\ActiveForm */
-/* @var $model app\models\LoginForm */
+/* @var $model app\models\SignupForm */
 
+use app\widgets\WalletForm;
 use yii\helpers\Html;
-use yii\bootstrap4\ActiveForm;
-use yii\helpers\Url;
-use yii\web\View;
 
-
-$this->title = Yii::t('app','Register');
-
+$this->title = Yii::t('app', 'Register');
 ?>
-<div class="container h-100">
-  <div class="row h-100 justify-content-center align-items-center">
-    <div class="site-login">
-      <div class="body-content dash-balance jumbotron pb-5">
-
-          <div class="text-center">
-              <img src="css/images/logo.png" alt="" width="220">
-          </div>
-          <div class="form-divider"></div>
-          <h3 class="alert alert-info"><?= Yii::t('app','Registration form') ?></h3>
-
-          <p class="text-light"><?= Yii::t('app','Please fill out the fields. A link to activate your account will be sent.') ?></p>
-          <div class="form-divider"></div>
-
-          <?php if (Yii::$app->session->hasFlash('registerFormSubmitted')): ?>
-
-              <div class="alert alert-success">
-                  <?php echo Yii::t('app','Your registration request has been registered.');?><br>
-                  <?php echo Yii::t('app','You will receive an email to confirm your subscription.');?>
-              </div>
-              <div class="form-row txt-center text-light mt-15">
-                  <?php echo Yii::t('app','Back to home!'); ?>
-                 <a style="color:#007bff;" href="<?php echo Url::to(['site/index']); ?>" data-loader="show">Home</a>
-              </div>
-
-
-
-          <?php else: ?>
-
-
-        <?php $form = ActiveForm::begin([
-            'id' => 'register-form',
-            'layout' => 'horizontal',
-            'fieldConfig' => [
-        		'template' => "{label}\n<div class=\"col-lg-12\">{input}</div>\n{error}\n<div class=\"col-lg-8\">{error}</div>",
-        		'labelOptions' => ['class' => 'col-lg-1 control-label'],
-        	],
-        ]); ?>
-
-        <?php $fieldOptions1 = [
-            'inputTemplate' => '
-                                <div class="form-row-group with-icons">
-                                    <div class="form-row no-padding">
-                                        <i class="fa fa-envelope"></i>
-                                        {input}
-                                    </div>
-                                </div>',
-            'inputOptions' => ['class' => ['widget' => 'form-element']]
-
-        ];
-          ?>
-          <?php $fieldOptions2 = [
-              'inputTemplate' => '
-                                  <div class="form-row-group with-icons">
-                                      <div class="form-row no-padding">
-                                          <i class="fa fa-lock"></i>
-                                          {input}
-                                      </div>
-                                  </div>',
-              'inputOptions' => ['class' => ['widget' => 'form-element']]
-
-          ];
-            ?>
-
-        <?= $form->field($model, 'username', $fieldOptions1)->textInput(['autofocus' => false, 'autocomplete'=>"off",'placeholder'=>Yii::t('app','Username')])->label(false) ?>
-        <?= $form->field($model, 'password', $fieldOptions2)->passwordInput(['autocomplete'=>"new-password",'placeholder'=>Yii::t('app','Password')])->label(false) ?>
-        <?= $form->field($model, 'password_repeat', $fieldOptions2)->passwordInput(['placeholder'=>Yii::t('app','Repeat password')])->label(false) ?>
-
-        <div class="txt-left">
-            <?= $form->errorSummary($model, ['id' => 'error-summary','class'=>'col-lg-12']) ?>
-        </div>
-
-
-
-        <div class="form-mini-divider"></div>
-
-
-        <div class="form-group row">
-            <div class="col-sm-12">
-                <?= Html::submitButton('Register', ['class' => 'button circle block orange', 'name' => 'login-button']) ?>
+<div class="card card-md">
+    <div class="card-body">
+        <h2 class="card-title text-center mb-2"><?= Html::encode(Yii::t('app', 'Registration form')) ?></h2>
+        <?php if (Yii::$app->session->hasFlash('registerFormSubmitted')): ?>
+            <div class="alert alert-success" role="status">
+                <?= Html::encode(Yii::t('app', 'Your registration request has been registered.')) ?>
+                <?= Html::encode(Yii::t('app', 'You will receive an email to confirm your subscription.')) ?>
             </div>
-        </div>
-
-
-        <div class="form-row txt-center text-light mt-15">
-          Already have an account? <a style="color:#007bff;" href="<?php echo Url::to(['site/login']); ?>" data-loader="show">Login</a>
-        </div>
-        <?php ActiveForm::end(); ?>
+            <?= Html::a(Html::encode(Yii::t('app', 'Login')), ['site/login'], ['class' => 'btn btn-primary w-100']) ?>
+        <?php else: ?>
+            <p class="text-secondary text-center mb-4"><?= Html::encode(Yii::t('app', 'Please fill out the fields. A link to activate your account will be sent.')) ?></p>
+            <?php $form = WalletForm::begin(['id' => 'register-form']); ?>
+            <?= $form->field($model, 'username')->input('email', ['autocomplete' => 'username', 'placeholder' => 'nome@esempio.it']) ?>
+            <?= $form->field($model, 'password')->passwordInput(['autocomplete' => 'new-password']) ?>
+            <?= $form->field($model, 'password_repeat')->passwordInput(['autocomplete' => 'new-password']) ?>
+            <div class="form-footer">
+                <?= Html::submitButton(Html::encode(Yii::t('app', 'Register')), ['class' => 'btn btn-primary w-100', 'name' => 'register-button']) ?>
+            </div>
+            <?php WalletForm::end(); ?>
         <?php endif; ?>
-      </div>
     </div>
-  </div>
 </div>
+<p class="text-center wallet-switch mt-3">
+    <?= Html::encode(Yii::t('app', 'Already have an account?')) ?>
+    <?= Html::a(Html::encode(Yii::t('app', 'Login')), ['site/login']) ?>
+</p>

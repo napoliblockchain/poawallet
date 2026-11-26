@@ -7,7 +7,7 @@ $options = [
     'invalidSeedMessage' => Yii::t('app','Invalid seed!'),
     'invalidSeed12Word' => Yii::t('app','Seed hasn\'t 12 words! Words inserted are: '),
     'validSeedMessage' => Yii::t('app','Seed is correct!'),
-    'spinner' => '<div class="button-spinner spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>',
+    'spinner' => '<div class="button-spinner spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
     'baseUrl' => Yii::$app->request->baseUrl,
     'language' => Yii::$app->language,
     'cryptURL' => Url::to(['/wallet/crypt']),
@@ -61,7 +61,6 @@ $wallet_restore = <<<JS
 
   		seed = $.trim($('#wizardwalletform-seed').val()).toLowerCase();
   		if (WordCount(seed) != 12 || !(isSeedValid(seed)) ){
-  			console.log('[Restore]: seed non valido', seed);
   			$('#seed-error').show().text(yiiOptions.invalidSeedMEssage);
   			return;
   		}
@@ -70,7 +69,6 @@ $wallet_restore = <<<JS
   		// la password viene generata in automatico dal sistema di 32 caratteri
   		var password = generateEntropy(64);
 
-  		console.log('[Restore]: seed valido', seed);
   		initializeVault(password,seed);
   	});
 
@@ -127,16 +125,12 @@ $wallet_restore = <<<JS
         							prv_php 	: CryptoJS.AES.encrypt(JSON.stringify(prv_key), password, {format: CryptoJSAesJson}).toString(),
         							prv_pas		: pwd_crypted,
         						};
-                                console.log('[Restore]: seed: ', seed);
-                                console.log('[Restore]: prv_key: ', prv_key);
                                 console.log('[Restore]: address: ', address);
-                                console.log('[Restore]: address and key in post: ', walletPost);
 
                                 clearAllData('wallet')
                                 .then(function () {
                                     writeData('wallet', walletPost)
                                     .then(function() {
-                                        console.log('[Restore]: Saved wallet info in indexedDB', walletPost);
                                         //$('#cryptConferma').html('<img width=20 src="'+ajax_loader_url+'" alt="'+Yii.t('js','loading...')+'">');
                                     })
                                     .then(function() {
